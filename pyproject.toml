@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bigcrittercolor"
+version = "0.1.0"
+authors = [
+    {name = "Jacob Idec", email = "jacob.idec@ufl.edu"},
+]
+description = "Pipeline and tools for extracting organismal color information from iNaturalist images"
+readme = "README.md"
+requires-python = ">=3.7"
+license = {text = "GPL-3.0-or-later"}
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "requests", "pandas", "scikit-learn", "numpy", "opencv-python", "matplotlib", "scikit-image", "scipy",
+     "pillow",
+    'importlib-metadata; python_version<"3.8"',
+]
+
+# ... other project metadata fields as specified in:
+#     https://packaging.python.org/en/latest/specifications/declaring-project-metadata/
