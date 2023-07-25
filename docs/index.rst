@@ -20,4 +20,6 @@ Indices and tables
 
 you can use the ``bigcrittercolor.dataprep.createBCCDataFolder()`` function:
 
-.. autofunction:: bigcrittercolor.dataprep.createBCCDataFolder
+.. automodule:: bigcrittercolor.dataprep
+
+.. automodule:: dataprep
