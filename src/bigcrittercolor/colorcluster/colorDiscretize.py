@@ -3,25 +3,18 @@ from numpy import unique
 from sklearn.cluster import KMeans, OPTICS, SpectralClustering, AgglomerativeClustering, DBSCAN
 from sklearn.mixture import GaussianMixture
 import numpy as np
-from matplotlib import colors
 import cv2
-from matplotlib.patches import Ellipse
-import sys
-from sklearn.neighbors import NearestCentroid
-from bigcrittercolor.helpers import rotateToVertical
 from bigcrittercolor.helpers import showImages
-from bigcrittercolor.helpers import plotPixels
 
-from matplotlib import pyplot as plt
 # from yellowbrick.cluster import KElbowVisualizer
 # from kneed import DataGenerator, KneeLocator
-from sklearn.metrics import calinski_harabasz_score, davies_bouldin_score, silhouette_score
+from sklearn.metrics import calinski_harabasz_score, davies_bouldin_score
 import colorsys
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler
 import os
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from skimage import io, color
+from skimage import color
 from sklearn.metrics import silhouette_samples, silhouette_score
 from scipy.cluster import hierarchy
 

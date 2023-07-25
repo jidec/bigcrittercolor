@@ -1,0 +1,2 @@
+from bigcrittercolor.segmentation.inferMasks import inferMasks
+from bigcrittercolor.segmentation.inferMasksFast import inferMasksFast
