@@ -1,0 +1,14 @@
+site_name: bigcrittercolor Docs
+
+theme:
+  name: "material"
+
+plugins:
+  - mkdocstrings
+
+nav:
+  - index.md
+  - Project Prep: projprep.md
+  - Image Download: imgdownload.md
+  - Segmentation: segmentation.md
+  - Mask Clustering & Segment Extraction: clusterextract.md

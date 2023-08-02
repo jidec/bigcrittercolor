@@ -14,31 +14,32 @@ import numpy as np
 # diffusers
 import torch
 from huggingface_hub import hf_hub_download
-from bigcrittercolor.helpers import _bprint, _getAllExistingImgIDs, _getIDsInFolder, _showImages
+from bigcrittercolor.helpers import _bprint, _getIDsInFolder, _showImages
 import random
 
-def inferMasks(img_ids, skip_existing=True, archetype="prompt1", text_prompt="subject", box_threshold=0.25, text_threshold=0.25,
+def inferMasks(img_ids, skip_existing=True,
+               strategy="prompt1", text_prompt="subject", box_threshold=0.25, text_threshold=0.25,
                erode_kernel_size=0, remove_islands = True,
                show=False, show_indv=False, print_steps=True, print_details=False, data_folder=""):
-    """
-        Infer masks for the specified image_ids using SegmentAnything prompted by the groundingDINO zero-shot object detector
+    """ Infer masks for the specified image ids using SegmentAnything prompted by the groundingDINO zero-shot object detector
 
-        :param str archetype: prepackaged strategies for creating masks from iNat images
-            can be:
-            1. prompt1 - simply save the first mask of prompt1 - a reliable way to get the image subject
-            2. remove_prompt2_from1 - save prompt1 with all instances of prompt2 (+3,4,etc. currently) subtracted
+        Args:
+            img_ids (list): the imageIDs (image names) to infer from
+            skip_existing (bool): if we skip images that have already been processed
+            strategy (str): prepackaged strategies for creating masks from iNat images
+                can be:
+                1. prompt1 - simply save the first mask of prompt1 - a reliable way to get the image subject
+                2. remove_prompt2_from1 - save prompt1 with all instances of prompt2 (+3,4,etc. currently) subtracted
 
-            to add later:
-            3. prompt1_merged_and_prompt2_merged - save all instances of prompt1 merged together, AND all instances of prompt2 merged
-            4. prompt1_instances - save all instances of prompt1 separately
-            5. prompt1_instances_and_prompt2_instances - save all instances of prompt1 and
-
-        :param List image_ids: the imageIDs (image names) to infer from
-        :param str model_name: the name of the model contained in data/ml_models to infer with NOT including the .pt suffix
-        :param int image_size: the image dimensions that the model was trained on
-        :param str part_suffix:
-        :param bool show: show image processing outputs and intermediates
-        :param bool print_steps: print processing step info after they are performed
+                to add later:
+                3. prompt1_merged_and_prompt2_merged - save all instances of prompt1 merged together, AND all instances of prompt2 merged
+                4. prompt1_instances - save all instances of prompt1 separately
+                5. prompt1_instances_and_prompt2_instances - save all instances of prompt1 and
+            text_prompt (str): the text prompt for groundingDINO to use in selecting bounding boxes
+            box_threshold (float): confidence threshold to keep object bounding boxes - higher values means less boxes are kept
+            text_threshold (float): confidence threshold that kept object bounding boxes are the object we prompted for
+            erode_kernel_size (int): size of the postprocessing erosion kernel
+            remove_islands (bool): whether to remove islands from the mask during postprocessing
     """
 
     # download grounding dino if you need it, then load it
@@ -60,7 +61,6 @@ def inferMasks(img_ids, skip_existing=True, archetype="prompt1", text_prompt="su
     # if no ids get all existing
     if img_ids is None:
         _bprint(print_steps, "No IDs specified, getting all existing image IDs from all_images")
-        #img_ids = _getAllExistingImgIDs(data_folder)
         img_ids = _getIDsInFolder(data_folder + "/all_images")
         random.shuffle(img_ids)
 
@@ -142,13 +142,13 @@ def inferMasks(img_ids, skip_existing=True, archetype="prompt1", text_prompt="su
             _bprint(print_details, "No masks predicted, skipping...")
             continue
 
-        _bprint(print_details, "Applying archetype...")
-        # this archetype simply saves the first mask
-        if archetype == "prompt1":
+        _bprint(print_details, "Applying strategy...")
+        # this strategy simply saves the first mask
+        if strategy == "prompt1":
             mask = tensor_to_img(masks[0][0])
 
-        # this archetype saves the first mask with ALL subsequent masks removed from it
-        if archetype == "remove_prompt2_from1":
+        # this strategy saves the first mask with ALL subsequent masks removed from it
+        if strategy == "remove_prompt2_from1":
 
             # get the first (prompt1) mask
             mask = tensor_to_img(masks[0][0])
@@ -222,9 +222,14 @@ def inferMasks(img_ids, skip_existing=True, archetype="prompt1", text_prompt="su
                             title_fontsize=13)
 
         _bprint(print_details, "Writing final mask...")
-        dest = data_folder + "/masks/" + img_ids[index] + "_mask.jpg"
+        dest = data_folder + "/masks/" + img_ids[index] + "_mask.png"
         cv2.imwrite(dest, mask)
 
+    # if show, show a sample of the masks we got
+    if show:
+        masks = [cv2.imread(data_folder + "/masks/" + id + "_mask.png") for id in img_ids]
+        masks = random.sample(masks,12)
+        _showImages(show,masks,maintitle="Sample Masks")
 
 
 # download groundingDINO if you need it, the  load it

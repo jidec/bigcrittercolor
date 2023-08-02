@@ -10,17 +10,16 @@ from bigcrittercolor.helpers import _bprint
 def downloadiNatImageData(taxa_list, img_size="medium",
                           skip_existing=True, print_steps=True,
                           data_folder='../..'):
-    """
-       Download iNat images and data by genus or species
-       This method downloads records then refers to those records to download in parallel
-       Images are always saved in data_folder/all_images folder
-       Based on Brian Stucky's iNat downloader, his modified code is in _inat_dl_helpers.py
+    """ Download iNat images and data by genus or species.
+        This method downloads records then refers to those records to download in parallel.
+        Images are always saved in data_folder/all_images.
+        Based on Brian Stucky's iNat downloader, his modified code is in _inat_dl_helpers.py.
 
-       :param list taxa_list: the list of genera and/or species
-        List members are treated as species if binomial (i.e. "Homo sapiens") and genus if not (i.e. "Homo")
-       :param bool skip_existing: if we skip images that have already been downloaded
-       :param str img_size: size of images to download - can be "medium", "large", or "full"
-       :param str data_folder: the path to the bigcrittercolor formatted data folder
+        Args:
+           taxa_list (list): the list of genera and/or species. List members are treated as species if binomial (i.e. "Homo sapiens") and genus if not (i.e. "Homo")
+           skip_existing (bool): if we skip images that have already been downloaded
+           img_size (str): size of images to download - can be "medium", "large", or "full"
+           data_folder (str): the path to the bigcrittercolor formatted data folder
     """
 
     # for every taxon

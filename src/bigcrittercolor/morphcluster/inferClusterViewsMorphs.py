@@ -1,6 +1,7 @@
 import pandas as pd
 import cv2
-from bigcrittercolor.helpers import _clusterByImgFeatures, _bprint, _getIDsInFolder, showIDs, _extractVerticalizeMasksOrSegs
+from bigcrittercolor.helpers import _clusterByImgFeatures, _bprint, _getIDsInFolder, _showImages
+from bigcrittercolor.helpers.imgtransforms import _verticalizeImg
 
 def inferClusterViewsMorphs(img_ids, records_group_col="species",
                        print_steps=True, print_details=False, show=True, data_folder=""):
@@ -28,7 +29,7 @@ def inferClusterViewsMorphs(img_ids, records_group_col="species",
     print(len(masks))
 
     # normalize masks
-    masks = _extractVerticalizeMasksOrSegs(masks)
+    masks = [_verticalizeImg(mask) for mask in masks]
 
     # cluster the masks and visualize
     labels = _clusterByImgFeatures(masks, show=True)

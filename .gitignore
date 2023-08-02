@@ -124,9 +124,6 @@ venv.bak/
 # Rope project settings
 .ropeproject
 
-# mkdocs documentation
-/site
-
 # mypy
 .mypy_cache/
 .dmypy.json
@@ -154,3 +151,7 @@ cython_debug/
 # Models
 *.pt
 *.pth
+
+# Test images
+/tests/dummy_bcc_folder/masks
+/tests/dummy_bcc_folder/segments

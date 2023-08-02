@@ -1,7 +1,7 @@
 import random
 from bigcrittercolor.segmentation import inferMasks
 from bigcrittercolor.helpers import _getIDsInFolder, _loadTrainClassModel
-from bigcrittercolor.maskfilter import filterClusterMasksExtractSegs
+from bigcrittercolor.maskfilter import clusterMasksExtractSegs
 import os
 import shutil
 

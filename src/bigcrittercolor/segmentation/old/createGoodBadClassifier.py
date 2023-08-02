@@ -1,7 +1,7 @@
 import random
 from bigcrittercolor.segmentation import inferMasks
 from bigcrittercolor.helpers import _getIDsInFolder
-from bigcrittercolor.maskfilter import filterClusterMasksExtractSegs
+from bigcrittercolor.maskfilter import clusterMasksExtractSegs
 
 # this function would:
 # 1. use inferMasks to infer nmasks masks
@@ -18,9 +18,9 @@ def createInitialFilter(seg_text_prompt, training_set_size=1000, data_folder='')
 
     # infer masks for those ids, they get put in masks folder
     inferMasks(img_ids=sampled_ids,data_folder=data_folder,
-               text_prompt="dragonfly . wing .", archetype="remove_prompt2_from1", erode_kernel_size=3, show=False)
+               text_prompt="dragonfly . wing .", strategy="remove_prompt2_from1", erode_kernel_size=3, show=False)
 
-    filterClusterMasksExtractSegs(img_ids=sampled_ids, filter_hw_ratio_minmax=(3, 100), filter_prop_img_minmax=(0, 0.25),
+    clusterMasksExtractSegs(img_ids=sampled_ids, filter_hw_ratio_minmax=(3, 100), filter_prop_img_minmax=(0, 0.25),
                                   data_folder=data_folder)
 
     print(0)
