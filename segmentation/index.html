@@ -1,0 +1,972 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../imgdownload/">
+      
+      
+        <link rel="next" href="../clusterextract/">
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.2, mkdocs-material-9.1.21">
+    
+    
+      
+        <title>Segmentation - bigcrittercolor Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.eebd395e.min.css">
+      
+      
+
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#bigcrittercolor.segmentation.inferMasks" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="bigcrittercolor Docs" class="md-header__button md-logo" aria-label="bigcrittercolor Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            bigcrittercolor Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Segmentation
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="bigcrittercolor Docs" class="md-nav__button md-logo" aria-label="bigcrittercolor Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    bigcrittercolor Docs
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Welcome to MkDocs
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../projprep/" class="md-nav__link">
+        Project Prep
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../imgdownload/" class="md-nav__link">
+        Image Download
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Segmentation
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Segmentation
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#bigcrittercolor.segmentation.inferMasks" class="md-nav__link">
+    bigcrittercolor.segmentation.inferMasks
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bigcrittercolor.segmentation.inferMasks.inferMasks" class="md-nav__link">
+    inferMasks()
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../clusterextract/" class="md-nav__link">
+        Mask Clustering & Segment Extraction
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#bigcrittercolor.segmentation.inferMasks" class="md-nav__link">
+    bigcrittercolor.segmentation.inferMasks
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bigcrittercolor.segmentation.inferMasks.inferMasks" class="md-nav__link">
+    inferMasks()
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  <h1>Segmentation</h1>
+
+<div class="doc doc-object doc-module">
+
+
+<a id="bigcrittercolor.segmentation.inferMasks"></a>
+  <div class="doc doc-contents first">
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h2 id="bigcrittercolor.segmentation.inferMasks.inferMasks" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">inferMasks</span><span class="p">(</span><span class="n">img_ids</span><span class="p">,</span> <span class="n">skip_existing</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="s1">&#39;prompt1&#39;</span><span class="p">,</span> <span class="n">text_prompt</span><span class="o">=</span><span class="s1">&#39;subject&#39;</span><span class="p">,</span> <span class="n">box_threshold</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">text_threshold</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">erode_kernel_size</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">remove_islands</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">show_indv</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">print_steps</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">print_details</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">data_folder</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span></code>
+
+</h2>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Infer masks for the specified image ids using SegmentAnything prompted by the groundingDINO zero-shot object detector</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>img_ids</code></td>
+          <td>
+                <code>list</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>the imageIDs (image names) to infer from</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>skip_existing</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>if we skip images that have already been processed</p>
+            </div>
+          </td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>strategy</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>prepackaged strategies for creating masks from iNat images
+can be:
+1. prompt1 - simply save the first mask of prompt1 - a reliable way to get the image subject
+2. remove_prompt2_from1 - save prompt1 with all instances of prompt2 (+3,4,etc. currently) subtracted</p>
+<p>to add later:
+3. prompt1_merged_and_prompt2_merged - save all instances of prompt1 merged together, AND all instances of prompt2 merged
+4. prompt1_instances - save all instances of prompt1 separately
+5. prompt1_instances_and_prompt2_instances - save all instances of prompt1 and</p>
+            </div>
+          </td>
+          <td>
+                <code>&#39;prompt1&#39;</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>text_prompt</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>the text prompt for groundingDINO to use in selecting bounding boxes</p>
+            </div>
+          </td>
+          <td>
+                <code>&#39;subject&#39;</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>box_threshold</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>confidence threshold to keep object bounding boxes - higher values means less boxes are kept</p>
+            </div>
+          </td>
+          <td>
+                <code>0.25</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>text_threshold</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>confidence threshold that kept object bounding boxes are the object we prompted for</p>
+            </div>
+          </td>
+          <td>
+                <code>0.25</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>erode_kernel_size</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>size of the postprocessing erosion kernel</p>
+            </div>
+          </td>
+          <td>
+                <code>0</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>remove_islands</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>whether to remove islands from the mask during postprocessing</p>
+            </div>
+          </td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>src\bigcrittercolor\segmentation\inferMasks.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">inferMasks</span><span class="p">(</span><span class="n">img_ids</span><span class="p">,</span> <span class="n">skip_existing</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+               <span class="n">strategy</span><span class="o">=</span><span class="s2">&quot;prompt1&quot;</span><span class="p">,</span> <span class="n">text_prompt</span><span class="o">=</span><span class="s2">&quot;subject&quot;</span><span class="p">,</span> <span class="n">box_threshold</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">text_threshold</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
+               <span class="n">erode_kernel_size</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">remove_islands</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+               <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">show_indv</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">print_steps</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">print_details</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">data_folder</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Infer masks for the specified image ids using SegmentAnything prompted by the groundingDINO zero-shot object detector</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            img_ids (list): the imageIDs (image names) to infer from</span>
+<span class="sd">            skip_existing (bool): if we skip images that have already been processed</span>
+<span class="sd">            strategy (str): prepackaged strategies for creating masks from iNat images</span>
+<span class="sd">                can be:</span>
+<span class="sd">                1. prompt1 - simply save the first mask of prompt1 - a reliable way to get the image subject</span>
+<span class="sd">                2. remove_prompt2_from1 - save prompt1 with all instances of prompt2 (+3,4,etc. currently) subtracted</span>
+
+<span class="sd">                to add later:</span>
+<span class="sd">                3. prompt1_merged_and_prompt2_merged - save all instances of prompt1 merged together, AND all instances of prompt2 merged</span>
+<span class="sd">                4. prompt1_instances - save all instances of prompt1 separately</span>
+<span class="sd">                5. prompt1_instances_and_prompt2_instances - save all instances of prompt1 and</span>
+<span class="sd">            text_prompt (str): the text prompt for groundingDINO to use in selecting bounding boxes</span>
+<span class="sd">            box_threshold (float): confidence threshold to keep object bounding boxes - higher values means less boxes are kept</span>
+<span class="sd">            text_threshold (float): confidence threshold that kept object bounding boxes are the object we prompted for</span>
+<span class="sd">            erode_kernel_size (int): size of the postprocessing erosion kernel</span>
+<span class="sd">            remove_islands (bool): whether to remove islands from the mask during postprocessing</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># download grounding dino if you need it, then load it</span>
+    <span class="n">ckpt_repo_id</span> <span class="o">=</span> <span class="s2">&quot;ShilongLiu/GroundingDINO&quot;</span>
+    <span class="n">ckpt_filenmae</span> <span class="o">=</span> <span class="s2">&quot;groundingdino_swinb_cogcoor.pth&quot;</span>
+    <span class="n">ckpt_config_filename</span> <span class="o">=</span> <span class="s2">&quot;GroundingDINO_SwinB.cfg.py&quot;</span>
+
+    <span class="n">_bprint</span><span class="p">(</span><span class="n">print_steps</span><span class="p">,</span><span class="s2">&quot;Loading groundingDINO, downloading weights if necessary...&quot;</span><span class="p">)</span>
+    <span class="n">groundingdino_model</span> <span class="o">=</span> <span class="n">load_model_hf</span><span class="p">(</span><span class="n">ckpt_repo_id</span><span class="p">,</span> <span class="n">ckpt_filenmae</span><span class="p">,</span> <span class="n">ckpt_config_filename</span><span class="p">)</span>
+
+    <span class="c1"># sam currently must be downloaded from https://huggingface.co/ybelkada/segment-anything/tree/main/checkpoints and placed in</span>
+    <span class="c1">#   the ml_checkpoints folder as sam.pth</span>
+    <span class="n">_bprint</span><span class="p">(</span><span class="n">print_steps</span><span class="p">,</span> <span class="s2">&quot;Loading SegmentAnything from data_folder/other/ml_checkpoints/sam.pth...&quot;</span><span class="p">)</span>
+    <span class="n">sam_checkpoint</span> <span class="o">=</span> <span class="n">data_folder</span> <span class="o">+</span> <span class="s1">&#39;/other/ml_checkpoints/sam.pth&#39;</span>
+    <span class="n">sam</span> <span class="o">=</span> <span class="n">build_sam</span><span class="p">(</span><span class="n">checkpoint</span><span class="o">=</span><span class="n">sam_checkpoint</span><span class="p">)</span>
+    <span class="n">sam</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="s1">&#39;cuda&#39;</span><span class="p">)</span>
+    <span class="n">sam_predictor</span> <span class="o">=</span> <span class="n">SamPredictor</span><span class="p">(</span><span class="n">sam</span><span class="p">)</span>
+
+    <span class="c1"># if no ids get all existing</span>
+    <span class="k">if</span> <span class="n">img_ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_bprint</span><span class="p">(</span><span class="n">print_steps</span><span class="p">,</span> <span class="s2">&quot;No IDs specified, getting all existing image IDs from all_images&quot;</span><span class="p">)</span>
+        <span class="n">img_ids</span> <span class="o">=</span> <span class="n">_getIDsInFolder</span><span class="p">(</span><span class="n">data_folder</span> <span class="o">+</span> <span class="s2">&quot;/all_images&quot;</span><span class="p">)</span>
+        <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">img_ids</span><span class="p">)</span>
+
+
+    <span class="k">if</span> <span class="n">skip_existing</span><span class="p">:</span>
+        <span class="c1"># get existing mask ids</span>
+        <span class="n">existing_mask_ids</span> <span class="o">=</span> <span class="n">_getIDsInFolder</span><span class="p">(</span><span class="n">data_folder</span> <span class="o">+</span> <span class="s2">&quot;/masks&quot;</span><span class="p">)</span>
+        <span class="c1"># create new image ids removing existing</span>
+        <span class="n">img_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">img_ids</span> <span class="k">if</span> <span class="n">item</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">existing_mask_ids</span><span class="p">]</span>
+
+    <span class="c1"># create img_locs which starts as a copy of img_ids</span>
+    <span class="n">img_locs</span> <span class="o">=</span> <span class="n">img_ids</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="c1"># turn list of ids into list of file locations</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">img_locs</span><span class="p">)):</span>
+        <span class="n">img_locs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_folder</span> <span class="o">+</span> <span class="s2">&quot;/all_images/&quot;</span> <span class="o">+</span> <span class="n">img_locs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.jpg&quot;</span>
+
+    <span class="n">_bprint</span><span class="p">(</span><span class="n">print_steps</span><span class="p">,</span> <span class="s2">&quot;Starting inferring masks for &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">img_locs</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot; IDs...&quot;</span><span class="p">)</span>
+    <span class="c1"># for each image location</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">img_loc</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">img_locs</span><span class="p">):</span>
+
+        <span class="n">_bprint</span><span class="p">(</span><span class="n">print_details</span><span class="p">,</span> <span class="s2">&quot;Reading in image from &quot;</span> <span class="o">+</span> <span class="n">img_loc</span> <span class="o">+</span> <span class="s2">&quot;...&quot;</span><span class="p">)</span>
+        <span class="n">image_source</span><span class="p">,</span> <span class="n">image</span> <span class="o">=</span> <span class="n">load_image</span><span class="p">(</span><span class="n">img_loc</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">image_source</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="n">_bprint</span><span class="p">(</span><span class="n">print_details</span><span class="p">,</span> <span class="s2">&quot;Image load failed, skipping...&quot;</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">show_indv</span><span class="p">:</span>
+            <span class="n">img_raw</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">img_loc</span><span class="p">)</span>
+            <span class="c1">#_showImages(show=True, images=[cv2.imread(img_loc)], titles=[&quot;Raw Image&quot;])</span>
+
+        <span class="n">_bprint</span><span class="p">(</span><span class="n">print_details</span><span class="p">,</span> <span class="s2">&quot;Getting bounding boxes using groundingDINO...&quot;</span><span class="p">)</span>
+        <span class="n">boxes</span><span class="p">,</span> <span class="n">logits</span><span class="p">,</span> <span class="n">phrases</span> <span class="o">=</span> <span class="n">predict</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">groundingdino_model</span><span class="p">,</span>
+            <span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">,</span>
+            <span class="n">caption</span><span class="o">=</span><span class="n">text_prompt</span><span class="p">,</span>
+            <span class="n">box_threshold</span><span class="o">=</span><span class="n">box_threshold</span><span class="p">,</span>
+            <span class="n">text_threshold</span><span class="o">=</span><span class="n">text_threshold</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">boxes</span><span class="o">.</span><span class="n">nelement</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">_bprint</span><span class="p">(</span><span class="n">print_details</span><span class="p">,</span> <span class="s2">&quot;No bounding boxes obtained, skipping...&quot;</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">show_indv</span><span class="p">:</span>
+            <span class="n">annotated_frame</span> <span class="o">=</span> <span class="n">annotate</span><span class="p">(</span><span class="n">image_source</span><span class="o">=</span><span class="n">image_source</span><span class="p">,</span> <span class="n">boxes</span><span class="o">=</span><span class="n">boxes</span><span class="p">,</span> <span class="n">logits</span><span class="o">=</span><span class="n">logits</span><span class="p">,</span> <span class="n">phrases</span><span class="o">=</span><span class="n">phrases</span><span class="p">)</span>
+            <span class="n">annotated_frame</span> <span class="o">=</span> <span class="n">annotated_frame</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># BGR to RGB</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span><span class="n">annotated_frame</span><span class="p">)</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">img</span><span class="p">),</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_RGB2BGR</span><span class="p">)</span>
+            <span class="c1">#_showImages(show=True, images=[img], titles=[&quot;Annotated Frames&quot;])</span>
+            <span class="n">img_frame</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+
+        <span class="n">_bprint</span><span class="p">(</span><span class="n">print_details</span><span class="p">,</span> <span class="s2">&quot;Predicting mask using SegmentAnything...&quot;</span><span class="p">)</span>
+
+        <span class="c1"># set image</span>
+        <span class="n">sam_predictor</span><span class="o">.</span><span class="n">set_image</span><span class="p">(</span><span class="n">image_source</span><span class="p">)</span>
+
+        <span class="c1"># box: normalized box xywh -&gt; unnormalized xyxy</span>
+        <span class="n">H</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">image_source</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">boxes_xyxy</span> <span class="o">=</span> <span class="n">box_ops</span><span class="o">.</span><span class="n">box_cxcywh_to_xyxy</span><span class="p">(</span><span class="n">boxes</span><span class="p">)</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">([</span><span class="n">W</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">H</span><span class="p">])</span>
+
+        <span class="n">transformed_boxes</span> <span class="o">=</span> <span class="n">sam_predictor</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">apply_boxes_torch</span><span class="p">(</span><span class="n">boxes_xyxy</span><span class="p">,</span> <span class="n">image_source</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;cuda:0&#39;</span><span class="p">)</span>
+        <span class="n">masks</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">sam_predictor</span><span class="o">.</span><span class="n">predict_torch</span><span class="p">(</span>
+            <span class="n">point_coords</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">point_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">boxes</span><span class="o">=</span><span class="n">transformed_boxes</span><span class="p">,</span>
+            <span class="n">multimask_output</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">show_indv</span><span class="p">:</span>
+            <span class="n">annotated_frame_with_mask</span> <span class="o">=</span> <span class="n">show_mask</span><span class="p">(</span><span class="n">masks</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">annotated_frame</span><span class="p">)</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span><span class="n">annotated_frame_with_mask</span><span class="p">)</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">img</span><span class="p">),</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_RGB2BGR</span><span class="p">)</span>
+            <span class="n">img_frame_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+            <span class="c1">#_showImages(show=True, images=[img],titles=[&quot;Annotated Frames with Mask&quot;])</span>
+
+        <span class="c1"># if we didn&#39;t get any segments, skip</span>
+        <span class="k">if</span> <span class="n">masks</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">nelement</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">_bprint</span><span class="p">(</span><span class="n">print_details</span><span class="p">,</span> <span class="s2">&quot;No masks predicted, skipping...&quot;</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="n">_bprint</span><span class="p">(</span><span class="n">print_details</span><span class="p">,</span> <span class="s2">&quot;Applying strategy...&quot;</span><span class="p">)</span>
+        <span class="c1"># this strategy simply saves the first mask</span>
+        <span class="k">if</span> <span class="n">strategy</span> <span class="o">==</span> <span class="s2">&quot;prompt1&quot;</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">tensor_to_img</span><span class="p">(</span><span class="n">masks</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="c1"># this strategy saves the first mask with ALL subsequent masks removed from it</span>
+        <span class="k">if</span> <span class="n">strategy</span> <span class="o">==</span> <span class="s2">&quot;remove_prompt2_from1&quot;</span><span class="p">:</span>
+
+            <span class="c1"># get the first (prompt1) mask</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">tensor_to_img</span><span class="p">(</span><span class="n">masks</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+            <span class="c1">#cv2.imshow(&quot;prompt1_mask&quot;, mask)</span>
+            <span class="c1">#cv2.waitKey(0)</span>
+
+            <span class="c1"># if more than 1 mask, collate subsequent masks</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">masks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">prompt2_mask</span> <span class="o">=</span> <span class="n">tensor_to_img</span><span class="p">(</span><span class="n">masks</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+                <span class="c1">#cv2.imshow(&quot;class2_init&quot;, class2_mask)</span>
+                <span class="c1">#cv2.waitKey(0)</span>
+
+                <span class="c1"># for each mask of class 2</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">masks</span><span class="p">)):</span>
+                    <span class="n">mask_to_add</span> <span class="o">=</span> <span class="n">tensor_to_img</span><span class="p">(</span><span class="n">masks</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                    <span class="c1">#cv2.imshow(&quot;class2_to_add&quot;, mask_to_add)</span>
+                    <span class="c1">#cv2.waitKey(0)</span>
+                    <span class="n">prompt2_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">prompt2_mask</span><span class="p">,</span> <span class="n">mask_to_add</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span>
+                    <span class="c1">#cv2.imshow(&quot;class2_with_add&quot;, prompt2_mask)</span>
+                    <span class="c1">#cv2.waitKey(0)</span>
+
+                <span class="c1">#cv2.imshow(&quot;1&quot;, prompt2_mask)</span>
+                <span class="c1">#cv2.waitKey(0)</span>
+
+                <span class="c1"># remove the prompt2_mask from the original prompt 1 mask</span>
+                <span class="c1"># taking the AND of the prompt 1 mask and the NOT prompt2_mask accomplishes this</span>
+                <span class="n">mask</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">bitwise_and</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">bitwise_not</span><span class="p">(</span><span class="n">prompt2_mask</span><span class="p">))</span>
+
+            <span class="c1">#cv2.imshow(&quot;final&quot;, mask)</span>
+            <span class="c1">#cv2.waitKey(0)</span>
+
+        <span class="c1"># if mask is all black (empty) skip</span>
+        <span class="k">if</span> <span class="n">cv2</span><span class="o">.</span><span class="n">countNonZero</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">_bprint</span><span class="p">(</span><span class="n">print_details</span><span class="p">,</span> <span class="s2">&quot;Empty mask, skipping...&quot;</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">show_indv</span><span class="p">:</span>
+            <span class="n">mask_raw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+            <span class="c1">#_showImages(show=True, images=[mask], titles=[&quot;Mask&quot;])</span>
+
+        <span class="c1"># erode mask</span>
+        <span class="k">if</span> <span class="n">erode_kernel_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">_bprint</span><span class="p">(</span><span class="n">print_details</span><span class="p">,</span> <span class="s2">&quot;Eroding mask...&quot;</span><span class="p">)</span>
+            <span class="n">kernel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">erode_kernel_size</span><span class="p">,</span> <span class="n">erode_kernel_size</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">erode</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">kernel</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">show_indv</span><span class="p">:</span>
+                <span class="n">mask_eroded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+                <span class="c1">#_showImages(show=True, images=[mask], titles=[&quot;Eroded Mask&quot;])</span>
+
+        <span class="c1"># keep only the largest component in the image, removing tiny blips</span>
+        <span class="k">if</span> <span class="n">remove_islands</span><span class="p">:</span>
+            <span class="c1"># keep only biggest contour (i.e. remove islands from mask)</span>
+            <span class="n">_bprint</span><span class="p">(</span><span class="n">print_details</span><span class="p">,</span> <span class="s2">&quot;Removing islands from mask...&quot;</span><span class="p">)</span>
+            <span class="n">contours</span><span class="p">,</span> <span class="n">hierarchy</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">findContours</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">RETR_LIST</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">CHAIN_APPROX_SIMPLE</span><span class="p">)</span>
+
+            <span class="c1"># if no contour found, skip</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">contours</span><span class="p">:</span>
+                <span class="n">_bprint</span><span class="p">(</span><span class="n">print_details</span><span class="p">,</span> <span class="s2">&quot;No contour found when removing islands, skipping...&quot;</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># empty image and fill with big contour</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">drawContours</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="n">contours</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">)],</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="n">thickness</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">show_indv</span><span class="p">:</span>
+                <span class="n">mask_islands</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+                <span class="n">raw_segment</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">bitwise_and</span><span class="p">(</span><span class="n">img_raw</span><span class="p">,</span> <span class="n">img_raw</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">))</span>
+                <span class="n">_showImages</span><span class="p">(</span><span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">images</span><span class="o">=</span><span class="p">[</span><span class="n">img_raw</span><span class="p">,</span><span class="n">img_frame</span><span class="p">,</span><span class="n">img_frame_mask</span><span class="p">,</span> <span class="n">mask_eroded</span><span class="p">,</span> <span class="n">mask_islands</span><span class="p">,</span> <span class="n">raw_segment</span><span class="p">],</span>
+                            <span class="n">titles</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Start Image&quot;</span><span class="p">,</span> <span class="s2">&quot;Image w/ Frame&quot;</span><span class="p">,</span> <span class="s2">&quot;Image with Mask&quot;</span><span class="p">,</span> <span class="s2">&quot;Eroded Mask&quot;</span><span class="p">,</span> <span class="s2">&quot;Islands-Removed Mask&quot;</span><span class="p">,</span> <span class="s2">&quot;Raw Segment&quot;</span><span class="p">],</span>
+                            <span class="n">title_fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
+
+        <span class="n">_bprint</span><span class="p">(</span><span class="n">print_details</span><span class="p">,</span> <span class="s2">&quot;Writing final mask...&quot;</span><span class="p">)</span>
+        <span class="n">dest</span> <span class="o">=</span> <span class="n">data_folder</span> <span class="o">+</span> <span class="s2">&quot;/masks/&quot;</span> <span class="o">+</span> <span class="n">img_ids</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;_mask.png&quot;</span>
+        <span class="n">cv2</span><span class="o">.</span><span class="n">imwrite</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>
+
+    <span class="c1"># if show, show a sample of the masks we got</span>
+    <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
+        <span class="n">masks</span> <span class="o">=</span> <span class="p">[</span><span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">data_folder</span> <span class="o">+</span> <span class="s2">&quot;/masks/&quot;</span> <span class="o">+</span> <span class="nb">id</span> <span class="o">+</span> <span class="s2">&quot;_mask.png&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">img_ids</span><span class="p">]</span>
+        <span class="n">masks</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">masks</span><span class="p">,</span><span class="mi">12</span><span class="p">)</span>
+        <span class="n">_showImages</span><span class="p">(</span><span class="n">show</span><span class="p">,</span><span class="n">masks</span><span class="p">,</span><span class="n">maintitle</span><span class="o">=</span><span class="s2">&quot;Sample Masks&quot;</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.220ee61c.min.js"></script>
+      
+    
+  </body>
+</html>
