@@ -1,2 +1,0 @@
-from bigcrittercolor.morphcluster.inferClusterViewsMorphs import inferClusterViewsMorphs
-

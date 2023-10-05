@@ -1,2 +1,1 @@
-from bigcrittercolor.imgdownload.downloadiNatImageData import downloadiNatImageData
 from bigcrittercolor.imgdownload.downloadiNatRandImgs import downloadiNatRandImgs

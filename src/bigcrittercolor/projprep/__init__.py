@@ -1,2 +1,1 @@
-from bigcrittercolor.projprep.createBCCDataFolder import createBCCDataFolder
 from bigcrittercolor.projprep.printBCCDataStatus import printBCCDataStatus

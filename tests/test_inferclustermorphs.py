@@ -1,4 +1,4 @@
-from bigcrittercolor.morphcluster import inferClusterViewsMorphs
+#from bigcrittercolor.morphcluster import inferClusterViewsMorphs
 import os
 
 def test_inferclustermorphs():

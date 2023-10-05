@@ -1,0 +1,5 @@
+from bigcrittercolor.createBCCDataFolder import createBCCDataFolder
+from bigcrittercolor.downloadiNatImageData import downloadiNatImageData
+from bigcrittercolor.inferMasks import inferMasks
+from bigcrittercolor.clusterExtractSegs import clusterExtractSegs
+from bigcrittercolor.clusterColorsToPatterns import clusterColorsToPatterns

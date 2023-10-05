@@ -49,7 +49,7 @@ def downloadiNatRandImgs(n, seed=30, n_before_hr_wait=70, inat_csv_location='', 
                 result = result.get('url')
 
                 # replace square with original to get full size
-                #result = result.replace("square", "original")
+                # result = result.replace("square", "original")
                 result = result.replace("square", "medium")
                 img = requests.get(result).content
                 file = open(data_folder + "/all_images/INATRANDOM-" + str(i) + ".jpg", "wb")

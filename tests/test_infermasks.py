@@ -1,4 +1,4 @@
-from bigcrittercolor.segmentation import inferMasks
+from bigcrittercolor.segment import inferMasks
 import os
 
 def test_infermasks():
@@ -17,4 +17,8 @@ def test_infermasksindv():
                show_indv=True, print_steps=True, print_details=True,
                data_folder="E:/aeshna_data")
 
-test_infermasksindv()
+def test_inferMasksCpu():
+    inferMasks(gpu=False, img_ids=None,skip_existing=False,data_folder="D:/GitProjects/bigcrittercolor/tests/dummy_bcc_folder",
+               text_prompt="dragonfly", strategy="prompt1", erode_kernel_size=3, show=True, show_indv=True,print_details=True)
+
+test_inferMasksCpu()

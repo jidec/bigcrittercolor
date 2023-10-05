@@ -71,11 +71,12 @@ def _showImages(show, images, titles=None, maintitle=None, list_cmaps=None, grid
 
         for i in range(num_images):
             img = list_images[i]
-            title = list_titles[i] if list_titles is not None else str(i) #'Image %d' % (i)
+            title = list_titles[i] if list_titles is not None else None #str(i) #'Image %d' % (i)
             cmap = list_cmaps[i] if list_cmaps is not None else (None if img_is_color(img) else 'gray')
 
             list_axes[i].imshow(img, cmap=cmap)
-            list_axes[i].set_title(title, fontsize=title_fontsize)
+            if title is not None:
+                list_axes[i].set_title(title, fontsize=title_fontsize)
             list_axes[i].grid(grid)
 
         for i in range(num_images, len(list_axes)):
@@ -88,7 +89,9 @@ def _showImages(show, images, titles=None, maintitle=None, list_cmaps=None, grid
         fig.tight_layout()
         # add maintitle to top of plt
         if maintitle is not None:
-            plt.suptitle(maintitle,fontsize=40,horizontalalignment='left', verticalalignment='top')
+            fig.subplots_adjust(top=0.85)
+            fig.suptitle(maintitle,fontsize=30)
+            #plt.suptitle(maintitle,fontsize=40)#,horizontalalignment='left', verticalalignment='top')
         _ = plt.show()
         # author: "stackoverflowuser2010"
 

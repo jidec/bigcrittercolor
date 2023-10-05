@@ -17,22 +17,17 @@ from PIL import Image, ImageOps
 # allow full overlap rather than blending
 
 def makeCollage(imgs,n_per_row,resize_wh=(100,100),white_bg=False,overlap_wh=None,rotation=None,rot_jitter=0,show=False):
-    """
-       Create a collage, a set of images stitched together
-       Args allow for a variety of arrangements
-
-       :param list imgs: a list of images to stitch
-       :param tuple resize_wh: a tuple where the first element is the width to resize all images to,
-        and the second is the height to resize all images to,
-       :param int n_per_row: num images per row of the collage
-       :param bool white_bg: whether background should be white - if False background is black
-       :param tuple overlap_wh: a tuple containing the horizontal and vertical distances in pixels
-        that images are pushed into overlap - can make collages look prettier
+    """ Create a collage, a set of images stitched together. Args allow for a variety of arrangements
+        Args:
+            imgs (list): a list of images to stitch
+            resize_wh (tuple): a tuple where the first element is the width to resize all images to, and the second is the height to resize all images to,
+            n_per_row (int): num images per row of the collage
+            white_bg (bool): whether background should be white - if False background is black
+            overlap_wh (tuple): a tuple containing the horizontal and vertical distances in pixels that images are pushed into overlap - can make collages look prettier
     """
 
     # resize all images
     imgs = [cv2.resize(im,resize_wh) for im in imgs]
-    print(len(imgs))
     collage = None
 
     # if int rotation specified, rotate
@@ -54,7 +49,6 @@ def makeCollage(imgs,n_per_row,resize_wh=(100,100),white_bg=False,overlap_wh=Non
 
         # if length of the new row is a multiple of n per row
         if len(row_imgs) % n_per_row == 0:
-            print("Adding and resetting row")
             # make a collage of the new row
             if overlap_wh is None:
                 row_collage = cv2.hconcat(row_imgs)

@@ -17,3 +17,5 @@ scipy~=1.8.1
 clip~=1.0
 ultralytics~=8.0.120
 groundingdino~=0.1.0
+transformers
+addict
