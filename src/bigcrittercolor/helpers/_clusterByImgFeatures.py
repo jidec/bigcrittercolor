@@ -165,7 +165,7 @@ def _clusterByImgFeatures(imgs, feature_extractor="resnet18", cluster_algo="kmea
                 cluster_imgs = [makeCollage.makeCollage([img, segment], n_per_row=2) for img, segment in zip(cluster_imgs, segments)]
 
             # visualize them for the user
-            _showImages(show, cluster_imgs, titles=None,maintitle= "Cluster " + str(cluster_label) + ", " + str(n_imgs_in_cluster) + "images")
+            _showImages(show, cluster_imgs, titles=None,maintitle= "Cluster " + str(cluster_label) + ", " + str(n_imgs_in_cluster) + " images")
 
     # return labels
     return labels

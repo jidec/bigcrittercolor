@@ -1,7 +1,10 @@
 import cv2
 
-# narrow a binary image to a bounding rect around the white portion
+# narrow a BGR binary image to a bounding rect around the white portion
 def _narrowToBoundingRect(img, return_img_and_bb=False):
+  if len(img.shape) == 2:
+    return img
+
   img_binary = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
   
   # create bounding rect around img

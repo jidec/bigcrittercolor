@@ -80,19 +80,19 @@ def clusterExtractSegs(img_ids=None, sample_n=None,
         # keep in mind that currently these filters include verticalize I believe
         # prop filter
         if filter_prop_img_minmax is not None:
-            if not _blobPassesFilter(mask, prop_img_minmax=filter_prop_img_minmax, show=show_indv):
+            if not _blobPassesFilter(mask, prop_img_minmax=filter_prop_img_minmax, prevert=used_aux_segmodel, show=show_indv):
                 failed_prop_ids.append(id)
                 continue
 
         # vert hw ratio filter
         if filter_hw_ratio_minmax is not None:
-            if not _blobPassesFilter(mask, hw_ratio_minmax=filter_hw_ratio_minmax, prevert=False, show=show_indv):
+            if not _blobPassesFilter(mask, hw_ratio_minmax=filter_hw_ratio_minmax, prevert=used_aux_segmodel, show=show_indv):
                 failed_hw_ids.append(id)
                 continue
 
         # sym filter
         if filter_symmetry_min is not None:
-            if not _blobPassesFilter(mask, rot_invar_sym_min=filter_symmetry_min, show=show_indv):
+            if not _blobPassesFilter(mask, rot_invar_sym_min=filter_symmetry_min, prevert=used_aux_segmodel, show=show_indv):
                 failed_sym_ids.append(id)
                 continue
 
@@ -118,7 +118,7 @@ def clusterExtractSegs(img_ids=None, sample_n=None,
     # otherwise we would get the raw segs then either greyscale or binarize them
     # note that make_3channel is True because verticalizeImg takes 3 channel images
     if used_aux_segmodel:
-        segs = _readBCCImgs(img_ids=mask_ids,type="masks",color_format=color_format_to_cluster,make_3channel=True, data_folder=data_folder)
+        segs = _readBCCImgs(img_ids=mask_ids,type="mask",color_format=color_format_to_cluster,make_3channel=True, data_folder=data_folder)
     else:
         segs = _readBCCImgs(img_ids=mask_ids,type="raw_seg",color_format=color_format_to_cluster,make_3channel=True,data_folder=data_folder)
 

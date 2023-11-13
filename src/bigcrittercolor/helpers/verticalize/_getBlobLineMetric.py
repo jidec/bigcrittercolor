@@ -17,6 +17,12 @@ def _get_blob_line_overlap_sym(binary_img,line,show=False):
     left_side = _narrowToBoundingRect(vert_img[:, :cX])
     right_side = _narrowToBoundingRect(np.fliplr(vert_img[:, cX:]))
     h, w = left_side.shape[:2]
+    if right_side is None or w <= 0 or h <= 0:
+        return 0
+    if w is None or h is None:
+        return 0
+    if right_side.shape[0] == 0 or right_side.shape[1] == 0:
+        return 0
     right_side = cv2.resize(right_side, (w, h))
     overlap = np.sum(np.bitwise_and(left_side, right_side))
 

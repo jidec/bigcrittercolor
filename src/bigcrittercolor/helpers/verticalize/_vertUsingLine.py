@@ -68,6 +68,10 @@ def _vertUsingLine(img, line, return_img_and_line=False, show=False):
     if return_img_and_line:
       line_img = cv2.warpAffine(line_img, M, (nW, nH))
       y_coords, x_coords = np.where(line_img == 255)
+
+      if y_coords is None or y_coords.size == 0:
+        return img
+
       max_index = np.argmax(y_coords)
       min_index = np.argmin(y_coords)
 

@@ -49,6 +49,9 @@ def _getLinesAcrossBlob(greyu8_img, strategy="polygon", poly_epsilon_mult=0.01,
             # get the biggest contour and fit an ellipse to it
             big_contour = max(contours, key=cv2.contourArea)
 
+            if len(big_contour) < 5:
+                return None
+
             big_ellipse = cv2.fitEllipse(big_contour)
 
             # get params from ellipse

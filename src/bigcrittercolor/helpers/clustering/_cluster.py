@@ -17,7 +17,8 @@ def _cluster(values, algo="kmeans", n=3,
              eps = 0.1,
              min_samples = 24,
              show=True,
-             outlier_percentile=None, return_fuzzy_probs=False):
+             outlier_percentile=None, return_fuzzy_probs=False,
+             return_values_as_centroids=False):
     if show:
         #if values.shape[1] > 3:
         scaled = StandardScaler().fit_transform(values)
@@ -64,12 +65,14 @@ def _cluster(values, algo="kmeans", n=3,
                 plt.figure(figsize=(8, 6))
                 dendrogram = hierarchy.dendrogram(clusters)
                 # Plotting a horizontal line based on the first biggest distance between clusters
-                plt.axhline(150, color='red', linestyle='--');
+                plt.axhline(150, color='red', linestyle='--')
                 # Plotting a horizontal line based on the second biggest distance between clusters
-                plt.axhline(100, color='crimson');
+                plt.axhline(100, color='crimson')
+                plt.show()
+
             model = AgglomerativeClustering(n_clusters=n)
         case "dbscan":
-            model = DBSCAN(eps=params_dict['eps'], min_samples=params_dict['min_samples'])#, #algorithm='ball_tree')  # , metric='manhattan')
+            model = DBSCAN(eps=eps, min_samples=min_samples)#, #algorithm='ball_tree')  # , metric='manhattan')
 
     if return_fuzzy_probs:
         # Get the probabilities of belonging to each cluster
@@ -103,5 +106,21 @@ def _cluster(values, algo="kmeans", n=3,
         return labels
 
     labels = model.fit_predict(values)
+
+    if return_values_as_centroids:
+        labels = np.array(labels)  # Convert labels to a numpy array
+        values = np.array(values)
+        unique_labels = np.unique(labels)
+        centroids = {}
+        print(type(values))
+        print(type(labels))
+        print(values.shape)
+        print(labels.shape)
+        for label in unique_labels:
+            centroids[label] = np.mean(values[labels == label], axis=0)
+
+        values_centroids = np.array([centroids[label] for label in labels])
+
+        return values_centroids
 
     return labels

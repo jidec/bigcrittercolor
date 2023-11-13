@@ -9,4 +9,4 @@ def _blackBgToTransparent(img):
     # Set the alpha channel to fully transparent for black pixels
     img[(img[:, :, 0] == 0) & (img[:, :, 1] == 0) & (img[:, :, 2] == 0), 3] = 0
 
-    return(img)
+    return img

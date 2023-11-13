@@ -2,11 +2,12 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import cv2
 import colorsys
+import numpy as np
 
-def plotPixels(img,img_colorspace="rgb", centroids=None):
+def plotPixels(img,img_colorspace="rgb", sample_n=2000, centroids=None):
     #convert from BGR to RGB
     if img_colorspace == "rgb":
-        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     #hls2rgb = cv2.cvtColor(img, cv2.COLOR_RGB2HLS)
     lab2rgb = cv2.cvtColor(img, cv2.COLOR_RGB2LAB) / 255
 
@@ -29,6 +30,12 @@ def plotPixels(img,img_colorspace="rgb", centroids=None):
     g = g.flatten()
     b = b.flatten()
 
+    if sample_n is not None:
+        indices = np.random.choice(len(r), size=sample_n, replace=False)
+        r = r[indices]
+        g = g[indices]
+        b = b[indices]
+        pixels = [pixels[i] for i in indices]
     #plotting
     fig = plt.figure()
     ax = Axes3D(fig)
@@ -36,7 +43,8 @@ def plotPixels(img,img_colorspace="rgb", centroids=None):
 
     if centroids is not None:
         ax.scatter(centroids[:,0],centroids[:,1],centroids[:,2],s=600,c='black',marker='x')
-    plt.show()
 
-img = cv2.imread('D:/GitProjects/bigcrittercolor/tests/dummy_bcc_folder/segments/INAT-78524810-1_segment.png')
-plotPixels(img, img_colorspace="rgb")
+    ax.set_xlabel('Red')
+    ax.set_ylabel('Blue')
+    ax.set_zlabel('Green')
+    plt.show()
