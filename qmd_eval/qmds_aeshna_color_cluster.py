@@ -1,9 +1,9 @@
-from bigcrittercolor import clusterColorsToPatterns2
+from bigcrittercolor import clusterColorsToPatterns
 from bigcrittercolor.helpers import _getIDsInFolder
 import random
 
-ids = _getIDsInFolder("E:/aeshna_data/patterns/preclust")
-ids = random.sample(ids,500)
-clusterColorsToPatterns2(img_ids=ids,vert_resize=100,cluster_algo="kmeans",
-                         data_folder="E:/aeshna_data",cluster_n=5, preclust_read_subfolder="preclust", preclustered=True,
-                         group_cluster_raw_ids=True,show_indv=False,print_details=True)
+#ids = _getIDsInFolder("E:/aeshna_data/segments")
+#ids = random.sample(ids,200)
+clusterColorsToPatterns(data_folder="E:/aeshna_data",colorspace="cielab",
+                        cluster_args={'n':11, 'algo':"kmeans", 'scale':True,'merge_with_user_input':True,'linkage':"complete"},
+                        blur_args={'type':"bilateral",'d':9, 'sigma_color':150, 'sigma_space':150},show_indv=False)

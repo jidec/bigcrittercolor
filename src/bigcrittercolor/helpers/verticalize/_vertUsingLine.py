@@ -8,7 +8,7 @@ from bigcrittercolor.helpers import _showImages
 # input image must be RGB, BGR, or 3-channel greyscale
 def _vertUsingLine(img, line, return_img_and_line=False, show=False):
 
-  _showImages._showImages(show,img,"Image to Vert")
+  _showImages(show,img,"Image to Vert")
 
   # create empty image and draw line
   line_img = np.zeros_like(img, dtype=np.uint8)
@@ -63,7 +63,7 @@ def _vertUsingLine(img, line, return_img_and_line=False, show=False):
 
     # warp image to new rotation
     vert_img = cv2.warpAffine(img, M, (nW, nH))
-    _showImages._showImages(show, [img, line_img, hough_img,vert_img], ["Image", "Line Image", "Hough Image","Vert Image"])
+    _showImages(show, [img, line_img, hough_img,vert_img], ["Image", "Line Image", "Hough Image","Vert Image"])
 
     if return_img_and_line:
       line_img = cv2.warpAffine(line_img, M, (nW, nH))

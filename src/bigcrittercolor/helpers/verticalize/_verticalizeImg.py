@@ -60,10 +60,10 @@ def _verticalizeImg(img, lines_strategy="skeleton_hough", best_line_metric="over
         flipped, has_flipped = _flipHeavyToTop(img, return_img_flip=True)
         img = np.copy(flipped)
         if bound:
-            _showImages._showImages(show, [start_img, img_vert, bounded, flipped],
+            _showImages(show, [start_img, img_vert, bounded, flipped],
                     titles=["Start", "Verticalized", "Bounded", "Flipped"])
         else:
-            _showImages._showImages(show, [start_img, img_vert, flipped],
+            _showImages(show, [start_img, img_vert, flipped],
                         titles=["Start", "Verticalized", "Flipped"])
 
     if return_img_bb_flip:

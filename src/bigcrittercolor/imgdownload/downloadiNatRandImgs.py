@@ -7,7 +7,7 @@ from datetime import datetime
 import random
 from bigcrittercolor.helpers import _bprint
 
-def downloadiNatRandImgs(n, seed=30, n_before_hr_wait=70, inat_csv_location='', sep=" ", print_steps=True, data_folder=''):
+def downloadiNatRandImgs(n, seed=None, n_before_hr_wait=60, inat_csv_location='', sep=" ", print_steps=True, data_folder=''):
     """
         Download random single images - typically used for creating generalized sets for testing
 
@@ -19,7 +19,8 @@ def downloadiNatRandImgs(n, seed=30, n_before_hr_wait=70, inat_csv_location='', 
     data = pd.read_csv(inat_csv_location,sep=sep)
 
     _bprint(print_steps, "Picking " + str(n) + " random observations...")
-    random.seed(seed)
+    if seed is not None:
+        random.seed(seed)
     #ids = random.sample(data, n)['catalogNumber']
     ids = data.sample(n, random_state=seed)['catalogNumber']
 

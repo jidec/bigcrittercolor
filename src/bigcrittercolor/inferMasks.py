@@ -189,7 +189,7 @@ def inferMasks(img_ids=None, skip_existing=True, gpu=True,
             continue
 
         # when showing results for individual images, we hold onto a list of tuples that is expanded when a new modification is made
-        show_indv_data = [(img_raw,"Start Images"),(img_frame,"Image w/ Frame"),(img_frame_mask,"Image with Mask")]
+        show_indv_data = [(img_raw,"Start Image"),(img_frame,"Image w/ Frame"),(img_frame_mask,"Image with Mask")]
 
         # erode mask
         if erode_kernel_size > 0:
@@ -229,7 +229,7 @@ def inferMasks(img_ids=None, skip_existing=True, gpu=True,
 
             # get the segment SAM gave us and verticalize it
             sam_seg = cv2.bitwise_and(img_raw, img_raw, mask=mask.astype(np.uint8))
-            sam_seg = cv2.resize(sam_seg, (sam_seg.shape[1] // 2, sam_seg.shape[0] // 2))
+            #sam_seg = cv2.resize(sam_seg, (sam_seg.shape[1] // 2, sam_seg.shape[0] // 2))
             sam_seg_vert = _verticalizeImg(sam_seg, **auxseg_normalize_params_dict)
 
             show_indv_data.append((sam_seg_vert,"Normalized SAM Seg"))

@@ -1,6 +1,6 @@
 import cv2
 
-# input must be a BGR image
+# converts a 3-channel BGR or RGB image to a 4-channel PNG by making completely black pixels transparent
 def _blackBgToTransparent(img):
     # Make sure the image has an alpha channel
     if img.shape[2] < 4:

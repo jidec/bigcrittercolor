@@ -10,4 +10,8 @@ from bigcrittercolor.helpers.image._maskIsEmpty import _maskIsEmpty
 from bigcrittercolor.helpers.image._resizeImgToTotalDim import _resizeImgToTotalDim
 from bigcrittercolor.helpers.image._resizeImgsToAvgSize import _resizeImgsToAvgSize
 from bigcrittercolor.helpers.image._resizeImgToProp import _resizeImgToProp
-from bigcrittercolor.helpers.image._greyTo3ChannelGrey import _greyTo3ChannelGrey
+from bigcrittercolor.helpers.image._imgToColorPatches import _imgToColorPatches
+from bigcrittercolor.helpers.image._reconstructImgFromPPD import _reconstructImgFromPPD
+from bigcrittercolor.helpers.image._blur import _blur
+from bigcrittercolor.helpers.image._equalize import _equalize
+from bigcrittercolor.helpers.image._format import _format

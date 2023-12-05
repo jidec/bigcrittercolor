@@ -29,7 +29,7 @@ def _get_blob_line_overlap_sym(binary_img,line,show=False):
     symmetry_score = overlap / (np.sum(left_side) + np.sum(right_side))
     symmetry_score = round(symmetry_score, 2)
 
-    _showImages._showImages(show, [left_side, right_side, vert_img], ["Left","Right",str(symmetry_score) + " sym"])
+    _showImages(show, [left_side, right_side, vert_img], ["Left","Right",str(symmetry_score) + " sym"])
 
     return symmetry_score
 

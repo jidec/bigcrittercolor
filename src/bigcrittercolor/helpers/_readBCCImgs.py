@@ -1,9 +1,9 @@
 import cv2
 import numpy as np
 from bigcrittercolor.helpers import _getIDsInFolder
-from bigcrittercolor.helpers.image import _segToMask, _greyTo3ChannelGrey
+from bigcrittercolor.helpers.image import _segToMask, _format
 
-def _readBCCImgs(img_ids=None, type="img", color_format=None, make_3channel=False, print=False, show=False, data_folder=''):
+def _readBCCImgs(img_ids=None, type="img", color_format=None, make_3channel=False, print_steps=False, show=False, data_folder=''):
     if img_ids is None:
         img_ids = _getIDsInFolder(data_folder + "/masks")
     was_single =False
@@ -24,7 +24,10 @@ def _readBCCImgs(img_ids=None, type="img", color_format=None, make_3channel=Fals
             del imgs
             del masks
             segs = []
+            i = 0
             for img, mask in imgs_masks:
+                print(img_ids[i])
+                i = i + 1
                 #if img is not None and mask is not None:
                 segs.append(cv2.bitwise_and(img, img, mask=cv2.cvtColor(mask, cv2.COLOR_RGB2GRAY).astype(np.uint8)))
             imgs = segs
@@ -43,7 +46,7 @@ def _readBCCImgs(img_ids=None, type="img", color_format=None, make_3channel=Fals
 
     if make_3channel:
         if len(imgs[0].shape) == 2:
-            imgs = [_greyTo3ChannelGrey(img) for img in imgs]
+            imgs = [_format(img, 'grey', 'grey3', False) for img in imgs]
 
     if was_single:
         imgs = imgs[0]

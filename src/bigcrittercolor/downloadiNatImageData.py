@@ -6,8 +6,9 @@ import shutil
 from pathlib import Path
 from bigcrittercolor.helpers import _bprint, _inat_dl_helpers
 
-def downloadiNatImageData(taxa_list, lat_lon_box=None, usa_only=True, img_size="medium",
+def downloadiNatImageData(taxa_list, lat_lon_box=None, usa_only=False, img_size="medium",
                           skip_existing=True, print_steps=True,
+                          n_per_taxon=None,
                           data_folder='../..'):
     """ Download iNat images and data by genus or species.
         This method downloads records then refers to those records to download in parallel.
@@ -31,6 +32,19 @@ def downloadiNatImageData(taxa_list, lat_lon_box=None, usa_only=True, img_size="
         _bprint(print_steps,"Retrieving records for taxon " + taxon + "...")
         _inat_dl_helpers.getiNatRecords(taxon=taxon,research_only=True,lat_lon_box=lat_lon_box,img_size=img_size,data_folder=data_folder)
 
+        # n_per_taxon does not work as expected currently
+        if n_per_taxon is not None:
+            # read in records for taxon
+            records = pd.read_csv(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '.csv')
+            full_taxon_records = records.copy()
+
+            # sample
+            if len(records) > n_per_taxon:
+                records = records.sample(n_per_taxon)
+            # replace records with new trimmed records
+            records.to_csv(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '.csv', index=False,
+                           mode='w+')
+
         # if skipping existing (not redownloading), remove already downloaded images from the records
         if skip_existing:
             _bprint(print_steps, "Skipping existing already downloaded images...")
@@ -52,7 +66,6 @@ def downloadiNatImageData(taxa_list, lat_lon_box=None, usa_only=True, img_size="
 
             # replace records with new trimmed records
             records.to_csv(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '.csv',index=False,mode='w+')
-
 
         # create the dir for split records if it doesn't exist
         split_dir = data_folder + '/other/inat_download_records/iNat_images-' + taxon + '-records_split'
