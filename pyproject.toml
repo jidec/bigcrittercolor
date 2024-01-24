@@ -20,8 +20,9 @@ dependencies = [
     "requests", # used in downloader
     "pandas", "numpy", "matplotlib", "scipy",
     "opencv-python", "pillow", "scikit-image",
-    "scikit-learn", "torch", "torchvision",
+    "scikit-learn",
     "diffusers", "huggingface-hub", # groundedSAM dependencies
+    #"torch", "torchvision",
     #"segment-anything@git+https://github.com/facebookresearch/segment-anything",
     #"ninja", "setuptools", "GroundingDINO@git+https://github.com/IDEA-Research/GroundingDINO",
     'importlib-metadata; python_version<"3.8"'
