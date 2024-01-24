@@ -1,23 +1,27 @@
+import cv2
+import numpy as np
+
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+
 from sklearn.cluster import KMeans, OPTICS, SpectralClustering, AgglomerativeClustering, DBSCAN
 from sklearn.mixture import GaussianMixture
-import matplotlib.pyplot as plt
-from scipy.cluster import hierarchy
-import numpy as np
-from sklearn.cluster import KMeans
-from scipy.spatial import distance
-import numpy as np
-import matplotlib.pyplot as plt
+from sklearn.metrics import calinski_harabasz_score, davies_bouldin_score, silhouette_samples, silhouette_score
+from sklearn.preprocessing import MinMaxScaler
+
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.manifold import TSNE
+
+from scipy.cluster import hierarchy
+from scipy.spatial import distance
+
 from bigcrittercolor.helpers import _scatterColors
-from sklearn.preprocessing import MinMaxScaler
-import cv2
-import matplotlib.patches as patches
 
 # convenience function that wraps several sklearn clusters algorithms and returns labels
 # kmeans, gaussian_mixture, agglom, dbscan
 def _cluster(values, algo="kmeans", n=3,
+             find_n_minmax = None, find_n_metric = "ch",
              eps = 0.1,
              min_samples = 24,
              linkage="ward",
@@ -72,6 +76,43 @@ def _cluster(values, algo="kmeans", n=3,
 
     if weights is not None:
         values = values * weights
+
+    # find n
+    if find_n_minmax is not None:
+        # create a vector of ns to try for knee assessment
+        ns = np.arange(find_n_minmax[0], find_n_minmax[1] + 1)
+
+        models = [KMeans(n).fit(values) for n in ns]
+        #aics = [m.aic(values) for m in models]
+        labels_list = [m.fit_predict(values) for m in models]
+
+        ch_scores = [calinski_harabasz_score(values, l) for l in labels_list]
+        db_scores = [davies_bouldin_score(values, l) for l in labels_list]
+        sil_scores = [silhouette_score(values, l) for l in labels_list]
+
+        if show:
+            plt.plot(ns, ch_scores)
+            plt.title('Calinski-Harabasz Scores')
+            plt.xlabel('Number of clusters')
+            plt.ylabel('CH score')
+            plt.show()
+
+            plt.plot(ns, db_scores)
+            plt.title('Davies-Bouldin Scores')
+            plt.xlabel('Number of clusters')
+            plt.ylabel('DB score')
+            plt.show()
+
+            plt.plot(ns, sil_scores, label='Silhouette score')
+            plt.title('Silhouette Scores')
+            plt.xlabel('Number of clusters')
+            plt.ylabel('Silhouette score')
+            plt.show()
+
+        if find_n_metric == "ch":
+            n = ns[np.argmax(ch_scores)]
+        elif find_n_metric == "db":
+            n = ns[np.argmax(db_scores)]
 
     # create cluster model
     match algo:

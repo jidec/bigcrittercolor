@@ -1,28 +1,15 @@
-import numpy as np
-import cv2
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-import random
-from bigcrittercolor.helpers.image import _format
-
-import random
-import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-
 import random
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
-from mpl_toolkits.mplot3d import Axes3D
 
-def _scatterColors(color_values, input_colorspace, sample_n=500, pt_size=5, cluster_labels=None):
+def _scatterColors(color_values, input_colorspace, sample_n=1000, pt_size=5, cluster_labels=None):
     """
     Plot colors in a specified input color space (HLS or CIELAB or RGB), coloring each point by its actual color
     (converted to RGB if necessary) and changing the marker shape based on cluster ID.
     """
 
-    if sample_n is not None:
+    if sample_n is not None and color_values.shape[0] > sample_n:
         indices = random.sample(range(len(color_values)), sample_n)
         color_values = color_values[indices]
         cluster_labels = [cluster_labels[i] for i in indices]

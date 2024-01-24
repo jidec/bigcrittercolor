@@ -1,4 +1,4 @@
-from bigcrittercolor.helpers.showImages import showImages
+from bigcrittercolor.helpers._showImages import _showImages
 import cv2
 
 def visualizeSegmentPatterns(ids, pattern_dirs=["","grouped"],proj_dir="../.."):
@@ -9,4 +9,4 @@ def visualizeSegmentPatterns(ids, pattern_dirs=["","grouped"],proj_dir="../.."):
         for dir in pattern_dirs:
             pats.append(cv2.imread(pat_path + dir + "/" + id + "_pattern.png"))
 
-        showImages(True, [seg] + pats, ["segment"] + pattern_dirs)
+        _showImages(True, [seg] + pats, ["segment"] + pattern_dirs)

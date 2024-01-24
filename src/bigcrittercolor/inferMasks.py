@@ -1,20 +1,23 @@
-import os, sys
-sys.path.append(os.path.join(os.getcwd(), "GroundingDINO"))
+import cv2
+import numpy as np
 from PIL import Image
+import random
+
 # Grounding DINO
+#sys.path.append(os.path.join(os.getcwd(), "GroundingDINO"))
 from groundingdino.models import build_model
 from groundingdino.util import box_ops
 from groundingdino.util.slconfig import SLConfig
 from groundingdino.util.utils import clean_state_dict
 from groundingdino.util.inference import annotate, load_image, predict
-# segment anything
+
+# SAM
 from segment_anything import build_sam, SamPredictor
-import cv2
-import numpy as np
+
 import torch
 from huggingface_hub import hf_hub_download
+
 from bigcrittercolor.helpers import _bprint, _getIDsInFolder, _showImages
-import random
 from bigcrittercolor.helpers.verticalize import _verticalizeImg
 from bigcrittercolor.helpers.image import _removeIslands
 

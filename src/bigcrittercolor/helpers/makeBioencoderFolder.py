@@ -1,9 +1,9 @@
-from bigcrittercolor.helpers import _readBCCImgs, _getIDsInFolder
 import pandas as pd
 import os
 import cv2
 import shutil
 
+from bigcrittercolor.helpers import _readBCCImgs, _getIDsInFolder
 def makeBioencoderFolder(data_folder, min_imgs_per_class=50):
     # get ids of images i.e. INAT-31231-2
     img_ids = _getIDsInFolder(data_folder + "/segments")

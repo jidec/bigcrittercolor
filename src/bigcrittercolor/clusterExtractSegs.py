@@ -1,9 +1,10 @@
-from bigcrittercolor.helpers.verticalize import _verticalizeImg
 import numpy as np
 import cv2
+import random
+
+from bigcrittercolor.helpers.verticalize import _verticalizeImg
 from bigcrittercolor.helpers import _showImages, _bprint, _getIDsInFolder, _readBCCImgs, showBCCImages, _clusterByImgFeatures
 from bigcrittercolor.helpers.image import _blobPassesFilter, _maskIsEmpty
-import random
 
 # Image - the raw starting images, not changed in any way
 # Mask - masks that apply to the original image to yield a segment, created by inferMasks

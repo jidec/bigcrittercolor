@@ -1,6 +1,7 @@
 import cv2
-from bigcrittercolor.helpers import _readBCCImgs, _showImages, _getIDsInFolder, makeCollage
 import random
+
+from bigcrittercolor.helpers import _readBCCImgs, _showImages, _getIDsInFolder, makeCollage
 
 def showBCCImages(img_ids=None, sample_n=None, show_type="img", title="", data_folder=""):
     """ Show bigcrittercolor images, masks, and/or segments in a data folder

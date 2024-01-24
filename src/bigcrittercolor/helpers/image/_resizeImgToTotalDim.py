@@ -1,5 +1,6 @@
 import cv2
 
+# resize an image to a total sum of width and height
 def _resizeImgToTotalDim(img,total_dim):
     h = img.shape[0]
     w = img.shape[1]

@@ -1,4 +1,5 @@
 import cv2
+
 from bigcrittercolor.helpers import _showImages
 
 def _blur(img, type, ksize=5, sigma_x=0, d=9, sigma_color=75, sigma_space=75, auto_adjust_blur=False, show=False):
@@ -14,6 +15,10 @@ def _blur(img, type, ksize=5, sigma_x=0, d=9, sigma_color=75, sigma_space=75, au
     :param sigma_space: Filter sigma in the coordinate space for Bilateral filter.
     :return: Blurred image.
     """
+
+    four_channel_in = img.shape[2] == 4
+    if four_channel_in:
+        img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
 
     # Adjust blur parameters based on image size
     if auto_adjust_blur:
@@ -32,6 +37,9 @@ def _blur(img, type, ksize=5, sigma_x=0, d=9, sigma_color=75, sigma_space=75, au
     elif type == 'bilateral':
         blurred = cv2.bilateralFilter(img, d, sigma_color, sigma_space)
 
+    if four_channel_in:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2BGRA)
+
     _showImages(show, [img, blurred], ['Image', 'Blurred'])
-    
+
     return blurred

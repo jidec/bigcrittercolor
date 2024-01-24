@@ -1,6 +1,6 @@
 import cv2
-import numpy as np
 
+# convert a seg to a mask by setting nonblack pixels to white
 def _segToMask(rgb_img):
     # Convert the image to grayscale
     gray = cv2.cvtColor(rgb_img, cv2.COLOR_BGR2GRAY)

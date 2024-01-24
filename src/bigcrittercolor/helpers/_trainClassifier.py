@@ -1,4 +1,3 @@
-import pandas
 import pandas as pd
 import torch
 import time
@@ -102,7 +101,7 @@ def _trainClassifier(model, dataloaders, dataset_sizes, criterion, optimizer, sc
                 print(classification_report(test_labels, test_preds, target_names=class_names,zero_division=0))
 
                 # create and label confusion matrix
-                cm = pandas.DataFrame(confusion_matrix(test_labels, test_preds, labels=None, sample_weight=None, normalize=None))
+                cm = pd.DataFrame(confusion_matrix(test_labels, test_preds, labels=None, sample_weight=None, normalize=None))
                 cm_colnames = []
                 cm_rownames = []
                 for c in class_names:

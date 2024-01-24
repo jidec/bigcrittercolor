@@ -4,6 +4,7 @@ import time
 from datetime import datetime
 import shutil
 from pathlib import Path
+
 from bigcrittercolor.helpers import _bprint, _inat_dl_helpers
 
 def downloadiNatImageData(taxa_list, lat_lon_box=None, usa_only=False, img_size="medium",

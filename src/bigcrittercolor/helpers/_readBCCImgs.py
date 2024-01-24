@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+
 from bigcrittercolor.helpers import _getIDsInFolder
 from bigcrittercolor.helpers.image import _segToMask, _format
 

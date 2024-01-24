@@ -1,19 +1,20 @@
 from __future__ import print_function, division
 
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from torch.optim import lr_scheduler
 import numpy as np
-import torchvision
-from torchvision import datasets, models, transforms
 import matplotlib.pyplot as plt
 import time
 import os
 import copy
-import os
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.optim import lr_scheduler
+from torchvision import datasets, models, transforms
+
 from bigcrittercolor.helpers import _trainClassifier
-from torchsampler import ImbalancedDatasetSampler #pip install https://github.com/ufoym/imbalanced-dataset-sampler/archive/master.zip
+
+#from torchsampler import ImbalancedDatasetSampler #pip install https://github.com/ufoym/imbalanced-dataset-sampler/archive/master.zip
 
 def _loadTrainClassModel(training_folder, num_epochs, batch_size, num_workers, model_name, data_transforms=None,
                         pretrained_model=models.resnet50(pretrained=True), criterion=nn.modules.loss.CrossEntropyLoss(),loss_matrix_name=None,

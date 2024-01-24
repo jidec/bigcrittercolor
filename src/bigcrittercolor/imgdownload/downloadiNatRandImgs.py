@@ -1,10 +1,10 @@
 import requests
 import json
 import pandas as pd
-from os import listdir
 import time
 from datetime import datetime
 import random
+
 from bigcrittercolor.helpers import _bprint
 
 def downloadiNatRandImgs(n, seed=None, n_before_hr_wait=60, inat_csv_location='', sep=" ", print_steps=True, data_folder=''):

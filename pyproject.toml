@@ -8,7 +8,7 @@ version = "0.1.0"
 authors = [
     {name = "Jacob Idec", email = "jacob.idec@ufl.edu"},
 ]
-description = "Pipeline and tools for extracting organismal color information from iNaturalist images"
+description = "Pipeline and tools for extracting organismal color info from iNaturalist images"
 readme = "README.md"
 requires-python = ">=3.7"
 license = {text = "GPL-3.0-or-later"}
@@ -17,10 +17,20 @@ classifiers = [
     "Programming Language :: Python :: 3",
 ]
 dependencies = [
-    "requests", "pandas", "scikit-learn", "numpy", "opencv-python", "matplotlib", "scikit-image", "scipy",
-     "pillow",
-    'importlib-metadata; python_version<"3.8"',
+    "requests", # used in downloader
+    "pandas", "numpy", "matplotlib", "scipy",
+    "opencv-python", "pillow", "scikit-image",
+    "scikit-learn", "torch", "torchvision",
+    "diffusers", "huggingface-hub", # groundedSAM dependencies
+    #"segment-anything@git+https://github.com/facebookresearch/segment-anything",
+    #"ninja", "setuptools", "GroundingDINO@git+https://github.com/IDEA-Research/GroundingDINO",
+    'importlib-metadata; python_version<"3.8"'
 ]
+
+#[tool.poetry.dependencies]
+#python = "^3.6"
+#my-dependency = { git = "https://github.com/facebookresearch/segment-anything.git", branch = "main" }
+#my-dependency2 = { git = "https://github.com/IDEA-Research/GroundingDINO.git", branch = "main"}
 
 # ... other project metadata fields as specified in:
 #     https://packaging.python.org/en/latest/specifications/declaring-project-metadata/

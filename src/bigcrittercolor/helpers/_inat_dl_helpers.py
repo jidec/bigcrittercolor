@@ -4,8 +4,6 @@
 # to source URIs, iDigBio core IDs, and scientific names.
 
 import os.path
-import csv
-import time
 
 def getDownloadRequests(fpath, img_dir, skip_existing):
     """
@@ -72,8 +70,7 @@ def downloadImages(img_records,imgdir="../../data/other/",no_skip=False,fileout=
 
 import requests
 import csv
-import string
-import time, datetime
+import datetime
 import os.path
 
 base_url = 'https://api.inaturalist.org/v1/'

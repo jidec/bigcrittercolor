@@ -1,5 +1,5 @@
 import numpy as np
-import cv2
+
 from bigcrittercolor.helpers import _showImages
 
 def _reconstructImgFromPPD(ppd, input_colorspace="rgb", is_patch_data=True,show=False):

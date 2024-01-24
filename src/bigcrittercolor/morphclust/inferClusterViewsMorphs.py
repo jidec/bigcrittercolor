@@ -1,7 +1,7 @@
 import pandas as pd
 import cv2
 from bigcrittercolor.helpers import _clusterByImgFeatures, _bprint, _getIDsInFolder, _showImages
-from bigcrittercolor.helpers.imgtransforms import _verticalizeImg
+from bigcrittercolor.helpers.verticalize import _verticalizeImg
 
 def inferClusterViewsMorphs(img_ids, records_group_col="species",
                        print_steps=True, print_details=False, show=True, data_folder=""):
@@ -59,8 +59,8 @@ def inferClusterViewsMorphs(img_ids, records_group_col="species",
             recs_ids = recs['recordID']
             _bprint(print_details, "Got records for group " + g + " and view label " + str(v))
 
-            if show:
-                showIDs(recs_ids,data_folder=data_folder)
+            #if show:
+             #   showIDs(recs_ids,data_folder=data_folder)
 
 
 

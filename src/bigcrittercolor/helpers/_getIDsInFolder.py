@@ -1,4 +1,5 @@
 import os
+
 from bigcrittercolor.helpers import _imgNameToID
 
 def _getIDsInFolder(folder):

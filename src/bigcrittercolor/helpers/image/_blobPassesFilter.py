@@ -1,6 +1,7 @@
-from bigcrittercolor.helpers.verticalize import _verticalizeImg
 import numpy as np
 import cv2
+
+from bigcrittercolor.helpers.verticalize import _verticalizeImg
 
 def _blobPassesFilter(rgb_mask, hw_ratio_minmax=None, prop_img_minmax=None, rot_invar_sym_min=None, prevert=False, show=False):
     """ Given a binary rgb mask containing one blob, return True if it passes the provided filters

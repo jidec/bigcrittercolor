@@ -1,5 +1,6 @@
 import cv2
 
+# resize an image to a proportion of its original size
 def _resizeImgToProp(img, prop):
     # Calculate the new dimensions based on the proportion
     new_width = int(img.shape[1] * prop)

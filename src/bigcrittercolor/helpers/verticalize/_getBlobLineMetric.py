@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+
 from bigcrittercolor.helpers.image import _narrowToBoundingRect
 from bigcrittercolor.helpers.verticalize import _vertUsingLine
 from bigcrittercolor.helpers import _showImages

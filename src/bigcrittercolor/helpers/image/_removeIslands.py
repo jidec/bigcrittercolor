@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 
+# remove contours other than the largest contour
 def _removeIslands(img):
     contours, hierarchy = cv2.findContours(img, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 

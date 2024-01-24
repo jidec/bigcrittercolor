@@ -1,7 +1,6 @@
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-from skimage.filters import roberts
 
 def _showImages(show, images, titles=None, maintitle=None, list_cmaps=None, grid=False, num_cols=3, figsize=(10, 10),
                     title_fontsize=30):

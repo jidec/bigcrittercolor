@@ -1,16 +1,15 @@
-from sklearn.cluster import AffinityPropagation, AgglomerativeClustering, KMeans, SpectralClustering
-import torch
-from torchvision import models, transforms
 import numpy as np
+import cv2
+from PIL import Image
+import random
+
+import torch
+from torch import nn
+from torchvision import models, transforms
+
 from bigcrittercolor.helpers import _showImages, _bprint, makeCollage
 from bigcrittercolor.helpers._readBCCImgs import _readBCCImgs
 from bigcrittercolor.helpers.clustering import _cluster, _findNClusters
-from torch import nn
-import random
-from PIL import Image
-from scipy.cluster import hierarchy
-from matplotlib import pyplot as plt
-import cv2
 from bigcrittercolor.helpers.image import _padImgToSize,_resizeImgToTotalDim
 
 # helper that takes a list of numpy arr images and returns labels clustered by AffinityProp on features

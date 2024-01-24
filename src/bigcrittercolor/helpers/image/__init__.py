@@ -3,7 +3,6 @@ from bigcrittercolor.helpers.image._narrowToBoundingRect import _narrowToBoundin
 from bigcrittercolor.helpers.image._resizeImgsToAvgSize import _resizeImgsToAvgSize
 from bigcrittercolor.helpers.image._cropImgSides import _cropImgSides
 from bigcrittercolor.helpers.image._blobPassesFilter import _blobPassesFilter
-from bigcrittercolor.helpers.image._blackBgToTransparent import _blackBgToTransparent
 from bigcrittercolor.helpers.image._removeIslands import _removeIslands
 from bigcrittercolor.helpers.image._segToMask import _segToMask
 from bigcrittercolor.helpers.image._maskIsEmpty import _maskIsEmpty

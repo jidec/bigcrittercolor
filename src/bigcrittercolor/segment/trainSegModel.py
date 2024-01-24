@@ -1,23 +1,22 @@
-from pathlib import Path
-import click
-import torch
-from sklearn.metrics import f1_score, roc_auc_score
 import copy
 import csv
 import time
 import numpy as np
-import torch
+from PIL import Image
+from pathlib import Path
+from typing import Any, Callable, Optional
 from tqdm import tqdm
+import os
+
+from sklearn.metrics import f1_score, roc_auc_score
+
+import torch
 from torchvision.models.segmentation.deeplabv3 import DeepLabHead
 from torchvision import models
 from torch.utils.data import DataLoader
 from torchvision import transforms
-from pathlib import Path
-from typing import Any, Callable, Optional
-from PIL import Image
 from torchvision.datasets.vision import VisionDataset
 #from torchvision.transforms import AutoAugmentPolicy
-import os
 
 def trainSegModel(training_dir_location, num_epochs=8, batch_size=6, num_workers=0, data_transforms=None, img_color_mode="rgb",
                       criterion = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor(8)), resnet_type="deeplabv3", resnet_size="101", pretrained=True,

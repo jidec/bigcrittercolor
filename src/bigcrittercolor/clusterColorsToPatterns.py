@@ -3,11 +3,10 @@ import numpy as np
 import cv2
 from numpy import unique
 import os
-import colorspacious
 
 from bigcrittercolor.helpers import _bprint, _getIDsInFolder, _showImages
 from bigcrittercolor.helpers.clustering import _cluster
-from bigcrittercolor.helpers.image import _blur, _format, _imgToColorPatches, _blackBgToTransparent, _reconstructImgFromPPD
+from bigcrittercolor.helpers.image import _blur, _format, _imgToColorPatches, _reconstructImgFromPPD
 from bigcrittercolor.helpers.image import _equalize
 
 def clusterColorsToPatterns(img_ids=None, cluster_individually=False, preclustered = False, group_cluster_records_colname = None,

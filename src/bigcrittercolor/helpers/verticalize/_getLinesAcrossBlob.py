@@ -1,10 +1,12 @@
 import cv2
-from bigcrittercolor.helpers.verticalize import _isLineInsidePoly
-from bigcrittercolor.helpers import _showImages
+import numpy as np
 import math
+
 from skimage.morphology import skeletonize
 from skimage import img_as_ubyte
-import numpy as np
+
+from bigcrittercolor.helpers.verticalize import _isLineInsidePoly
+from bigcrittercolor.helpers import _showImages
 
 # Strategies:
 # polygon - simplify blob to a polygon, lines are then all lines between polygon points that don't pass outside the poly
