@@ -7,7 +7,6 @@ from bigcrittercolor.helpers._clusterByImgFeatures import _clusterByImgFeatures
 from bigcrittercolor.helpers._rebuildiNatRecords import _rebuildiNatRecords
 from bigcrittercolor.helpers._loadTrainClassModel import _loadTrainClassModel
 from bigcrittercolor.helpers._trainClassifier import _trainClassifier
-from bigcrittercolor.helpers.showBCCImages import showBCCImages
 from bigcrittercolor.helpers.makeCollage import makeCollage
 from bigcrittercolor.helpers.plotPixels import plotPixels
 from bigcrittercolor.helpers._scatterColors import _scatterColors

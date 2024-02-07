@@ -11,8 +11,8 @@ from bigcrittercolor.helpers.image import _equalize
 
 def clusterColorsToPatterns(img_ids=None, cluster_individually=False, preclustered = False, group_cluster_records_colname = None,
                     by_patches=True, min_patch_pixel_area=10,
-                    cluster_args={'n':3, 'algo':"kmeans"}, use_positions=False,
-                    colorspace = "rgb",
+                    cluster_args={'find_n_minmax':(2,7), 'algo':"gaussian_mixture"}, use_positions=False,
+                    colorspace = "cielab",
                     height_resize = 100,
                     equalize_args={'type':"clahe"},
                     blur_args= {'type':"bilateral"},
@@ -188,7 +188,7 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
         all_indices = [index for index, sublist in enumerate(all_values_per_image) for item in sublist]
 
         _bprint(print_steps, "Clustering " + str(len(all_values)) + " colors...")
-        clustered_values = _cluster(all_values, **cluster_args, show_color_scatter=show, input_colorspace=colorspace, return_values_as_centroids=True)
+        clustered_values = _cluster(all_values, **cluster_args, show_color_scatter=show, input_colorspace=colorspace, return_values_as_centroids=True,print_steps=print_steps)
 
         def group_values_by_indices(values, indices):
             groups = {}

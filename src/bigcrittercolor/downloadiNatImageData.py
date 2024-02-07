@@ -7,10 +7,20 @@ from pathlib import Path
 
 from bigcrittercolor.helpers import _bprint, _inat_dl_helpers
 
-def downloadiNatImageData(taxa_list, lat_lon_box=None, usa_only=False, img_size="medium",
-                          skip_existing=True, print_steps=True,
-                          n_per_taxon=None,
-                          data_folder='../..'):
+# works by:
+# 1. calls getiNatRecords which loads prev obs ids
+# 2. then it calls getRecords check if we have downloaded records already - if we have, load those and skip
+# 3. getRecords also get the rec count and splits it up...
+# 4. it calls retrieveRecords which downloads but skips records already in the downloaded RECORDS (not images)...
+
+# notably:
+# 1. images that are already downloaded are skipped
+# 2. a new copy of records is always downloaded, so new observations since the last time we ran the fun will always be downloaded
+# 3. you should keep lat long box the same when downloading new obs or things will get screwed up
+# 4. interrupting it in the middle will not cause any issues
+
+def downloadiNatImageData(taxa_list, lat_lon_box=None, usa_only=False, img_size="medium", research_grade_only=True,
+                          print_steps=True, n_per_taxon=None, data_folder='../..'):
     """ Download iNat images and data by genus or species.
         This method downloads records then refers to those records to download in parallel.
         Images are always saved in data_folder/all_images.
@@ -31,7 +41,7 @@ def downloadiNatImageData(taxa_list, lat_lon_box=None, usa_only=False, img_size=
     # for every taxon
     for taxon in taxa_list:
         _bprint(print_steps,"Retrieving records for taxon " + taxon + "...")
-        _inat_dl_helpers.getiNatRecords(taxon=taxon,research_only=True,lat_lon_box=lat_lon_box,img_size=img_size,data_folder=data_folder)
+        _inat_dl_helpers.getiNatRecords(taxon=taxon,research_grade_only=research_grade_only,lat_lon_box=lat_lon_box,img_size=img_size,data_folder=data_folder)
 
         # n_per_taxon does not work as expected currently
         if n_per_taxon is not None:
@@ -46,6 +56,7 @@ def downloadiNatImageData(taxa_list, lat_lon_box=None, usa_only=False, img_size=
             records.to_csv(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '.csv', index=False,
                            mode='w+')
 
+        skip_existing = True
         # if skipping existing (not redownloading), remove already downloaded images from the records
         if skip_existing:
             _bprint(print_steps, "Skipping existing already downloaded images...")

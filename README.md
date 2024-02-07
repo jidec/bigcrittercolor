@@ -1,11 +1,17 @@
 # bigcrittercolor
  
-Data paradigms:
+bigcrittercolor is an approach 
+
+Installation
+1. Install Cuda 12.1
+2. 
+ 
+Some data paradigms:
 1. For simplicity, bigcrittercolor works on a set data folder format that the user must create using createBCCDataFolder() when starting the project. 
     Generally, each data folder should contain observations of one clade in which organism images are similar enough that the same processing arguments work on the whole clade.
-    For example, trying to analyze dragonflies and birds in the same folder would be very difficult because these images have such different characteristics. 
+    For example, trying to analyze dragonflies and birds in the same folder would be difficult and is not recommended because these images have such different characteristics. 
 	Each data folder can usually be construed as a single research project where we want to get color traits for species or individuals of one clade, perhaps just in one location or set of locations or one timespan or set of timespans. 
-	The core functions of bigcrittercolor always apply to this data folder. 
+	The core functions of bigcrittercolor always apply to this data folder, taking a string parameter called "data_folder" as an argument. 
 	
 2. No .csv record is kept that contains info on which images have gone through each processing step, rather:
     - an ID being in masks means it was masked

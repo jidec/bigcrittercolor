@@ -3,7 +3,7 @@ import cv2
 
 from bigcrittercolor.helpers.verticalize import _verticalizeImg
 
-def _blobPassesFilter(rgb_mask, hw_ratio_minmax=None, prop_img_minmax=None, rot_invar_sym_min=None, prevert=False, show=False):
+def _blobPassesFilter(rgb_mask, hw_ratio_minmax=None, prop_img_minmax=None, rot_invar_sym_min=None, intersects_sides=False, prevert=False, show=False):
     """ Given a binary rgb mask containing one blob, return True if it passes the provided filters
 
         Args:
@@ -40,5 +40,15 @@ def _blobPassesFilter(rgb_mask, hw_ratio_minmax=None, prop_img_minmax=None, rot_
         #sym = _getRotInvariantBlobSymmetry(greyu8, show=show)
         #if sym < sym_min:
         #    return False
+
+    if intersects_sides:
+        grey_img = cv2.cvtColor(rgb_mask, cv2.COLOR_RGB2GRAY)
+        # Check top and bottom borders
+        if np.any(grey_img[0, :] == 255) or np.any(grey_img[-1, :] == 255):
+            return False
+
+        # Check left and right borders
+        if np.any(grey_img[:, 0] == 255) or np.any(grey_img[:, -1] == 255):
+            return False
 
     return True

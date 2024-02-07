@@ -299,12 +299,12 @@ def readExtantObsIds(fpath):
 
     return obs_ids
 
-def getiNatRecords(taxon, research_only=True, lat_lon_box=None, output_file=None, update=True, img_size="medium",
+def getiNatRecords(taxon, research_grade_only=True, lat_lon_box=None, output_file=None, update=True, img_size="medium",
                    data_folder="../.."):
     taxon_id = getTaxonID(taxon)
 
     base_params = {'taxon_id': taxon_id}
-    if research_only:
+    if research_grade_only:
         base_params['quality_grade'] = 'research'
     #if usa_only:
     #    base_params['swlat'] = 24.396308
@@ -325,12 +325,9 @@ def getiNatRecords(taxon, research_only=True, lat_lon_box=None, output_file=None
     of_exists = os.path.exists(ofpath)
     prev_obs_ids = {}
     if of_exists:
-        if not (update):
-            exit('\nERROR: The output file, {0}, already exists.\n'.format(
-                ofpath
-            ))
-        else:
+        if update:
             prev_obs_ids = readExtantObsIds(ofpath)
+    #prev_obs_ids = readExtantObsIds(ofpath)
 
     fout = open(ofpath, 'a', encoding='utf-8')
     writer = csv.DictWriter(fout, [

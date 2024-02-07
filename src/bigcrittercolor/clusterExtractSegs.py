@@ -3,7 +3,8 @@ import cv2
 import random
 
 from bigcrittercolor.helpers.verticalize import _verticalizeImg
-from bigcrittercolor.helpers import _showImages, _bprint, _getIDsInFolder, _readBCCImgs, showBCCImages, _clusterByImgFeatures
+from bigcrittercolor.helpers import _showImages, _bprint, _getIDsInFolder, _readBCCImgs, _clusterByImgFeatures
+from bigcrittercolor.projprep import showBCCImages
 from bigcrittercolor.helpers.image import _blobPassesFilter, _maskIsEmpty
 
 # Image - the raw starting images, not changed in any way
@@ -19,10 +20,10 @@ from bigcrittercolor.helpers.image import _blobPassesFilter, _maskIsEmpty
 # Extract segments using masks, normalize them, filter them using simple metrics, cluster using features from a pretrained CNN feature extractor
 def clusterExtractSegs(img_ids=None, sample_n=None,
     color_format_to_cluster = "grey", used_aux_segmodel=False,
-    filter_hw_ratio_minmax = None, filter_prop_img_minmax = None, filter_symmetry_min = None, # filters
+    filter_hw_ratio_minmax = None, filter_prop_img_minmax = None, filter_symmetry_min = None, filter_intersects_sides=False,# filters
     mask_normalize_params_dict={'lines_strategy':"ellipse"}, # normalization/verticalization of masks
     feature_extractor="resnet18", # feature extractor
-    cluster_algo="agglom", cluster_n = 4,
+    cluster_algo="kmeans", cluster_n = 4,
     cluster_params_dict={'eps':0.1,'min_samples':24}, preselected_clusters_input = None,
     show=True, show_indv=False, print_steps=True, data_folder=""):
 
@@ -95,6 +96,10 @@ def clusterExtractSegs(img_ids=None, sample_n=None,
         if filter_symmetry_min is not None:
             if not _blobPassesFilter(mask, rot_invar_sym_min=filter_symmetry_min, prevert=used_aux_segmodel, show=show_indv):
                 failed_sym_ids.append(id)
+                continue
+
+        if filter_intersects_sides:
+            if not _blobPassesFilter(mask, intersects_sides=True):
                 continue
 
         masks.append(mask)
