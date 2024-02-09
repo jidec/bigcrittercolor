@@ -10,7 +10,7 @@ from bigcrittercolor.helpers.image import _blur, _format, _imgToColorPatches, _r
 from bigcrittercolor.helpers.image import _equalize
 
 def clusterColorsToPatterns(img_ids=None, cluster_individually=False, preclustered = False, group_cluster_records_colname = None,
-                    by_patches=True, min_patch_pixel_area=10,
+                    by_patches=True, patch_args = {'min_patch_pixel_area':5},
                     cluster_args={'find_n_minmax':(2,7), 'algo':"gaussian_mixture"}, use_positions=False,
                     colorspace = "cielab",
                     height_resize = 100,

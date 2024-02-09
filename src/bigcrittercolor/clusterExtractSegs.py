@@ -5,7 +5,7 @@ import random
 from bigcrittercolor.helpers.verticalize import _verticalizeImg
 from bigcrittercolor.helpers import _showImages, _bprint, _getIDsInFolder, _readBCCImgs, _clusterByImgFeatures
 from bigcrittercolor.projprep import showBCCImages
-from bigcrittercolor.helpers.image import _blobPassesFilter, _maskIsEmpty
+from bigcrittercolor.helpers.image import _blobPassesFilter, _maskIsEmpty, _format
 
 # Image - the raw starting images, not changed in any way
 # Mask - masks that apply to the original image to yield a segment, created by inferMasks
@@ -20,7 +20,7 @@ from bigcrittercolor.helpers.image import _blobPassesFilter, _maskIsEmpty
 # Extract segments using masks, normalize them, filter them using simple metrics, cluster using features from a pretrained CNN feature extractor
 def clusterExtractSegs(img_ids=None, sample_n=None,
     color_format_to_cluster = "grey", used_aux_segmodel=False,
-    filter_hw_ratio_minmax = None, filter_prop_img_minmax = None, filter_symmetry_min = None, filter_intersects_sides=False,# filters
+    filter_hw_ratio_minmax = None, filter_prop_img_minmax = (0.01, 0.5), filter_symmetry_min = None, filter_intersects_sides=True, # filters
     mask_normalize_params_dict={'lines_strategy':"ellipse"}, # normalization/verticalization of masks
     feature_extractor="resnet18", # feature extractor
     cluster_algo="kmeans", cluster_n = 4,
@@ -61,6 +61,7 @@ def clusterExtractSegs(img_ids=None, sample_n=None,
     failed_hw_ids = []
     failed_prop_ids = []
     failed_sym_ids = []
+    failed_edge_ids = []
 
     # for each image id
     for index, id in enumerate(img_ids):
@@ -100,6 +101,7 @@ def clusterExtractSegs(img_ids=None, sample_n=None,
 
         if filter_intersects_sides:
             if not _blobPassesFilter(mask, intersects_sides=True):
+                failed_edge_ids.append(id)
                 continue
 
         masks.append(mask)
@@ -117,6 +119,9 @@ def clusterExtractSegs(img_ids=None, sample_n=None,
     if filter_symmetry_min is not None:
         _bprint(print_steps, str(len(failed_sym_ids)) + " masks failed for symmetry")
         if show: showBCCImages(img_ids=failed_sym_ids, show_type=show_type, sample_n=18, title="Failed Sym",data_folder=data_folder)
+    if filter_intersects_sides:
+        _bprint(print_steps, str(len(failed_edge_ids)) + " masks failed for edge intersection")
+        if show: showBCCImages(img_ids=failed_edge_ids, show_type=show_type, sample_n=18, title="Failed Edge",data_folder=data_folder)
 
     masks_unchanged = masks.copy() # save unchanged masks to use for seg extraction later
 
@@ -172,10 +177,10 @@ def clusterExtractSegs(img_ids=None, sample_n=None,
         masks = _readBCCImgs(kept_ids, type="mask", data_folder=data_folder)
 
         # temporary fix to probably a jpg corruption issue
-        for index, mask in enumerate(masks):
-            mask[(mask > 10)] = 255
-            mask[(mask < 10)] = 0
-            masks[index] = mask
+        #for index, mask in enumerate(masks):
+        #    mask[(mask > 10)] = 255
+        #    mask[(mask < 10)] = 0
+        #    masks[index] = mask
 
         # get all images to match the masks
         parent_imgs = _readBCCImgs(kept_ids, type="img", data_folder=data_folder)
@@ -185,7 +190,21 @@ def clusterExtractSegs(img_ids=None, sample_n=None,
 
         # extract segments using masks
         segs = [cv2.bitwise_and(parent_img, parent_img, mask=cv2.cvtColor(mask,cv2.COLOR_RGB2GRAY).astype(np.uint8)) for mask, parent_img in masks_parents]
+
+        #seg = np.copy(segs[0])
+        #seg[np.where((seg == [0, 0, 0]).all(axis=2))] = [0, 0, 255]
+        #cv2.imshow("0",seg)
+        #cv2.waitKey(0)
+
         segs = [_verticalizeImg(seg, **mask_normalize_params_dict) for seg in segs]
+
+        #seg = np.copy(segs[0])
+        #seg[np.where((seg == [0, 0, 0]).all(axis=2))] = [0, 0, 255]
+        #cv2.imshow("1", seg)
+        #cv2.waitKey(0)
+
+        # make seg 4 channel
+        #segs = [_format(seg,)]
 
     # zip segments and their ids
     segs_ids = [(x, y) for x, y in zip(segs, kept_ids)]

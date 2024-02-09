@@ -27,10 +27,10 @@ def _readBCCImgs(img_ids=None, type="img", color_format=None, make_3channel=Fals
             segs = []
             i = 0
             for img, mask in imgs_masks:
-                print(img_ids[i])
+                #print(img_ids[i])
                 i = i + 1
-                #if img is not None and mask is not None:
-                segs.append(cv2.bitwise_and(img, img, mask=cv2.cvtColor(mask, cv2.COLOR_RGB2GRAY).astype(np.uint8)))
+                if img is not None and mask is not None:
+                    segs.append(cv2.bitwise_and(img, img, mask=cv2.cvtColor(mask, cv2.COLOR_RGB2GRAY).astype(np.uint8)))
             imgs = segs
             #imgs = [cv2.bitwise_and(parent_img, parent_img,
             #                    mask=cv2.cvtColor(mask, cv2.COLOR_RGB2GRAY).astype(np.uint8)) for

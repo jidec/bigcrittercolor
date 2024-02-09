@@ -32,6 +32,6 @@ Some data paradigms:
 
 4. Image formats are as follows:
 	- all_images - 3-channel RGB .jpgs of variable sizes 
-	- masks - (1/3?)-channel binary images (OR normalized but unfiltered 4-channel RGBA segments if the auxiliary segmenter is used in inferMasks())
+	- masks - 3-channel binary images (OR normalized but unfiltered 4-channel RGBA segments if the auxiliary segmenter is used in inferMasks())
 	- segments - normalized and filtered 4-channel RGBA segments of variable sizes
 	- patterns - 4-channel RGBA reductions of continuously shaded segments to discrete, comparable, denoised color patterns 
