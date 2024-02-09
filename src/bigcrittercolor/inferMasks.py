@@ -76,6 +76,11 @@ def inferMasks(img_ids=None, skip_existing=True, gpu=True,
     if skip_existing:
         # get existing mask ids
         existing_mask_ids = _getIDsInFolder(data_folder + "/masks")
+        # get failed mask infers
+        with open(data_folder + "/other/processing_info/failed_mask_infers.txt") as file:
+            failed_mask_ids = [line.strip() for line in file]
+        # combine
+        existing_mask_ids = existing_mask_ids + failed_mask_ids
         # create new image ids removing existing
         img_ids = [item for item in img_ids if item not in existing_mask_ids]
 
@@ -91,6 +96,19 @@ def inferMasks(img_ids=None, skip_existing=True, gpu=True,
     for i in range(0,len(img_locs)):
         img_locs[i] = data_folder + "/all_images/" + img_locs[i] + ".jpg"
 
+    # fun to write failed masks as all black zeroes images with the same shape
+    #def write_failed_empty_mask(index, shape):
+    #    mask = np.zeros(shape)
+    #    dest = data_folder + "/masks/" + img_ids[index] + "_mask.png"
+    #    cv2.imwrite(dest, mask)
+
+    def write_failed_id(id):
+        with open(data_folder + "/other/processing_info/failed_mask_infers.txt") as file:
+            ids = [line.strip() for line in file]
+        ids.append(id)
+        ids = list(set(ids))
+        with open(data_folder + "/other/processing_info/failed_mask_infers.txt", 'w') as file: file.write('\n'.join(ids))
+
     _bprint(print_steps, "Starting inferring masks for " + str(len(img_locs)) + " IDs...")
     # for each image location
     for index, img_loc in enumerate(img_locs):
@@ -100,6 +118,7 @@ def inferMasks(img_ids=None, skip_existing=True, gpu=True,
 
         if (image_source is None):
             _bprint(print_details, "Image load failed, skipping...")
+            write_failed_id(img_ids[index])
             continue
 
         img_raw = cv2.imread(img_loc)
@@ -125,6 +144,7 @@ def inferMasks(img_ids=None, skip_existing=True, gpu=True,
             )
         if boxes.nelement() == 0:
             _bprint(print_details, "No bounding boxes obtained, skipping...")
+            write_failed_id(img_ids[index])
             continue
 
         annotated_frame = annotate(image_source=image_source, boxes=boxes, logits=logits, phrases=phrases)
@@ -160,6 +180,7 @@ def inferMasks(img_ids=None, skip_existing=True, gpu=True,
         # if we didn't get any segments, skip
         if masks[0][0].cpu().nelement() == 0:
             _bprint(print_details, "No masks predicted, skipping...")
+            write_failed_id(img_ids[index])
             continue
 
         _bprint(print_details, "Applying strategy...")
@@ -189,6 +210,7 @@ def inferMasks(img_ids=None, skip_existing=True, gpu=True,
         # if mask is all black (empty) skip
         if cv2.countNonZero(mask) == 0:
             _bprint(print_details, "Empty mask, skipping...")
+            write_failed_id(img_ids[index])
             continue
 
         # when showing results for individual images, we hold onto a list of tuples that is expanded when a new modification is made
@@ -213,6 +235,7 @@ def inferMasks(img_ids=None, skip_existing=True, gpu=True,
                 _bprint(print_details, "No contour found when removing islands, writing empty mask...")
                 dest = data_folder + "/masks/" + img_ids[index] + "_mask.png"
                 cv2.imwrite(dest, mask)
+                write_failed_id(img_ids[index])
                 continue
 
             # empty image and fill with big contour
@@ -290,6 +313,7 @@ def inferMasks(img_ids=None, skip_existing=True, gpu=True,
         _bprint(print_details, "Writing final mask...")
         dest = data_folder + "/masks/" + img_ids[index] + "_mask.png"
         cv2.imwrite(dest, mask)
+
 
     # if show, show a sample of the masks we got
     if show:

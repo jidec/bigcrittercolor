@@ -32,6 +32,11 @@ def createBCCDataFolder(parent_folder, new_folder_name="bcc_data"):
     # make raw records folder
     os.mkdir(base_path + "/other/raw_records")
 
+    # make processing info folder
+    os.mkdir(base_path + "/other/processing_info")
+    with open(base_path + "/other/processing_info/failed_mask_infers.txt", 'w') as file:
+        pass  # No need to write anything, just create the file
+
     # make dirs for new classifier training
     os.mkdir(base_path + "/other/filter_training/")
     os.mkdir(base_path + "/other/filter_training/test")

@@ -63,5 +63,3 @@ def printBCCDataStatus(data_folder):
 
     # has goodbadclassifier been created?
     # number of segments attempted vs number of good masks
-
-printBCCDataStatus("D:/bcc/my_taxon")
