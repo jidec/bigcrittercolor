@@ -5,7 +5,7 @@ from datetime import datetime
 import shutil
 from pathlib import Path
 
-from bigcrittercolor.helpers import _bprint, _inat_dl_helpers
+from bigcrittercolor.helpers import _bprint, _inat_dl_helpers, _rebuildiNatRecords
 
 # works by:
 # 1. calls getiNatRecords which loads prev obs ids
@@ -130,5 +130,6 @@ def downloadiNatImageData(taxa_list, lat_lon_box=None, usa_only=False, img_size=
         # write full records csv back
         full_taxon_records.to_csv(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '.csv', index=False, mode='w+')
 
+    _rebuildiNatRecords(data_folder=data_folder)
     _bprint(print_steps, "Finished.")
 
