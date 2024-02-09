@@ -1,5 +1,5 @@
 from bigcrittercolor.helpers.verticalize import _getLinesAcrossBlob,_getBlobLineMetric, _vertUsingLine
-from bigcrittercolor.helpers.image import _narrowToBoundingRect,_flipHeavyToTop,_cropImgSides
+from bigcrittercolor.helpers.image import _narrowToBoundingRect,_flipHeavyToTop,_cropImgSides,_smoothBlobEdges
 from bigcrittercolor.helpers import _showImages
 import numpy as np
 import cv2
@@ -51,6 +51,11 @@ def _verticalizeImg(img, lines_strategy="skeleton_hough", best_line_metric="over
 
     img_vert = _vertUsingLine(img,best_line,show=show)
     img = np.copy(img_vert)
+
+    #if smooth:
+    #    img2 = _smoothBlobEdges(img)
+    #    cv2.imshow("1",img2)
+    #    cv2.waitKey(0)
 
     if bound:
         bounded,box = _narrowToBoundingRect(img,return_img_and_bb=True)

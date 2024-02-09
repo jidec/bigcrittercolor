@@ -1,3 +1,4 @@
+from bigcrittercolor.helpers.image._smoothBlobEdges import _smoothBlobEdges
 from bigcrittercolor.helpers.image._flipHeavyToTop import _flipHeavyToTop
 from bigcrittercolor.helpers.image._narrowToBoundingRect import _narrowToBoundingRect
 from bigcrittercolor.helpers.image._resizeImgsToAvgSize import _resizeImgsToAvgSize
