@@ -43,13 +43,13 @@ def _imgToColorPatches(img, cluster_args={'n':4, 'algo':'kmeans'}, input_colorsp
 
                 # The below removes pure black background pixels from masks
                 # Apply the mask to the original image
-                masked_img = cv2.bitwise_and(img, img, mask=component_mask)
+                #masked_img = cv2.bitwise_and(img, img, mask=component_mask)
                 # Check for black pixels
-                target_black_value = [0,0,0]
-                if input_colorspace == "cielab":
-                    target_black_value = [10,128,128]
-                black_pixels = np.all(masked_img <= target_black_value, axis=-1)
-                component_mask[black_pixels] = 0  # Remove black pixel locations from the mask
+                #target_black_value = [0,0,0]
+                #if input_colorspace == "cielab":
+                #    target_black_value = [10,128,128]
+               # black_pixels = np.all(masked_img <= target_black_value, axis=-1)
+                #component_mask[black_pixels] = 0  # Remove black pixel locations from the mask
 
                 # Compute the mean color of the pixels in the original image where the current component is located
                 mean_color = cv2.mean(img, mask=component_mask)[:3]
@@ -64,9 +64,9 @@ def _imgToColorPatches(img, cluster_args={'n':4, 'algo':'kmeans'}, input_colorsp
                 # Apply the mean color to the component in the overlay image
                 overlay_image[component_mask == 255] = mean_color
 
-                if mean_color[0] > 10:
-                    patch_bool_masks.append(component_mask == 255)
-                    patch_colors.append(mean_color)
+                #if mean_color[0] > 10:
+                patch_bool_masks.append(component_mask == 255)
+                patch_colors.append(mean_color)
 
     _showImages(show, [img, overlay_image], ['Image', 'Patch Image'])
 

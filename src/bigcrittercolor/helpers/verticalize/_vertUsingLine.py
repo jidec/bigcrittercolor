@@ -61,9 +61,22 @@ def _vertUsingLine(img, line, return_img_and_line=False, show=False):
     M[0, 2] += (nW / 2) - cX
     M[1, 2] += (nH / 2) - cY
 
+    # img has no black edge blurs before warp
+    # after warp its fucked!!
+    #img2 = np.copy(img)
+    #img2[np.where((img2 == [0, 0, 0]).all(axis=2))] = [0, 0, 255]
+    #cv2.imshow('3', img2)
+    #cv2.waitKey(0)
+
     # warp image to new rotation
-    vert_img = cv2.warpAffine(img, M, (nW, nH))
+    vert_img = cv2.warpAffine(img, M, (nW, nH),flags=cv2.INTER_NEAREST)
     _showImages(show, [img, line_img, hough_img,vert_img], ["Image", "Line Image", "Hough Image","Vert Image"])
+
+    # after warp its messed
+    #img3 = np.copy(vert_img)
+    #img3[np.where((img3 == [0, 0, 0]).all(axis=2))] = [0, 0, 255]
+    #cv2.imshow('4',img3)
+    #cv2.waitKey(0)
 
     if return_img_and_line:
       line_img = cv2.warpAffine(line_img, M, (nW, nH))
