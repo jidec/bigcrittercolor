@@ -22,13 +22,15 @@ Some data paradigms:
 	Each data folder can usually be construed as a single research project where we want to get color traits for species or individuals of one clade, perhaps just in one location or set of locations or one timespan or set of timespans. 
 	The core functions of bigcrittercolor always apply to this data folder, taking a string parameter called "data_folder" as an argument. 
 	
-2. No comprehensive .csv record is kept that contains info on which images have gone through each processing step, rather:
+2. Functions can be interrupted at any point or called multiple times without causing any issues in data flow 
+
+3. No comprehensive .csv record is kept that contains info on which images have gone through each processing step, rather:
     - an ID being in masks means it was masked
     - an ID being in segments means it was filtered and segmented
     - an ID being in patterns means it was color clustered
 	The only record kept for now is /other/processing_info/failed_mask_infers.txt which contains ids where masking failed so we can skip those in the future
 
-3. Image formats are as follows:
+4. Image formats are as follows:
 	- all_images - 3-channel RGB .jpgs of variable sizes 
 	- masks - (1/3?)-channel binary images (OR normalized but unfiltered 4-channel RGBA segments if the auxiliary segmenter is used in inferMasks())
 	- segments - normalized and filtered 4-channel RGBA segments of variable sizes
