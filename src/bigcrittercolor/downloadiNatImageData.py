@@ -121,11 +121,11 @@ def downloadiNatImageData(taxa_list, lat_lon_box=None, usa_only=False, img_size=
 
             # TODO could allow changing chunksize since medium images hit the servers more weakly
             # if there are more chunks left, wait for an hour before doing the next chunk
-            if c < len(os.listdir(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '-records_split')) - 1:
-                now = datetime.now()
-                current_time = now.strftime("%H:%M:%S")
-                print("Waiting one hour starting at " + current_time + "...")
-                time.sleep(3600)
+            #if c < len(os.listdir(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '-records_split')) - 1:
+            #    now = datetime.now()
+            #    current_time = now.strftime("%H:%M:%S")
+            #    print("Waiting one hour starting at " + current_time + "...")
+            #    time.sleep(3600)
 
         # write full records csv back
         full_taxon_records.to_csv(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '.csv', index=False, mode='w+')
