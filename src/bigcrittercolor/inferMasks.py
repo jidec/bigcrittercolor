@@ -21,7 +21,7 @@ from bigcrittercolor.helpers import _bprint, _getIDsInFolder, _showImages
 from bigcrittercolor.helpers.verticalize import _verticalizeImg
 from bigcrittercolor.helpers.image import _removeIslands
 
-def inferMasks(img_ids=None, skip_existing=True, gpu=True,
+def inferMasks(img_ids=None, skip_existing=True, gd_gpu=True, sam_gpu=True,
                strategy="prompt1", text_prompt="subject", box_threshold=0.25, text_threshold=0.25, # groundedSAM params
                aux_segmodel_location=None, # location of the auxiliary segmodel that get applied to SAM masks
                auxseg_normalize_params_dict={'lines_strategy':"skeleton_hough", 'best_line_metric':"overlap_sym"},
@@ -63,7 +63,7 @@ def inferMasks(img_ids=None, skip_existing=True, gpu=True,
     _bprint(print_steps, "Loading SegmentAnything from data_folder/other/ml_checkpoints/sam.pth...")
     sam_checkpoint = data_folder + '/other/ml_checkpoints/sam.pth'
     sam = build_sam(checkpoint=sam_checkpoint)
-    if gpu:
+    if sam_gpu:
         sam.to(device='cuda')
     sam_predictor = SamPredictor(sam)
 
@@ -125,7 +125,7 @@ def inferMasks(img_ids=None, skip_existing=True, gpu=True,
 
         _bprint(print_details, "Getting bounding boxes using groundingDINO...")
         # NOTE that groundingDINO predict here is throwing a cpu error - cuda is not installed
-        if gpu:
+        if gd_gpu:
             boxes, logits, phrases = predict(
                 model=groundingdino_model,
                 image=image,
@@ -163,7 +163,7 @@ def inferMasks(img_ids=None, skip_existing=True, gpu=True,
         boxes_xyxy = box_ops.box_cxcywh_to_xyxy(boxes) * torch.Tensor([W, H, W, H])
 
         transformed_boxes = sam_predictor.transform.apply_boxes_torch(boxes_xyxy, image_source.shape[:2])
-        if gpu:
+        if sam_gpu:
             transformed_boxes = transformed_boxes.to('cuda:0')
         masks, _, _ = sam_predictor.predict_torch(
             point_coords=None,
