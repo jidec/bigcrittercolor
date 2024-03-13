@@ -4,6 +4,7 @@ import time
 from datetime import datetime
 import shutil
 from pathlib import Path
+import copy
 
 from bigcrittercolor.helpers import _bprint, _inat_dl_helpers, _rebuildiNatRecords
 
@@ -18,9 +19,16 @@ from bigcrittercolor.helpers import _bprint, _inat_dl_helpers, _rebuildiNatRecor
 # 2. a new copy of records is always downloaded, so new observations since the last time we ran the fun will always be downloaded
 # 3. you should keep lat long box the same when downloading new obs or things will get screwed up
 # 4. interrupting it in the middle will not cause any issues
-
-def downloadiNatImageData(taxa_list, lat_lon_box=None, usa_only=False, img_size="medium", research_grade_only=True,
-                          print_steps=True, n_per_taxon=None, data_folder='../..'):
+# 5. if we're removing already downloaded images from records, it's BAD if the fun gets interrupted and the original
+#   isn't restored because we need the original when binding everything together into the main supp df
+# 6. however,
+# 7. skip_existing_taxa bypasses downloading a new copy of records, and assumes that the records already downloaded are complete - this
+#   will fail to download all records for a taxon if a previous records download was interrupted
+# 8. works in two pieces - downloading records and downloading images using records
+def downloadiNatImageData(taxa_list, download_records=True, download_images=True,
+                          lat_lon_box=None, usa_only=False, img_size="medium", research_grade_only=True, n_per_taxon=None,
+                          skip_records_for_existing_taxa=True,
+                          print_steps=True, data_folder='../..'):
     """ Download iNat images and data by genus or species.
         This method downloads records then refers to those records to download in parallel.
         Images are always saved in data_folder/all_images.
@@ -38,97 +46,120 @@ def downloadiNatImageData(taxa_list, lat_lon_box=None, usa_only=False, img_size=
     if usa_only and lat_lon_box is None:
         lat_lon_box = ((24.396308,-124.848974),(49.384358,-66.885444))
 
-    # for every taxon
-    for taxon in taxa_list:
-        _bprint(print_steps,"Retrieving records for taxon " + taxon + "...")
-        _inat_dl_helpers.getiNatRecords(taxon=taxon,research_grade_only=research_grade_only,lat_lon_box=lat_lon_box,img_size=img_size,data_folder=data_folder)
+    taxa_list_records = copy.deepcopy(taxa_list)
+    if skip_records_for_existing_taxa:
+        # List to hold the filenames
+        filenames_starting_with_iNat = []
+        path = data_folder + "/other/inat_download_records"
+        # Iterate over the entries in the directory
+        for entry in os.listdir(path):
+            # Check if the entry is a file and if its name starts with "iNat"
+            if os.path.isfile(os.path.join(path, entry)) and entry.startswith("iNat"):
+                filenames_starting_with_iNat.append(entry)
+        taxa_with_records = [s.split('-')[1].split('.')[0] for s in filenames_starting_with_iNat]
+        taxa_list_records = [item for item in taxa_list if item not in taxa_with_records]
 
+    # for every taxon
+    if download_records:
+        for taxon in taxa_list_records:
+            _bprint(print_steps,"Retrieving records for taxon " + taxon + "...")
+            _inat_dl_helpers.getiNatRecords(taxon=taxon,research_grade_only=research_grade_only,lat_lon_box=lat_lon_box,img_size=img_size,data_folder=data_folder)
+
+    if download_images:
         # n_per_taxon does not work as expected currently
-        if n_per_taxon is not None:
+        #if n_per_taxon is not None:
             # read in records for taxon
-            records = pd.read_csv(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '.csv')
-            full_taxon_records = records.copy()
+        #    records = pd.read_csv(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '.csv')
+        #    full_taxon_records = records.copy()
 
             # sample
-            if len(records) > n_per_taxon:
-                records = records.sample(n_per_taxon)
+        #    if len(records) > n_per_taxon:
+        #        records = records.sample(n_per_taxon)
             # replace records with new trimmed records
-            records.to_csv(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '.csv', index=False,
-                           mode='w+')
+        #    records.to_csv(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '.csv', index=False,
+        #                   mode='w+')
+        for taxon in taxa_list:
+            # create the dir for split records if it doesn't exist
+            split_dir = data_folder + '/other/inat_download_records/iNat_images-' + taxon + '-records_split'
+            if not os.path.isdir(split_dir):
+                os.mkdir(split_dir)
+            # create the dir for saved og records if it doesn't exist
+            dir = data_folder + '/other/inat_download_records/iNat_images-' + taxon + '-records_saved'
+            if not os.path.isdir(dir):
+                os.mkdir(dir)
 
-        skip_existing = True
-        # if skipping existing (not redownloading), remove already downloaded images from the records
-        if skip_existing:
-            _bprint(print_steps, "Skipping existing already downloaded images...")
-            # get existing image names
-            existing_imgnames = os.listdir(data_folder + '/all_images')
+            skip_existing = True
+            # if skipping existing (not redownloading), remove already downloaded images from the records
+            if skip_existing:
+                _bprint(print_steps, "Skipping existing already downloaded images...")
+                # get existing image names
+                existing_imgnames = os.listdir(data_folder + '/all_images')
 
-            # remove INAT- prefix to get original filenames
-            existing_ogfilenames = [i.replace('INAT-', '') for i in existing_imgnames]
+                # remove INAT- prefix to get original filenames
+                existing_ogfilenames = [i.replace('INAT-', '') for i in existing_imgnames]
 
-            # read in records for taxon
-            records = pd.read_csv(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '.csv')
-            # save these records
-            full_taxon_records = records.copy()
+                # read in records for taxon
+                records = pd.read_csv(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '.csv')
+                # save these records
+                full_taxon_records = records.copy()
+                # write full records csv
+                full_taxon_records.to_csv(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '-records_saved/saved_records.csv',
+                                          index=False, mode='w+')
 
-            # get only records NOT in existing records for taxon
-            in_mask = records["file_name"].isin(existing_ogfilenames)
-            records = records[~in_mask]
-            _bprint(print_steps, "Will download " + str(records.shape[0]) + " new observations...")
+                # get only records NOT in existing records for taxon
+                in_mask = records["file_name"].isin(existing_ogfilenames)
+                records = records[~in_mask]
+                _bprint(print_steps, "Will download " + str(records.shape[0]) + " new observations...")
 
-            # replace records with new trimmed records
-            records.to_csv(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '.csv',index=False,mode='w+')
+                # replace records with new trimmed records
+                records.to_csv(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '.csv',index=False,mode='w+')
 
-        # create the dir for split records if it doesn't exist
-        split_dir = data_folder + '/other/inat_download_records/iNat_images-' + taxon + '-records_split'
-        if not os.path.isdir(split_dir):
-            os.mkdir(split_dir)
+            _bprint(print_steps, "Splitting records into chunks...")
+            # split the records using pd.read_csv with the chunksize arg
+            j = 1
+            for chunk in pd.read_csv(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '.csv', chunksize=7500):
+                chunk.to_csv(split_dir + '/' + str(j) + '.csv', index=False)
+                j += 1
 
-        _bprint(print_steps, "Splitting records into chunks...")
-        # split the records using pd.read_csv with the chunksize arg
-        j = 1
-        for chunk in pd.read_csv(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '.csv', chunksize=7500):
-            chunk.to_csv(split_dir + '/' + str(j) + '.csv', index=False)
-            j += 1
+            _bprint(print_steps, "Using records to download images for taxon " + taxon + "...")
+            # make raw images folder if it doesn't exist
+            rawimg_dir = data_folder + "/other/inat_download_records/iNat_images-" + taxon + "-raw_images"
+            if not os.path.exists(rawimg_dir):
+                os.mkdir(rawimg_dir)
 
-        _bprint(print_steps, "Using records to download images for taxon " + taxon + "...")
-        # make raw images folder if it doesn't exist
-        rawimg_dir = data_folder + "/other/inat_download_records/iNat_images-" + taxon + "-raw_images"
-        if not os.path.exists(rawimg_dir):
-            os.mkdir(rawimg_dir)
-
-        dirname = data_folder + '/other/inat_download_records/iNat_images-' + taxon + "-raw_images"
-        # download each record chunk, waiting an hour between
-        for c, record_chunk in enumerate(os.listdir(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '-records_split')):
-            fileout = data_folder + "/other/inat_download_records/" + taxon + '-download_log.csv'
-            # download the images
-            _inat_dl_helpers.downloadImages(img_records=data_folder + '/other/inat_download_records/iNat_images-' + taxon + '.csv',imgdir=dirname,fileout=fileout)
-
-            # add INAT- prefix to images
-            imgnames = os.listdir(rawimg_dir)
-            for name in imgnames:
-                newname = name.split('_')[0]
-                os.rename(dirname + "/" + name,dirname + "/INAT-" + newname)
-
-            _bprint(print_steps, "Renaming images as JPGs and moving them to all_images...")
-            # rename images as JPGs and move
             dirname = data_folder + '/other/inat_download_records/iNat_images-' + taxon + "-raw_images"
-            for i, filename in enumerate(os.listdir(dirname)):
-                file = Path(dirname + "/" + filename + ".jpg")
-                if not file.exists():
-                    os.rename(dirname + "/" + filename, dirname + "/" + filename + ".jpg")
-                shutil.move(dirname + "/" + filename + ".jpg", data_folder + "/all_images/" + filename + ".jpg")
+            # download each record chunk, waiting an hour between
+            for c, record_chunk in enumerate(os.listdir(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '-records_split')):
+                fileout = data_folder + "/other/inat_download_records/" + taxon + '-download_log.csv'
+                # download the images
+                _inat_dl_helpers.downloadImages(img_records=data_folder + '/other/inat_download_records/iNat_images-' + taxon + '.csv',imgdir=dirname,fileout=fileout)
 
-            # TODO could allow changing chunksize since medium images hit the servers more weakly
-            # if there are more chunks left, wait for an hour before doing the next chunk
-            #if c < len(os.listdir(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '-records_split')) - 1:
-            #    now = datetime.now()
-            #    current_time = now.strftime("%H:%M:%S")
-            #    print("Waiting one hour starting at " + current_time + "...")
-            #    time.sleep(3600)
+                # add INAT- prefix to images
+                imgnames = os.listdir(rawimg_dir)
+                for name in imgnames:
+                    newname = name.split('_')[0]
+                    os.rename(dirname + "/" + name,dirname + "/INAT-" + newname)
+
+                _bprint(print_steps, "Renaming images as JPGs and moving them to all_images...")
+                # rename images as JPGs and move
+                dirname = data_folder + '/other/inat_download_records/iNat_images-' + taxon + "-raw_images"
+                for i, filename in enumerate(os.listdir(dirname)):
+                    file = Path(dirname + "/" + filename + ".jpg")
+                    if not file.exists():
+                        os.rename(dirname + "/" + filename, dirname + "/" + filename + ".jpg")
+                    shutil.move(dirname + "/" + filename + ".jpg", data_folder + "/all_images/" + filename + ".jpg")
+
+                # TODO could allow changing chunksize since medium images hit the servers more weakly
+                # if there are more chunks left, wait for an hour before doing the next chunk
+                #if c < len(os.listdir(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '-records_split')) - 1:
+                #    now = datetime.now()
+                #    current_time = now.strftime("%H:%M:%S")
+                #    print("Waiting one hour starting at " + current_time + "...")
+                #    time.sleep(3600)
 
         # write full records csv back
-        full_taxon_records.to_csv(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '.csv', index=False, mode='w+')
+        if download_images:
+            full_taxon_records.to_csv(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '.csv', index=False, mode='w+')
 
     _rebuildiNatRecords(data_folder=data_folder)
     _bprint(print_steps, "Finished.")
