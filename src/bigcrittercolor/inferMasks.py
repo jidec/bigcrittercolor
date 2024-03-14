@@ -253,6 +253,9 @@ def inferMasks(img_ids=None, skip_existing=True, gd_gpu=True, sam_gpu=True,
         if aux_segmodel_location is not None:
             _bprint(print_details,"Applying auxiliary model to SAM segment...")
 
+            if img_raw is None or mask is None:
+                continue
+                
             # get the segment SAM gave us and verticalize it
             sam_seg = cv2.bitwise_and(img_raw, img_raw, mask=mask.astype(np.uint8))
             #sam_seg = cv2.resize(sam_seg, (sam_seg.shape[1] // 2, sam_seg.shape[0] // 2))
