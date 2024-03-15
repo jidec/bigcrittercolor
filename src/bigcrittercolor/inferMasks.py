@@ -251,7 +251,7 @@ def inferMasks(img_ids=None, skip_existing=True, gd_gpu=True, sam_gpu=True,
 
         # special option to use a pretrained model on normalized SAM-extracted segments
         if aux_segmodel_location is not None:
-            _bprint(print_details,"Applying auxiliary model to SAM segment...")
+            _bprint(print_details,"Applying auxiliary model to SAM segment...TEST")
 
             if not _imgAndMaskAreValid(img_raw,mask.astype(np.uint8)):
                 continue
