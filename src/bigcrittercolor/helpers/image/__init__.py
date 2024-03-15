@@ -15,3 +15,5 @@ from bigcrittercolor.helpers.image._reconstructImgFromPPD import _reconstructImg
 from bigcrittercolor.helpers.image._blur import _blur
 from bigcrittercolor.helpers.image._equalize import _equalize
 from bigcrittercolor.helpers.image._format import _format
+from bigcrittercolor.helpers.image._imgAndMaskAreValid import _imgAndMaskAreValid
+from bigcrittercolor.helpers.image._imgIsValid import _imgIsValid

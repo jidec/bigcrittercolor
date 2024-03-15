@@ -19,7 +19,7 @@ from huggingface_hub import hf_hub_download
 
 from bigcrittercolor.helpers import _bprint, _getIDsInFolder, _showImages
 from bigcrittercolor.helpers.verticalize import _verticalizeImg
-from bigcrittercolor.helpers.image import _removeIslands
+from bigcrittercolor.helpers.image import _removeIslands, _imgIsValid, _imgAndMaskAreValid
 
 def inferMasks(img_ids=None, skip_existing=True, gd_gpu=True, sam_gpu=True,
                strategy="prompt1", text_prompt="subject", box_threshold=0.25, text_threshold=0.25, # groundedSAM params
@@ -253,9 +253,9 @@ def inferMasks(img_ids=None, skip_existing=True, gd_gpu=True, sam_gpu=True,
         if aux_segmodel_location is not None:
             _bprint(print_details,"Applying auxiliary model to SAM segment...")
 
-            if img_raw is None or mask is None:
+            if not _imgAndMaskAreValid(img_raw,mask.astype(np.uint8)):
                 continue
-                
+
             # get the segment SAM gave us and verticalize it
             sam_seg = cv2.bitwise_and(img_raw, img_raw, mask=mask.astype(np.uint8))
             #sam_seg = cv2.resize(sam_seg, (sam_seg.shape[1] // 2, sam_seg.shape[0] // 2))
