@@ -2,9 +2,9 @@ from bigcrittercolor.helpers.image import _imgIsValid
 import numpy as np
 
 def _imgAndMaskAreValid(img, mask):
-    if not _imgIsValid(img):
+    if not _imgIsValid._imgIsValid(img):
         return False
-    if not _imgIsValid(mask):
+    if not _imgIsValid._imgIsValid(mask):
         return False
 
     # Check if the mask is of type np.uint8

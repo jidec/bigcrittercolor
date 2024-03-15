@@ -19,7 +19,7 @@ from huggingface_hub import hf_hub_download
 
 from bigcrittercolor.helpers import _bprint, _getIDsInFolder, _showImages
 from bigcrittercolor.helpers.verticalize import _verticalizeImg
-from bigcrittercolor.helpers.image import _removeIslands, _imgIsValid, _imgAndMaskAreValid
+from bigcrittercolor.helpers.image import _removeIslands, _imgAndMaskAreValid
 
 def inferMasks(img_ids=None, skip_existing=True, gd_gpu=True, sam_gpu=True,
                strategy="prompt1", text_prompt="subject", box_threshold=0.25, text_threshold=0.25, # groundedSAM params
