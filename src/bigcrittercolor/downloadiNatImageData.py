@@ -124,10 +124,11 @@ def downloadiNatImageData(taxa_list, download_records=True, download_images=True
 
             dirname = data_folder + '/other/inat_download_records/iNat_images-' + taxon + "-raw_images"
             # download each record chunk, waiting an hour between
-            for split_record_location in os.listdir(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '-records_split'):
+            for split_records_name in os.listdir(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '-records_split'):
                 fileout = data_folder + "/other/inat_download_records/" + taxon + '-download_log.csv'
                 # download the images
-                _inat_dl_helpers.downloadImages(img_records=split_record_location,imgdir=dirname,fileout=fileout)
+                split_records_path = data_folder + '/other/inat_download_records/iNat_images-' + taxon + '-records_split/' + split_records_name
+                _inat_dl_helpers.downloadImages(img_records=split_records_path,imgdir=dirname,fileout=fileout)
 
                 # add INAT- prefix to images
                 imgnames = os.listdir(rawimg_dir)
