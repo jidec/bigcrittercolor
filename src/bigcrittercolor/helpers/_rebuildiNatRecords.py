@@ -31,5 +31,3 @@ def _rebuildiNatRecords(data_folder):
 
     # write
     merged_data.to_csv(data_folder + "/records.csv", index=False)
-
-_rebuildiNatRecords("E:/aeshna_data")
