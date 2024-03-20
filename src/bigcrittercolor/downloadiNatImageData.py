@@ -105,7 +105,7 @@ def downloadiNatImageData(taxa_list, download_records=True, download_images=True
             n_new_obs = records.shape[0]
             if n_new_obs == 0:
                 _bprint(print_steps, "No new observations to download, exiting...")
-                return
+                continue
             _bprint(print_steps, "Will download " + str(n_new_obs) + " new observations...")
 
             # write trimmed records to trimmed records folder
