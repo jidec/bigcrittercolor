@@ -102,7 +102,11 @@ def downloadiNatImageData(taxa_list, download_records=True, download_images=True
             # get only records NOT in existing records for taxon
             in_mask = records["file_name"].isin(existing_ogfilenames)
             records = records[~in_mask]
-            _bprint(print_steps, "Will download " + str(records.shape[0]) + " new observations...")
+            n_new_obs = str(records.shape[0])
+            if n_new_obs == 0:
+                _bprint(print_steps, "No new observations to download, exiting...")
+                return
+            _bprint(print_steps, "Will download " + n_new_obs + " new observations...")
 
             # write trimmed records to trimmed records folder
             records.to_csv(
