@@ -1,73 +1,3 @@
-
-# Downloads images from a set of iDigBio search results, using random names for
-# the downloaded files, and generates a CSV file mapping downloaded file names
-# to source URIs, iDigBio core IDs, and scientific names.
-
-import os.path
-
-def getDownloadRequests(fpath, img_dir, skip_existing):
-    """
-    Generates a list of download request (file_name, URI) tuples.
-    """
-    downloads = []
-    with open(fpath, encoding="utf-8") as fin:
-        reader = csv.DictReader(fin)
-
-        for line in reader:
-            imguri = line['img_url']
-            fname = line['file_name']
-            tmp_fname = os.path.splitext(fname)[0]
-            downloads.append((tmp_fname, imguri))
-
-    return downloads
-
-
-
-def downloadImages(img_records,imgdir="../../data/other/",no_skip=False,fileout="IMG_RECORDS_FILE-download_log.csv",timeout=20,threads=20):
-    downloads = getDownloadRequests(
-        img_records, imgdir, not(no_skip)
-    )
-    if len(downloads) == 0:
-        exit()
-
-    # Generate the file name for the failure log.
-    logfn = 'fail_log-{0}.csv'.format(
-        time.strftime('%Y%b%d-%H:%M:%S', time.localtime())
-    )
-
-    # Process the download requests.
-    with open(fileout, 'a', encoding="utf-8") as fout: #, open(logfn, 'w') as logf:
-        writer = csv.DictWriter(
-            fout, ['file_name', 'file_path', 'imgsize', 'bytes', 'img_url', 'time']
-        )
-        writer.writeheader()
-        outrow = {}
-
-        #faillog = csv.DictWriter(
-        #    logf, ['file_name', 'img_url', 'time', 'reason']
-        #)
-        #faillog.writeheader()
-        logrow = {}
-
-        for result in mtDownload(
-            downloads, imgdir, timeout, threads
-        ):
-            if result.result == ImageDownloadWorkerResult.SUCCESS:
-                outrow['file_name'] = result.identifier
-                outrow['file_path'] = result.localpath
-                outrow['img_url'] = result.uri
-                #outrow['imgsize'] = getImageSize(result.localpath)
-                #outrow['bytes'] = os.stat(result.localpath).st_size
-                outrow['time'] = result.timestamp
-                writer.writerow(outrow)
-            elif result.result == ImageDownloadWorkerResult.DOWNLOAD_FAIL:
-                logrow['file_name'] = result.identifier
-                logrow['img_url'] = result.uri
-                logrow['time'] = result.timestamp
-                logrow['reason'] = result.fail_reason
-                #faillog.writerow(logrow)
-
-
 import requests
 import csv
 import datetime
@@ -75,70 +5,57 @@ import os.path
 
 base_url = 'https://api.inaturalist.org/v1/'
 
+def getiNatRecords(taxon, research_grade_only=True, lat_lon_box=None, output_file=None, update=True, img_size="medium",
+                   data_folder="../.."):
+    taxon_id = getTaxonID(taxon)
 
-# ("Starting")
+    base_params = {'taxon_id': taxon_id}
+    if research_grade_only:
+        base_params['quality_grade'] = 'research'
+    #if usa_only:
+    #    base_params['swlat'] = 24.396308
+    #    base_params['swlng'] = -124.848974
+    #    base_params['nelat'] = 49.384358
+    #    base_params['nelng'] = -66.885444
+    if lat_lon_box is not None:
+        base_params['swlat'] = lat_lon_box[0][0]
+        base_params['swlng'] = lat_lon_box[0][1]
+        base_params['nelat'] = lat_lon_box[1][0]
+        base_params['nelng'] = lat_lon_box[1][1]
+    ofpath = output_file
+    if ofpath is None:
+        # ofpath = 'helpers/genus_image_records/iNat_images-' + args.taxon.replace(' ', '_') + '.csv' #EDITED
+        # add param for proj_root
+        ofpath = data_folder + '/other/inat_download_records/iNat_images-' + taxon.replace(' ',
+                                                                                              '_') + '.csv'  # EDITED
+    of_exists = os.path.exists(ofpath)
+    prev_obs_ids = {}
+    if of_exists:
+        if update:
+            prev_obs_ids = readExtantObsIds(ofpath)
+    #prev_obs_ids = readExtantObsIds(ofpath)
 
-def getTaxonID(taxon_name):
-    if len(taxon_name.split(' ')) == 2:
-        rank = 'species'
-    else:
-        rank = 'genus'
+    fout = open(ofpath, 'a', encoding='utf-8')
+    writer = csv.DictWriter(fout, [
+        'obs_id', 'usr_id', 'date', 'latitude', 'longitude', 'taxon',
+        'img_cnt', 'img_id', 'file_name', 'img_url', 'width', 'height',
+        'license', 'annotations', 'tags', 'download_time', 'family', 'genus', 'species'
+    ])
+    if not (of_exists):
+        writer.writeheader()
 
-    params = {'rank': rank, 'q': taxon_name}
-    resp = requests.get(base_url + 'taxa', params=params)
-    res = resp.json()
-
-    match_cnt = 0
-    taxon_id = None
-    taxon_ids = []
-    for t_info in res['results']:
-        if t_info['name'] == taxon_name:
-            taxon_id = t_info['id']
-            taxon_ids.append(t_info['id'])
-            match_cnt += 1
-
-    if match_cnt == 0:
-        raise Exception('Could not find the {0} "{1}".\n'.format(
-            rank, taxon_name
-        ))
-    elif match_cnt > 1:
-        # raise Exception(
-        # 'More than one {0} name match for "{1}".\n'.format(rank, taxon_name
-        # ))
-        print("Genus matches " + str(match_cnt) + " using the first")
-        print(len(taxon_ids))
-        taxon_id = taxon_ids[0]
-        print(taxon_ids)
-        print(taxon_id)
-
-    return taxon_id
-
-
-def getRecCnt(base_params):
-    # print("Getting record count")
-    resp = requests.get(base_url + 'observations', params=base_params)
-    res = resp.json()
-
-    return int(res['total_results'])
+    getRecords(base_params, writer, prev_obs_ids, img_size=img_size)
 
 
-def getControlledVocab():
-    # print("Getting controlled vocab")
-    """
-    Retrieves the controlled vocabulary used for annotations.
-    """
-    resp = requests.get(base_url + 'controlled_terms')
-    res = resp.json()
+def readExtantObsIds(fpath):
+    obs_ids = set()
 
-    vocab = {}
+    with open(fpath, encoding="utf-8") as fin:  # added encoding="utf-8"
+        reader = csv.DictReader(fin)
+        for row in reader:
+            obs_ids.add(int(row['obs_id']))
 
-    for result in res['results']:
-        vocab[result['id']] = result['label']
-        for val in result['values']:
-            vocab[val['id']] = val['label']
-
-    return vocab
-
+    return obs_ids
 
 def getRecords(base_params, writer, prev_obs_ids, img_size, vocab=None):
     # ("Records")
@@ -289,62 +206,137 @@ def retrieveAllRecords(
         print('  {0:,} records processed...'.format(record_cnt))
         page += 1
 
-def readExtantObsIds(fpath):
-    obs_ids = set()
+# img_records is the PATH to the records .csv
+def downloadImages(img_records,imgdir="../../data/other/",no_skip=False,fileout="IMG_RECORDS_FILE-download_log.csv",timeout=20,threads=20):
+    downloads = getDownloadRequests(
+        img_records, imgdir, not(no_skip)
+    )
+    if len(downloads) == 0:
+        exit()
 
-    with open(fpath, encoding="utf-8") as fin:  # added encoding="utf-8"
-        reader = csv.DictReader(fin)
-        for row in reader:
-            obs_ids.add(int(row['obs_id']))
+    # Generate the file name for the failure log.
+    logfn = 'fail_log-{0}.csv'.format(
+        time.strftime('%Y%b%d-%H:%M:%S', time.localtime())
+    )
 
-    return obs_ids
-
-def getiNatRecords(taxon, research_grade_only=True, lat_lon_box=None, output_file=None, update=True, img_size="medium",
-                   data_folder="../.."):
-    taxon_id = getTaxonID(taxon)
-
-    base_params = {'taxon_id': taxon_id}
-    if research_grade_only:
-        base_params['quality_grade'] = 'research'
-    #if usa_only:
-    #    base_params['swlat'] = 24.396308
-    #    base_params['swlng'] = -124.848974
-    #    base_params['nelat'] = 49.384358
-    #    base_params['nelng'] = -66.885444
-    if lat_lon_box is not None:
-        base_params['swlat'] = lat_lon_box[0][0]
-        base_params['swlng'] = lat_lon_box[0][1]
-        base_params['nelat'] = lat_lon_box[1][0]
-        base_params['nelng'] = lat_lon_box[1][1]
-    ofpath = output_file
-    if ofpath is None:
-        # ofpath = 'helpers/genus_image_records/iNat_images-' + args.taxon.replace(' ', '_') + '.csv' #EDITED
-        # add param for proj_root
-        ofpath = data_folder + '/other/inat_download_records/iNat_images-' + taxon.replace(' ',
-                                                                                              '_') + '.csv'  # EDITED
-    of_exists = os.path.exists(ofpath)
-    prev_obs_ids = {}
-    if of_exists:
-        if update:
-            prev_obs_ids = readExtantObsIds(ofpath)
-    #prev_obs_ids = readExtantObsIds(ofpath)
-
-    fout = open(ofpath, 'a', encoding='utf-8')
-    writer = csv.DictWriter(fout, [
-        'obs_id', 'usr_id', 'date', 'latitude', 'longitude', 'taxon',
-        'img_cnt', 'img_id', 'file_name', 'img_url', 'width', 'height',
-        'license', 'annotations', 'tags', 'download_time', 'family', 'genus', 'species'
-    ])
-    if not (of_exists):
+    # Process the download requests.
+    with open(fileout, 'a', encoding="utf-8") as fout: #, open(logfn, 'w') as logf:
+        writer = csv.DictWriter(
+            fout, ['file_name', 'file_path', 'imgsize', 'bytes', 'img_url', 'time']
+        )
         writer.writeheader()
+        outrow = {}
 
-    getRecords(base_params, writer, prev_obs_ids, img_size=img_size)
+        #faillog = csv.DictWriter(
+        #    logf, ['file_name', 'img_url', 'time', 'reason']
+        #)
+        #faillog.writeheader()
+        logrow = {}
+
+        for result in mtDownload(
+            downloads, imgdir, timeout, threads
+        ):
+            if result.result == ImageDownloadWorkerResult.SUCCESS:
+                outrow['file_name'] = result.identifier
+                outrow['file_path'] = result.localpath
+                outrow['img_url'] = result.uri
+                #outrow['imgsize'] = getImageSize(result.localpath)
+                #outrow['bytes'] = os.stat(result.localpath).st_size
+                outrow['time'] = result.timestamp
+                writer.writerow(outrow)
+            elif result.result == ImageDownloadWorkerResult.DOWNLOAD_FAIL:
+                logrow['file_name'] = result.identifier
+                logrow['img_url'] = result.uri
+                logrow['time'] = result.timestamp
+                logrow['reason'] = result.fail_reason
+                #faillog.writerow(logrow)
+
+# Downloads images from a set of iDigBio search results, using random names for
+# the downloaded files, and generates a CSV file mapping downloaded file names
+# to source URIs, iDigBio core IDs, and scientific names.
+
+def getDownloadRequests(fpath, img_dir, skip_existing):
+    """
+    Generates a list of download request (file_name, URI) tuples.
+    """
+    downloads = []
+    with open(fpath, encoding="utf-8") as fin:
+        reader = csv.DictReader(fin)
+
+        for line in reader:
+            imguri = line['img_url']
+            fname = line['file_name']
+            tmp_fname = os.path.splitext(fname)[0]
+            downloads.append((tmp_fname, imguri))
+
+    return downloads
+# ("Starting")
+
+def getTaxonID(taxon_name):
+    if len(taxon_name.split(' ')) == 2:
+        rank = 'species'
+    else:
+        rank = 'genus'
+
+    params = {'rank': rank, 'q': taxon_name}
+    resp = requests.get(base_url + 'taxa', params=params)
+    res = resp.json()
+
+    match_cnt = 0
+    taxon_id = None
+    taxon_ids = []
+    for t_info in res['results']:
+        if t_info['name'] == taxon_name:
+            taxon_id = t_info['id']
+            taxon_ids.append(t_info['id'])
+            match_cnt += 1
+
+    if match_cnt == 0:
+        raise Exception('Could not find the {0} "{1}".\n'.format(
+            rank, taxon_name
+        ))
+    elif match_cnt > 1:
+        # raise Exception(
+        # 'More than one {0} name match for "{1}".\n'.format(rank, taxon_name
+        # ))
+        print("Genus matches " + str(match_cnt) + " using the first")
+        print(len(taxon_ids))
+        taxon_id = taxon_ids[0]
+        print(taxon_ids)
+        print(taxon_id)
+
+    return taxon_id
+
+
+def getRecCnt(base_params):
+    # print("Getting record count")
+    resp = requests.get(base_url + 'observations', params=base_params)
+    res = resp.json()
+
+    return int(res['total_results'])
+
+
+def getControlledVocab():
+    # print("Getting controlled vocab")
+    """
+    Retrieves the controlled vocabulary used for annotations.
+    """
+    resp = requests.get(base_url + 'controlled_terms')
+    res = resp.json()
+
+    vocab = {}
+
+    for result in res['results']:
+        vocab[result['id']] = result['label']
+        for val in result['values']:
+            vocab[val['id']] = val['label']
+
+    return vocab
 
 #
 # Utility classes and functions for working with image files at the file system
 # level, including facilities for parallel processing.
 #
-
 
 import os
 import os.path
