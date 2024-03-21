@@ -21,8 +21,8 @@ def _clusterByImgFeatures(imgs, feature_extractor="resnet18", cluster_algo="kmea
                             print_steps=True, show=True, show_n=18):
 
     if pad_imgs:
-        imgs = [_resizeImgToTotalDim(img,800) for img in imgs]
-        imgs = [_padImgToSize._padImgToSize(img,(900,900)) for img in imgs]
+        imgs = [_resizeImgToTotalDim(img,300) for img in imgs] #800
+        imgs = [_padImgToSize._padImgToSize(img,(300,300)) for img in imgs] #900 900
     # load model
     _bprint(print_steps,"Loading pretrained feature extractor...")
     match feature_extractor:
@@ -189,3 +189,12 @@ class FeatureExtractor(nn.Module):
         out = self.flatten(out)
         out = self.fc(out)
         return out
+
+#if __name__ == '__main__':
+#    segs = _readBCCImgs(img_ids=mask_ids, type="raw_seg", color_format=color_format_to_cluster, make_3channel=True,
+#                        data_folder=data_folder)
+    # show is always true here because we have to show for user input
+#    labels = _clusterByImgFeatures(segs, feature_extractor="resnet18", cluster_algo=kmeans,
+#                                   cluster_n=4,
+#                                   full_display_ids=ids_for_full_display, full_display_data_folder=data_folder,
+#                                   print_steps=print_steps, cluster_params_dict=cluster_params_dict, show=True)
