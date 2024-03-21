@@ -142,49 +142,73 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
             raw_imgs = [cv2.imread(data_folder + "/segments/" + img_ids[i] + "_segment.png",cv2.IMREAD_UNCHANGED) for i in indices]
             patch_imgs = [makeCollage([img,patch_img],n_per_row=2,resize_wh=(50,200)) for img, patch_img in zip(raw_imgs,patch_imgs)]
 
-        #if len(patch_imgs) > 18:
-        #    patch_imgs = random.sample(patch_imgs, 18)
-
         _showImages(True,patch_imgs,maintitle="Example Patched Images")
-
-        # add the shape of the image
-        #patch_or_pixel_data = [(ppd[0],ppd[1],np.shape(img)) for ppd in patch_or_pixel_data]
 
     # cluster by group
     if group_cluster_records_colname is not None:
-        _bprint(print_steps, "Started group clustering by a records column (probably species or clade)")
-        # load records and keep those with matching ids
-        records = pd.read_csv("records.csv")
-        records = records[records["imageID"].isin(img_ids),:]
+        _bprint(print_steps, "Started group clustering by a records column (probably 'species' or 'genus')")
+        # load records
+        records = pd.read_csv(data_folder + "/records.csv")
+        records = records[['obs_id', group_cluster_records_colname]]
+        records = records.drop_duplicates(subset='obs_id', keep='first')
 
-        # DEPRECATED FOR NOW
+        # create df to hold img_ids and corresponding taxa
+        img_ids_groups = pd.DataFrame(img_ids, columns=['img_id'])
+        img_ids_groups['obs_id'] = ["-".join(id.split("-")[:-1]) for id in img_ids] # add obs_id column
+
+        # merge in
+        img_ids_groups = pd.merge(img_ids_groups, records, on='obs_id')
+
         # loop through unique groups and update patch data using clustered centroids
-        unique_groups = unique(records[group_cluster_records_colname])
+        unique_groups = unique(img_ids_groups[group_cluster_records_colname])
+        updated_patch_or_pixel_data = []
+        updated_img_ids = []
         for g in unique_groups:
-            # group_ids = records.query(group_cluster_records_colname + '==' + g)["imageID"]
 
             # get indices for the group
-            group_indices = records.index[records[group_cluster_records_colname]==g].tolist()
+            group_indices = img_ids_groups.index[img_ids_groups[group_cluster_records_colname] == g].tolist()
 
             # get data for the group
-            group_data = patch_or_pixel_data[group_indices]
+            group_ppds = [patch_or_pixel_data[i] for i in group_indices]
 
-            # get 2nd element of each tuple, the pixel means
-            group_patch_means = [c[1] for c in group_data]
+            # get ids for the group
+            group_img_ids = [img_ids[i] for i in group_indices]
 
-            cluster_eps = 0
-            cluster_min_samples = 0
-            nclust_metric = None
+            ## BELOW PASTED FROM GROUP CLUSTERING - may want to make own fun
+            # get color values per image (a list of lists, each sublist containing RGB color values each of which has a length of 3)
+            all_values_per_image = [ppd[1] for ppd in group_ppds]
 
-            # cluster and get new values from cluster centroids
-            #clustered_values = getClusterCentroids(group_patch_means,cluster_algo,cluster_n,cluster_eps,cluster_min_samples,scale,use_positions,downweight_axis,upweight_axis,preclustered,nclust_metric,img,colorspace,show)
+            # combine the image sublists - all_values is a list of color values
+            all_values = [value for image_list in all_values_per_image for value in image_list]
+            # keep track of the indices - all_indices is a list of indices, the images to which each color value belongs
+            all_indices = [index for index, sublist in enumerate(all_values_per_image) for item in sublist]
 
-            # replaced old values in group data with new values
-            #for index, d in enumerate(group_data):
-            #    group_data[index] = tuple(d[0] + clustered_values[index] + d[2])
+            _bprint(print_steps, "Clustering " + str(len(all_values)) + " colors...")
+            clustered_values = _cluster(all_values, **cluster_args, show_color_scatter=show,
+                                        input_colorspace=colorspace, return_values_as_centroids=True,
+                                        print_steps=print_steps)
 
-            # add group data back to main data
-            #patch_or_pixel_data[group_indices] = group_data
+            def group_values_by_indices(values, indices):
+                groups = {}
+                for value, index in zip(values, indices):
+                    if index not in groups:
+                        groups[index] = []
+                    groups[index].append(value)
+
+                # Sort the dictionary by its keys and return the values
+                return [groups[key] for key in sorted(groups)]
+
+            # clustered_values_imgs regroups the clustered values back to their original images using the image indices we saved
+            clustered_values_imgs = group_values_by_indices(clustered_values, all_indices)
+            # we then create a new patch_or_pixel_data that only replaces old values with the new clustered values
+            group_ppds = [(ppd[0], clustered_values_imgs[index], ppd[2]) for index, ppd in
+                                   enumerate(group_ppds)]
+            ##
+            # I think indices are screwed up when you do this?
+            updated_patch_or_pixel_data = updated_patch_or_pixel_data + group_ppds
+            updated_img_ids = updated_img_ids + group_img_ids
+        patch_or_pixel_data = updated_patch_or_pixel_data
+        img_ids = updated_img_ids
 
     # cluster at the level of individual images
     elif cluster_individually:
@@ -201,10 +225,6 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
 
     else:  # otherwise we are grouping the ids (default)
         _bprint(print_steps, "Group clustering all IDs together...")
-
-        # get locations
-        # all_color_locations is a list of lists of coordinates if pixels, and a list of boolean masks if patches
-        #all_color_locations = [ppd[0] for ppd in patch_or_pixel_data]
 
         # get color values per image (a list of lists, each sublist containing RGB color values each of which has a length of 3)
         all_values_per_image = [ppd[1] for ppd in patch_or_pixel_data]
@@ -232,18 +252,6 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
         # we then create a new patch_or_pixel_data that only replaces old values with the new clustered values
         patch_or_pixel_data = [(ppd[0],clustered_values_imgs[index],ppd[2]) for index, ppd in enumerate(patch_or_pixel_data)]
 
-        # reassign clustered values to the original list of lists
-        # for the image index, and the clustered value...
-        #for img_index, new_value in zip(all_indices, clustered_values):
-            #
-        #    ppd = (patch_or_pixel_data[img_index][0],new_value, patch_or_pixel_data[img_index][2])
-        #    sublist_item_index = patch_or_pixel_data[sublist_index].index(patch_or_pixel_data[sublist_index][0])
-        #    patch_or_pixel_data[sublist_index][sublist_item_index] = new_value
-        #    del patch_or_pixel_data[sublist_index][0]
-
-        # FINALLY reassign back to patch the list of tuples
-        #patch_or_pixel_data = [(ppd[0],patch_or_pixel_data[index],ppd[2]) for index, ppd in enumerate(patch_or_pixel_data)]
-
     # reconstruct the images
     # patch_or_pixel_data is a list of tuples
     #   each tuple contains: a list of locations of the pixels and patches as its first element
@@ -253,23 +261,7 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
         img = _reconstructImgFromPPD(ppd,is_patch_data=by_patches,input_colorspace=colorspace)
 
         img = _format(img, in_format=colorspace,out_format="bgr",alpha=False)
-        #if colorspace == "cielab":
-        #    print("IMAGE BEFORE CONVERT")
-        #    print(img)
 
-        #    img = cv2.cvtColor(img, cv2.COLOR_Lab2BGR)
-        #    print("FINAL IMAGE")
-        #    print(img)
-
-        #img = _format(img,in_format=colorspace,out_format="bgr",alpha=True)
-        # convert back to rgb
-        #if colorspace != "rgb":
-        #img = img * 255
-
-        # reshape to original dims
-        #img = img.reshape(ppd[2])
-
-        #_showImages(show,[img],['Discretized'])
         if write_subfolder != "":
             if not os.path.exists(data_folder + "/patterns/" + write_subfolder):
                 os.mkdir(data_folder + "/patterns/" + write_subfolder)
