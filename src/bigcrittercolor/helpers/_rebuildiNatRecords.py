@@ -25,7 +25,7 @@ def _rebuildiNatRecords(data_folder):
     # rename taxon col to species
     merged_data = merged_data.rename(columns={'taxon': 'species'})
     # create genus col by spltting species col on spaces
-    merged_data['genus'] = merged_data['species'].str.split(' ', 1).str[0]
+    merged_data['genus'] = merged_data['species'].str.split(' ', n=1).str[0]
     # add INAT to the obs ids
     merged_data['obs_id'] = 'INAT-' + merged_data['obs_id'].astype(str)
 
