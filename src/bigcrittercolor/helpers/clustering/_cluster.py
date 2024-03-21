@@ -29,6 +29,7 @@ def _cluster(values, algo="kmeans", n=3,
              preference=None,
              scale=False, # whether to scale the features between 0 and 1 to equalize the importance of each (happens before weighting if applicable)
              weights=None, # a list of weights, one for each column, that make certain features more or less important
+             pca_n=None,
              show_pca_tsne = False,
              show_color_scatter = False,
              input_colorspace = "rgb",
@@ -74,12 +75,16 @@ def _cluster(values, algo="kmeans", n=3,
     start_values = np.copy(values)
     if scale:
         # Initialize the MinMaxScaler
-        scaler = MinMaxScaler()
+        scaler = StandardScaler() #MinMaxScaler
         # Scale the data
         values = scaler.fit_transform(values)
 
     if weights is not None:
         values = values * weights
+
+    if pca_n is not None:
+        pca = PCA(n_components=pca_n)
+        values = pca.fit_transform(values)
 
     # find n
     if find_n_minmax is not None:
