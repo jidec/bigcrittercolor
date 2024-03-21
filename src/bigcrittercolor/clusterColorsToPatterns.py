@@ -3,17 +3,20 @@ import numpy as np
 import cv2
 from numpy import unique
 import os
+from collections import Counter
+import random
 
 from bigcrittercolor.helpers import _bprint, _getIDsInFolder, _showImages
 from bigcrittercolor.helpers.clustering import _cluster
 from bigcrittercolor.helpers.image import _blur, _format, _imgToColorPatches, _reconstructImgFromPPD
 from bigcrittercolor.helpers.image import _equalize
+from bigcrittercolor.helpers import makeCollage
 
 def clusterColorsToPatterns(img_ids=None, cluster_individually=False, preclustered = False, group_cluster_records_colname = None,
-                    by_patches=True, patch_args = {'min_patch_pixel_area':5},
+                    by_patches=True, patch_args = {'min_patch_pixel_area':5,'cluster_args':{'n':5, 'algo':'kmeans'}}, visualize_patching=True,
                     cluster_args={'find_n_minmax':(2,7), 'algo':"gaussian_mixture"}, use_positions=False,
                     colorspace = "cielab",
-                    height_resize = 100,
+                    height_resize = 200,
                     equalize_args={'type':"clahe"},
                     blur_args= {'type':"bilateral"},
                     preclust_read_subfolder = "", write_subfolder= "",
@@ -63,7 +66,7 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
     if img_ids is None:
         img_ids = _getIDsInFolder(data_folder + "/segments")
         if preclustered:
-            img_ids = _getIDsInFolder(data_folder + "/patterns")
+            img_ids = _getIDsInFolder(data_folder + "/patterns/" + preclust_read_subfolder)
 
     # this list holds either patch data or pixel data for every image - soon we will gather this
     patch_or_pixel_data = []
@@ -91,6 +94,16 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
             _bprint(print_details, "Image is empty - skipping")
             continue
 
+        # get mask using black pixels before blur
+        # find the black background color, which will always be the most common color
+        pixels = img.reshape(-1, img.shape[2])
+        pixel_tuples = [tuple(pixel) for pixel in pixels]
+        most_common_color, _ = Counter(pixel_tuples).most_common(1)[0]
+        # create a mask for the black background
+        bg_mask = np.all(img == most_common_color, axis=-1)
+        # convert the boolean mask to uint8 format for visualization
+        bg_mask = bg_mask.astype(np.uint8) * 255
+
         # blur
         if blur_args is not None:
             img = _blur(img, **blur_args,show=show_indv)
@@ -100,13 +113,13 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
             img = _equalize(img, **equalize_args,show=show_indv)
 
         # format colorspace
-        #if colorspace is not None:
-        img = _format(img, in_format='bgr', out_format=colorspace,alpha=False)
-            
+        img = _format(img, in_format='rgb', out_format=colorspace,alpha=False)
+
         # resize
         if height_resize is not None:
             resize_proportion = height_resize / img.shape[0]
             img = cv2.resize(img, dsize=(int(img.shape[1] * resize_proportion),height_resize),interpolation = cv2.INTER_NEAREST)
+            bg_mask = cv2.resize(bg_mask, dsize=(int(bg_mask.shape[1] * resize_proportion),height_resize),interpolation = cv2.INTER_NEAREST)
 
         # gather data for the image
         # patch_or_pixel_data is a list of tuples that allows us to reconstruct the image later
@@ -114,11 +127,25 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
         #                        a list of the values of the pixels or patches as its second element
         #                        an ndarray of the image shape
         if by_patches: # patch data
-            patch_or_pixel_data.append(_imgToColorPatches(img, min_patch_pixels=min_patch_pixel_area,return_patch_masks_colors_imgshapes=True,show=show_indv, input_colorspace=colorspace))
+            patch_or_pixel_data.append(_imgToColorPatches(img, bg_mask, **patch_args, return_patch_masks_colors_imgshapes=True,show=show_indv, input_colorspace=colorspace))
             _bprint(print_details, "Gathered image patch data")
         else: # pixel data
             patch_or_pixel_data.append(getPixelCoordsAndPixels(img))
             _bprint(print_details, "Gathered image pixel data")
+
+    if by_patches and visualize_patching:
+        patch_imgs = [_reconstructImgFromPPD(ppd,is_patch_data=True) for ppd in patch_or_pixel_data]
+
+        if len(patch_imgs) > 18:
+            indices = random.sample(range(len(patch_imgs)), 18)
+            patch_imgs = [patch_imgs[i] for i in indices]
+            raw_imgs = [cv2.imread(data_folder + "/segments/" + img_ids[i] + "_segment.png",cv2.IMREAD_UNCHANGED) for i in indices]
+            patch_imgs = [makeCollage([img,patch_img],n_per_row=2,resize_wh=(50,200)) for img, patch_img in zip(raw_imgs,patch_imgs)]
+
+        #if len(patch_imgs) > 18:
+        #    patch_imgs = random.sample(patch_imgs, 18)
+
+        _showImages(True,patch_imgs,maintitle="Example Patched Images")
 
         # add the shape of the image
         #patch_or_pixel_data = [(ppd[0],ppd[1],np.shape(img)) for ppd in patch_or_pixel_data]
@@ -252,7 +279,6 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
         if(print_details): print("Wrote to " + write_target)
 
         print(i)
-        i = i + 1
 
 #def getPatchesAndPatchPixelMeans(img):
 #    patch_img = _imgToColorPatches(img)
