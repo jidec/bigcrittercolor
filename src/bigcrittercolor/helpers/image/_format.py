@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-def _format(image, in_format, out_format, alpha):
+def _format(image, in_format, out_format, alpha=False):
     """ Convert an image from one color format to another and add or removal an alpha channel if specified
 
         Args:
@@ -13,6 +13,9 @@ def _format(image, in_format, out_format, alpha):
         Returns:
             numpy.ndarray: The reformatted image in the desired color format and with the specified alpha channel handling.
     """
+
+    if in_format == out_format:
+        return image
     # Convert the input image to the desired format
     converted_image = _convert_image(image, in_format, out_format)
 
