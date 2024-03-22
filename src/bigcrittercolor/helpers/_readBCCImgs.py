@@ -38,6 +38,8 @@ def _readBCCImgs(img_ids=None, type="img", color_format=None, make_3channel=Fals
         case "mask_from_seg":
             imgs = [cv2.imread(data_folder + "/segments/" + id + "_segment.png") for id in img_ids]
             imgs = [_segToMask(img) for img in imgs]
+        case "pattern":
+            imgs = [cv2.imread(data_folder + "/patterns/" + id + "_pattern.png") for id in img_ids]
 
     match color_format:
         case "grey":

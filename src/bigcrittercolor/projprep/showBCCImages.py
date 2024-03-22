@@ -3,7 +3,7 @@ import random
 
 from bigcrittercolor.helpers import _readBCCImgs, _showImages, _getIDsInFolder, makeCollage
 
-def showBCCImages(img_ids=None, sample_n=None, show_type="img", title="", data_folder=""):
+def showBCCImages(img_ids=None, sample_n=None, show_type="img", title="", collage_resize_wh=(100,100), data_folder=""):
     """ Show bigcrittercolor images, masks, and/or segments in a data folder
         Args:
             img_ids (list): the image IDs to draw images, masks, and/or segments for
@@ -46,7 +46,18 @@ def showBCCImages(img_ids=None, sample_n=None, show_type="img", title="", data_f
             imgs = _readBCCImgs(img_ids, type="img", data_folder=data_folder)
             masks = _readBCCImgs(img_ids, type="mask", data_folder=data_folder)
 
-            imgs = [makeCollage.makeCollage([img,mask],n_per_row=2) for img, mask in zip(imgs,masks)]
+            imgs = [makeCollage([img,mask],resize_wh=collage_resize_wh,n_per_row=2) for img, mask in zip(imgs,masks)]
+        case "img_seg_pattern":
+            imgs = _readBCCImgs(img_ids, type="img", data_folder=data_folder)
+            segs = _readBCCImgs(img_ids, type="seg", data_folder=data_folder)
+            pats = _readBCCImgs(img_ids, type="pattern", data_folder=data_folder)
+            imgs = [makeCollage([img, seg, pat], resize_wh=collage_resize_wh, n_per_row=3) for img, seg, pat in zip(imgs, segs, pats)]
+        case "seg_pattern":
+            segs = _readBCCImgs(img_ids, type="seg", data_folder=data_folder)
+            pats = _readBCCImgs(img_ids, type="pattern", data_folder=data_folder)
+            imgs = [makeCollage([seg, pat], resize_wh=collage_resize_wh, n_per_row=2) for seg, pat in zip(segs, pats)]
 
     # at the end we show what was kept
     _showImages(True, images=imgs, maintitle=title)
+
+#showBCCImages(img_ids=["INAT-134099785-9"],show_type="img_seg_pattern",data_folder="E:/aeshna_data")
