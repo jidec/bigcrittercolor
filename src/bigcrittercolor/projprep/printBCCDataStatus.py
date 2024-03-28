@@ -28,7 +28,9 @@ def printBCCDataStatus(data_folder):
         df = pd.read_csv(file_path)
         total_rows += len(df)
     n_recs = total_rows
-    print("Number of downloaded records: " + str(n_recs))
+    n_obs = df['obs_id'].nunique()
+    print("Number of downloaded observation records: " + str(n_obs))
+    print("Number of downloaded image records (greater than n_obs if max_n_per_obs > 1): " + str(n_recs))
 
     # List to hold the filenames
     filenames_starting_with_iNat = []

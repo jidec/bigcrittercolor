@@ -1,1 +1,2 @@
 from bigcrittercolor.imgdownload.downloadiNatRandImgs import downloadiNatRandImgs
+from bigcrittercolor.imgdownload.printiNatRecordCounts import printiNatRecordCounts
