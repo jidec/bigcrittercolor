@@ -6,7 +6,7 @@ import os.path
 base_url = 'https://api.inaturalist.org/v1/'
 
 def getiNatRecords(taxon, research_grade_only=True, lat_lon_box=None, output_file=None, update=True, img_size="medium",
-                   data_folder="../.."):
+                   max_n_per_obs=1,data_folder="../.."):
     taxon_id = getTaxonID(taxon)
 
     base_params = {'taxon_id': taxon_id}
@@ -24,7 +24,6 @@ def getiNatRecords(taxon, research_grade_only=True, lat_lon_box=None, output_fil
         base_params['nelng'] = lat_lon_box[1][1]
     ofpath = output_file
     if ofpath is None:
-        # ofpath = 'helpers/genus_image_records/iNat_images-' + args.taxon.replace(' ', '_') + '.csv' #EDITED
         # add param for proj_root
         ofpath = data_folder + '/other/inat_download_records/iNat_images-' + taxon.replace(' ',
                                                                                               '_') + '.csv'  # EDITED
@@ -33,7 +32,6 @@ def getiNatRecords(taxon, research_grade_only=True, lat_lon_box=None, output_fil
     if of_exists:
         if update:
             prev_obs_ids = readExtantObsIds(ofpath)
-    #prev_obs_ids = readExtantObsIds(ofpath)
 
     fout = open(ofpath, 'a', encoding='utf-8')
     writer = csv.DictWriter(fout, [
@@ -44,7 +42,7 @@ def getiNatRecords(taxon, research_grade_only=True, lat_lon_box=None, output_fil
     if not (of_exists):
         writer.writeheader()
 
-    getRecords(base_params, writer, prev_obs_ids, img_size=img_size)
+    getRecords(base_params, writer, prev_obs_ids, max_n_per_obs=max_n_per_obs,img_size=img_size)
 
 
 def readExtantObsIds(fpath):
@@ -57,7 +55,7 @@ def readExtantObsIds(fpath):
 
     return obs_ids
 
-def getRecords(base_params, writer, prev_obs_ids, img_size, vocab=None):
+def getRecords(base_params, writer, prev_obs_ids, img_size, max_n_per_obs=1, vocab=None):
     # ("Records")
     if vocab is None:
         vocab = getControlledVocab()
@@ -109,10 +107,8 @@ def getRecords(base_params, writer, prev_obs_ids, img_size, vocab=None):
             )
 
 def retrieveAllRecords(
-        base_params, writer, prev_obs_ids, img_size, obs_ids, vocab
+        base_params, writer, prev_obs_ids, img_size, obs_ids, vocab, max_n_per_obs=1
 ):
-    FNCHARS = string.digits + string.ascii_letters
-
     params = base_params.copy()
     more_records = True
     record_cnt = 0
@@ -138,9 +134,7 @@ def retrieveAllRecords(
 
             if obs_id in obs_ids:
                 print("Repeat observation encountered")
-                # raise Exception(
-                #    'Repeat observation encountered: {0}'.format(obs_id)
-                # )
+
             else:
                 obs_ids.add(obs_id)
 
@@ -148,8 +142,9 @@ def retrieveAllRecords(
 
             # if has an image
             if len(img_list) > 0:
+                n_imgs = min(max_n_per_obs,len(img_list))
                 # for each image in img_list
-                for i in range(0, len(img_list) - 1):
+                for i in range(0, n_imgs): #-1
                     img = img_list[i]
                     img_num = i + 1
                     if (
@@ -314,7 +309,6 @@ def getRecCnt(base_params):
     res = resp.json()
 
     return int(res['total_results'])
-
 
 def getControlledVocab():
     # print("Getting controlled vocab")
