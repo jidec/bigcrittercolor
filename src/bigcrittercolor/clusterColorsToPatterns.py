@@ -8,12 +8,12 @@ import random
 
 from bigcrittercolor.helpers import _bprint, _getIDsInFolder, _showImages
 from bigcrittercolor.helpers.clustering import _cluster
-from bigcrittercolor.helpers.image import _blur, _format, _imgToColorPatches, _reconstructImgFromPPD
+from bigcrittercolor.helpers.image import _blur, _format, _imgToColorPatches, _reconstructImgFromPPD, _blackBgToTransparent
 from bigcrittercolor.helpers.image import _equalize
 from bigcrittercolor.helpers import makeCollage
 
 def clusterColorsToPatterns(img_ids=None, cluster_individually=False, preclustered = False, group_cluster_records_colname = None,
-                    by_patches=True, patch_args = {'min_patch_pixel_area':5,'cluster_args':{'n':5, 'algo':'kmeans'}}, visualize_patching=True,
+                    by_patches=True, patch_args = {'min_patch_pixel_area':5,'cluster_args':{'n':5, 'algo':'gaussian_mixture'}}, visualize_patching=True,
                     cluster_args={'find_n_minmax':(2,7), 'algo':"gaussian_mixture"}, use_positions=False,
                     colorspace = "cielab",
                     height_resize = 200,
@@ -85,7 +85,7 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
         if not preclustered: # if clustering normally, just read in segments
             img = cv2.imread(data_folder + "/segments/" + id + "_segment.png",cv2.IMREAD_UNCHANGED)
         else: # otherwise read in from the preclust_read_subfolder in patterns
-            img = cv2.imread(data_folder + "/patterns/" + preclust_read_subfolder + "/" + id + "_segment.png", cv2.IMREAD_UNCHANGED) #_pattern.ong
+            img = cv2.imread(data_folder + "/patterns/" + preclust_read_subfolder + "/" + id + "_pattern.png", cv2.IMREAD_UNCHANGED) #_pattern.ong
 
         _showImages(show_indv,[img],"Segment")
 
@@ -135,12 +135,13 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
 
     if by_patches and visualize_patching:
         patch_imgs = [_reconstructImgFromPPD(ppd,is_patch_data=True) for ppd in patch_or_pixel_data]
-
+        patch_imgs = [_format(img,in_format=colorspace,out_format="rgb") for img in patch_imgs]
         if len(patch_imgs) > 18:
             indices = random.sample(range(len(patch_imgs)), 18)
             patch_imgs = [patch_imgs[i] for i in indices]
             raw_imgs = [cv2.imread(data_folder + "/segments/" + img_ids[i] + "_segment.png",cv2.IMREAD_UNCHANGED) for i in indices]
             patch_imgs = [makeCollage([img,patch_img],n_per_row=2,resize_wh=(50,200)) for img, patch_img in zip(raw_imgs,patch_imgs)]
+
 
         _showImages(True,patch_imgs,maintitle="Example Patched Images")
 
@@ -184,7 +185,7 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
             all_indices = [index for index, sublist in enumerate(all_values_per_image) for item in sublist]
 
             _bprint(print_steps, "Clustering " + str(len(all_values)) + " colors...")
-            clustered_values = _cluster(all_values, **cluster_args, show_color_scatter=show,
+            clustered_values = _cluster(all_values, **cluster_args, show_color_scatter=show, show_color_centroids=show,
                                         input_colorspace=colorspace, return_values_as_centroids=True,
                                         print_steps=print_steps)
 
@@ -217,7 +218,7 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
             
             # cluster patch_or_pixel_data_point[1] which is the pixel colors OR the patch colors
             #   and return the centroids
-            clustered_values = _cluster(ppd[1], **cluster_args, show_color_scatter=show, input_colorspace=colorspace, return_values_as_centroids=True)
+            clustered_values = _cluster(ppd[1], **cluster_args, show_color_scatter=show, show_color_centroids=show, input_colorspace=colorspace, return_values_as_centroids=True)
             # reassign the centroids to the data
             ppd = (ppd[0], clustered_values, ppd[2])
             # put back into the list
@@ -235,7 +236,7 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
         all_indices = [index for index, sublist in enumerate(all_values_per_image) for item in sublist]
 
         _bprint(print_steps, "Clustering " + str(len(all_values)) + " colors...")
-        clustered_values = _cluster(all_values, **cluster_args, show_color_scatter=show, input_colorspace=colorspace, return_values_as_centroids=True,print_steps=print_steps)
+        clustered_values = _cluster(all_values, **cluster_args, show_color_scatter=show, show_color_centroids=True, input_colorspace=colorspace, return_values_as_centroids=True,print_steps=print_steps)
 
         def group_values_by_indices(values, indices):
             groups = {}
@@ -257,10 +258,15 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
     #   each tuple contains: a list of locations of the pixels and patches as its first element
     #                        a list of the values of the pixels or patches as its second element
     #                        the ndarray of image shapes
+    patterns_to_show = []
     for i, ppd in enumerate(patch_or_pixel_data):
         img = _reconstructImgFromPPD(ppd,is_patch_data=by_patches,input_colorspace=colorspace)
+        img = _format(img, in_format=colorspace,out_format="rgb",alpha=True)
 
-        img = _format(img, in_format=colorspace,out_format="bgr",alpha=False)
+        if i < 18:
+            patterns_to_show.append(np.copy(img))
+
+        img = _blackBgToTransparent(img)
 
         if write_subfolder != "":
             if not os.path.exists(data_folder + "/patterns/" + write_subfolder):
@@ -271,13 +277,14 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
         if(print_details): print("Wrote to " + write_target)
 
         print(i)
+    _showImages(show,patterns_to_show,maintitle="Final Patterns")
 
 #def getPatchesAndPatchPixelMeans(img):
 #    patch_img = _imgToColorPatches(img)
 
 # given an image return a tuple containing pixel coords, pixel values, and the shape of the image
 def getPixelCoordsAndPixels(img):
-    #img = _blackBgToTransparent(img)
+    img = _blackBgToTransparent(img) # turn this off, this is related to the same call at the end of clusterimgs
     pixels = []
     pixel_coords = []
     for i in range(0, img.shape[0]):

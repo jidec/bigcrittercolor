@@ -10,3 +10,4 @@ from bigcrittercolor.helpers._trainClassifier import _trainClassifier
 from bigcrittercolor.helpers.makeCollage import makeCollage
 from bigcrittercolor.helpers.plotPixels import plotPixels
 from bigcrittercolor.helpers._scatterColors import _scatterColors
+from bigcrittercolor.helpers._table import _table
