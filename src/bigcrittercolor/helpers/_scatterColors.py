@@ -2,8 +2,9 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
+from bigcrittercolor.helpers.image import _format
 
-def _scatterColors(color_values, input_colorspace, sample_n=1000, pt_size=5, cluster_labels=None):
+def _scatterColors(color_values, input_colorspace, sample_n=1000, pt_size=2, cluster_labels=None):
     """
     Plot colors in a specified input color space (HLS or CIELAB or RGB), coloring each point by its actual color
     (converted to RGB if necessary) and changing the marker shape based on cluster ID.
@@ -22,13 +23,14 @@ def _scatterColors(color_values, input_colorspace, sample_n=1000, pt_size=5, clu
     if input_colorspace.lower() == 'hls':
         point_colors = cv2.cvtColor(np.uint8(reshaped_colors), cv2.COLOR_HLS2RGB)
     elif input_colorspace.lower() == 'cielab':
-        point_colors = cv2.cvtColor(np.uint8(reshaped_colors), cv2.COLOR_Lab2RGB)
+        point_colors = cv2.cvtColor(np.uint8(reshaped_colors), cv2.COLOR_Lab2BGR) #RGB
         #print("COLORS IN SCATTER")
         #print(color_values)
         #print(point_colors)
     else:
         point_colors = color_values
 
+    #point_colors = _format()
     # Flatten the point_colors back to original shape
     point_colors = point_colors.reshape((-1, 3))
 
@@ -37,7 +39,7 @@ def _scatterColors(color_values, input_colorspace, sample_n=1000, pt_size=5, clu
     ax = fig.add_subplot(111, projection='3d')
 
     for i in range(len(color_values)):
-        xs, ys, zs = color_values[i, 0], color_values[i, 1], color_values[i, 2]
+        xs, ys, zs = color_values[i, 0], color_values[i, 1], color_values[i, 2] #0,1,1
         color = point_colors[i] / 255.0
         marker = markers[cluster_labels[i] % len(markers)] if cluster_labels is not None else 'o'
 
