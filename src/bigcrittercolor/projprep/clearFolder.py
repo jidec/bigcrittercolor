@@ -1,7 +1,7 @@
 import os
 import shutil
 
-def clearFolder(folder_path):
+def clearFolder(folder_path,ask=True):
     """
     Deletes all files and folders within the specified folder,
     leaving the folder itself intact. Asks for user confirmation
@@ -12,11 +12,12 @@ def clearFolder(folder_path):
     # Extract the folder name for display in the confirmation message
     folder_name = os.path.basename(folder_path)
 
-    # User confirmation
-    response = input(f'Are you sure you want to clear {folder_name}? (yes/no): ')
-    if response.lower() != 'yes':
-        print("Operation cancelled.")
-        return
+    if ask:
+        # User confirmation
+        response = input(f'Are you sure you want to clear {folder_name}? (yes/no): ')
+        if response.lower() != 'yes':
+            print("Operation cancelled.")
+            return
 
     for item_name in os.listdir(folder_path):
         item_path = os.path.join(folder_path, item_name)
