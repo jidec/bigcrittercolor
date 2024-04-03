@@ -17,3 +17,4 @@ from bigcrittercolor.helpers.image._reconstructImgFromPPD import _reconstructImg
 from bigcrittercolor.helpers.image._blur import _blur
 from bigcrittercolor.helpers.image._equalize import _equalize
 from bigcrittercolor.helpers.image._format import _format
+from bigcrittercolor.helpers.image._blackBgToTransparent import _blackBgToTransparent
