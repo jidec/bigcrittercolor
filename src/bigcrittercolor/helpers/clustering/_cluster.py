@@ -27,7 +27,7 @@ def _cluster(values, algo="kmeans", n=3,
              min_samples = 24,
              linkage="ward",
              preference=None,
-             scale=False, # whether to scale the features between 0 and 1 to equalize the importance of each (happens before weighting if applicable)
+             scale=None, # whether to scale the features between 0 and 1 to equalize the importance of each (happens before weighting if applicable)
              weights=None, # a list of weights, one for each column, that make certain features more or less important
              pca_n=None,
              show_pca_tsne = False,
@@ -35,6 +35,7 @@ def _cluster(values, algo="kmeans", n=3,
              input_colorspace = "rgb",
              show=True,
              outlier_percentile=None, return_fuzzy_probs=False,
+             show_color_centroids=False,
              merge_with_user_input=False,
              return_values_as_centroids=False,
              print_steps=False,
@@ -73,9 +74,12 @@ def _cluster(values, algo="kmeans", n=3,
             print(f"Principal Component {i}: {ev * 100:.2f}% of the variance")
 
     start_values = np.copy(values)
-    if scale:
-        # Initialize the MinMaxScaler
-        scaler = StandardScaler() #MinMaxScaler
+    if scale == "minmax":
+        scaler = MinMaxScaler()
+        # Scale the data
+        values = scaler.fit_transform(values)
+    if scale == "standard":
+        scaler = StandardScaler()
         # Scale the data
         values = scaler.fit_transform(values)
 
@@ -227,10 +231,16 @@ def _cluster(values, algo="kmeans", n=3,
     if scale:
         values = start_values
 
-    # if merge with user input, take input of the form 1,2;3,4;5,6 to merge clusters
+    # if merging with user input, ALWAYS show the color centroids
     if merge_with_user_input:
+        show_color_centroids = True
+    # visualize the color clusters by their centroids
+    if show_color_centroids:
         # Print centroids of each cluster
         centroids = {}
+
+        labels = np.array(labels)  # Convert labels to a numpy array
+        values = np.array(values)
 
         for label in np.unique(labels):
             centroids[label] = np.mean(values[labels == label], axis=0)
@@ -241,56 +251,39 @@ def _cluster(values, algo="kmeans", n=3,
                 if input_colorspace == "cielab":
                     # Convert from CIELAB to RGB
                     lab = np.uint8(np.round(centroids[label])).reshape(1, 1, 3)
-                    rgb = cv2.cvtColor(lab, cv2.COLOR_LAB2RGB)
+                    rgb = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR) #RGB
                     centroids[label] = rgb[0, 0]
                 elif input_colorspace == "hls":
                     # Convert from HLS to RGB
                     hls = np.uint8(np.round(centroids[label])).reshape(1, 1, 3)
                     rgb = cv2.cvtColor(hls, cv2.COLOR_HLS2RGB)
                     centroids[label] = rgb[0, 0]
-
+        # print centroids
         for label in np.unique(labels):
             print(f"Centroid of cluster {label}: {centroids[label]}")
 
-        if show and input_colorspace is not None:
+        # Calculate the number of values in each cluster
+        cluster_counts = {label: np.sum(labels == label) for label in np.unique(labels)}
 
-            # Calculate the number of values in each cluster
-            cluster_counts = {label: np.sum(labels == label) for label in np.unique(labels)}
+        # Print centroids and visualize as squares with cluster counts
+        fig, ax = plt.subplots(figsize=(5, len(centroids)))  # Adjusted figure size for better visualization
+        ax.set_xlim(0, 5)
+        ax.set_ylim(0, len(centroids))
 
-            # Print centroids and visualize as squares with cluster counts
-            fig, ax = plt.subplots(figsize=(5, len(centroids)))  # Adjusted figure size for better visualization
-            ax.set_xlim(0, 5)
-            ax.set_ylim(0, len(centroids))
+        for i, (label, centroid) in enumerate(centroids.items()):
+            color = centroid / 255  # Normalize if your RGB values are in the range 0-255
+            rect = patches.Rectangle((1, len(centroids) - i - 1), 1, 1, linewidth=1, edgecolor='black',
+                                     facecolor=color)
+            ax.add_patch(rect)
+            ax.text(2, len(centroids) - i - 0.5, f"{label} (n={cluster_counts[label]})", horizontalalignment='left',
+                    verticalalignment='center')
 
-            for i, (label, centroid) in enumerate(centroids.items()):
-                color = centroid / 255  # Normalize if your RGB values are in the range 0-255
-                rect = patches.Rectangle((1, len(centroids) - i - 1), 1, 1, linewidth=1, edgecolor='black',
-                                         facecolor=color)
-                ax.add_patch(rect)
-                ax.text(2, len(centroids) - i - 0.5, f"{label} (n={cluster_counts[label]})", horizontalalignment='left',
-                        verticalalignment='center')
+        plt.xticks([])
+        plt.yticks([])
+        plt.show()
 
-            plt.xticks([])
-            plt.yticks([])
-            plt.show()
-
-            # Print centroids and visualize as squares
-            #fig, ax = plt.subplots(figsize=(3, len(centroids)))
-            #ax.set_xlim(0, 3)
-            #ax.set_ylim(0, len(centroids))
-
-            #for i, (label, centroid) in enumerate(centroids.items()):
-            #    color = centroid / 255  # Normalize if your RGB values are in the range 0-255
-            #    rect = patches.Rectangle((1, len(centroids) - i - 1), 1, 1, linewidth=1, edgecolor='black',
-            #                             facecolor=color)
-            #    ax.add_patch(rect)
-            #    ax.text(1.5, len(centroids) - i - 0.5, str(label), horizontalalignment='center',
-            #            verticalalignment='center')
-
-            #plt.xticks([])
-            #plt.yticks([])
-            #plt.show()
-
+    # if merge with user input, take input of the form 1,2;3,4;5,6 to merge clusters
+    if merge_with_user_input:
         # Take user input for merging clusters
         user_input = input("Enter cluster sets to merge (e.g., '1,2; 3,4'): ")
 
@@ -305,7 +298,16 @@ def _cluster(values, algo="kmeans", n=3,
 
     if show_color_scatter:
         values = np.array(values)
-        _scatterColors._scatterColors(values, input_colorspace=input_colorspace, cluster_labels=labels)
+
+        # Find indices where the first column value is 0 or less
+        indices_to_remove = [i for i, row in enumerate(values) if row[0] <= 0]
+        # Remove those rows from the 2D array
+        values2 = [row for i, row in enumerate(values) if i not in indices_to_remove]
+        values2 = np.array(values2)
+        # Remove the same indices from the separate list
+        labels2 = [item for i, item in enumerate(labels) if i not in indices_to_remove]
+
+        _scatterColors._scatterColors(values2, input_colorspace=input_colorspace, cluster_labels=labels2)
 
     if return_values_as_centroids:
         labels = np.array(labels)  # Convert labels to a numpy array
