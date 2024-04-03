@@ -21,7 +21,7 @@ from bigcrittercolor.helpers.image import _blobPassesFilter, _maskIsEmpty, _form
 #@profile
 def clusterExtractSegs(img_ids=None, sample_n=None, batch_size=None,
     color_format_to_cluster = "grey", used_aux_segmodel=False,
-    filter_hw_ratio_minmax = None, filter_prop_img_minmax = (0.01, 0.5), filter_symmetry_min = None, filter_intersects_sides=True, # filters
+    filter_hw_ratio_minmax = None, filter_prop_img_minmax = None, filter_symmetry_min = None, filter_intersects_sides=True, # filters
     mask_normalize_params_dict={'lines_strategy':"ellipse"}, # normalization/verticalization of masks
     feature_extractor="resnet18", # feature extractor
     cluster_algo="kmeans", cluster_n = 4,
