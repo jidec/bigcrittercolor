@@ -35,12 +35,14 @@ def _cluster(values, algo="kmeans", n=3,
              input_colorspace = "rgb",
              show=True,
              outlier_percentile=None, return_fuzzy_probs=False,
+             unique_values_only=False,
              show_color_centroids=False,
              merge_with_user_input=False,
              return_values_as_centroids=False,
              print_steps=False,
              print_details=False):
 
+    #_bprint._bprint(print_steps, "Shape of values: " + str(np.shape(values)))
     if show_pca_tsne:
         scaled = StandardScaler().fit_transform(values)
 
@@ -90,13 +92,23 @@ def _cluster(values, algo="kmeans", n=3,
         pca = PCA(n_components=pca_n)
         values = pca.fit_transform(values)
 
+    if unique_values_only:
+        values, indices, inverse = np.unique(values, axis=0, return_index=True, return_inverse=True)
+        _bprint._bprint(print_steps, "Using " + str(np.shape(values)[0]) + " unique values only...")
+
     # find n
     if find_n_minmax is not None:
         _bprint._bprint(print_steps,"Finding cluster N using metric(s)...")
         # create a vector of ns to try for knee assessment
         ns = np.arange(find_n_minmax[0], find_n_minmax[1] + 1)
 
-        models = [KMeans(n).fit(values) for n in ns]
+        match algo:
+            case "kmeans":
+                models = [KMeans(n_clusters=n).fit(values) for n in ns]
+            case "gaussian_mixture":
+                models = [GaussianMixture(n_components=n, covariance_type='diag', reg_covar=1).fit(values) for n in ns]
+
+        #models = [KMeans(n).fit(values) for n in ns]
         labels_list = [m.fit_predict(values) for m in models]
 
         ch_scores = [calinski_harabasz_score(values, l) for l in labels_list]
@@ -308,6 +320,11 @@ def _cluster(values, algo="kmeans", n=3,
         labels2 = [item for i, item in enumerate(labels) if i not in indices_to_remove]
 
         _scatterColors._scatterColors(values2, input_colorspace=input_colorspace, cluster_labels=labels2)
+
+    # if unique_values_only
+    if unique_values_only:
+        labels = labels[inverse]
+        values = start_values
 
     if return_values_as_centroids:
         labels = np.array(labels)  # Convert labels to a numpy array

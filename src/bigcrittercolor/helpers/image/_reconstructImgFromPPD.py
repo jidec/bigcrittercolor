@@ -6,7 +6,8 @@ def _reconstructImgFromPPD(ppd, input_colorspace="rgb", is_patch_data=True,show=
 
     # shape is always at index 2
     shape = ppd[2]
-    img = np.zeros(shape=shape,dtype=np.uint8)
+
+    img = np.zeros(shape=(shape[0],shape[1],3),dtype=np.uint8) # used to just be shape # note that shape is contered from
 
     c1 = 0
     c2 = 0
