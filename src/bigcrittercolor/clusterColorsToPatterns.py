@@ -268,11 +268,15 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
 
         img = _blackBgToTransparent(img)
 
+        # setup write target
+        write_target = data_folder + "/patterns/" + img_ids[i] + "_pattern.png"
+        # if writing to subfolder
         if write_subfolder != "":
             if not os.path.exists(data_folder + "/patterns/" + write_subfolder):
                 os.mkdir(data_folder + "/patterns/" + write_subfolder)
-            write_subfolder = write_subfolder + "/"
-        write_target = data_folder + "/patterns/" + write_subfolder + img_ids[i] + "_pattern.png"
+            # change write target to subfolder
+            write_target = data_folder + "/patterns/" + write_subfolder + "/" + img_ids[i] + "_pattern.png"
+
         cv2.imwrite(write_target, img)
         if(print_details): print("Wrote to " + write_target)
 
