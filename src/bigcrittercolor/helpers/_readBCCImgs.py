@@ -4,7 +4,7 @@ import numpy as np
 from bigcrittercolor.helpers import _getIDsInFolder
 from bigcrittercolor.helpers.image import _segToMask, _format
 
-def _readBCCImgs(img_ids=None, type="img", color_format=None, make_3channel=False, print_steps=False, show=False, data_folder=''):
+def _readBCCImgs(img_ids=None, type="img", preclust_folder_name=None, color_format=None, make_3channel=False, print_steps=False, show=False, data_folder=''):
     if img_ids is None:
         img_ids = _getIDsInFolder(data_folder + "/masks")
     was_single =False
@@ -39,7 +39,12 @@ def _readBCCImgs(img_ids=None, type="img", color_format=None, make_3channel=Fals
             imgs = [cv2.imread(data_folder + "/segments/" + id + "_segment.png") for id in img_ids]
             imgs = [_segToMask(img) for img in imgs]
         case "pattern":
-            imgs = [cv2.imread(data_folder + "/patterns/" + id + "_pattern.png") for id in img_ids]
+            if preclust_folder_name is not None:
+
+                print(data_folder + "/patterns/" + preclust_folder_name + "/" + img_ids[0] + "_pattern.png")
+                imgs = [cv2.imread(data_folder + "/patterns/" + preclust_folder_name + "/" + id + "_pattern.png") for id in img_ids]
+            else:
+                imgs = [cv2.imread(data_folder + "/patterns/" + id + "_pattern.png") for id in img_ids]
 
     match color_format:
         case "grey":
