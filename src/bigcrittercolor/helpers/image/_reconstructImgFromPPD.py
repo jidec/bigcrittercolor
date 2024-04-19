@@ -33,9 +33,12 @@ def _reconstructImgFromPPD(ppd, input_colorspace="rgb", is_patch_data=True,show=
     else:
         pixel_coords = ppd[0]
         pixel_colors = ppd[1]
+        #print("Shape")
+        #print(np.shape(img))
 
         for color, coord in zip(pixel_colors, pixel_coords):
-            img[coord[1], coord[0]] = color
+            #print(coord)
+            img[coord[0], coord[1]] = color #swap 0 and 1
 
     _showImages(show,[img],["Reconstructed"])
 
