@@ -28,6 +28,9 @@ def _rebuildiNatRecords(data_folder):
     merged_data['genus'] = merged_data['species'].str.split(' ', n=1).str[0]
     # add INAT to the obs ids
     merged_data['obs_id'] = 'INAT-' + merged_data['obs_id'].astype(str)
+    merged_data['img_id'] = merged_data['obs_id'].astype(str) + "-1"
 
     # write
     merged_data.to_csv(data_folder + "/records.csv", index=False)
+
+#_rebuildiNatRecords("D:/anac_tests")
