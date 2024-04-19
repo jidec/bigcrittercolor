@@ -1,5 +1,6 @@
 from bigcrittercolor.helpers._showImages import _showImages
 from bigcrittercolor.helpers._imgNameToID import _imgNameToID
+from bigcrittercolor.helpers._imgIDToObsID import _imgIDToObsID
 from bigcrittercolor.helpers._getIDsInFolder import _getIDsInFolder
 from bigcrittercolor.helpers._readBCCImgs import _readBCCImgs
 from bigcrittercolor.helpers._bprint import _bprint

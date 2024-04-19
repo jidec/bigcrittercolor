@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import cv2
 from bigcrittercolor.helpers.image import _format
 
-def _scatterColors(color_values, input_colorspace, sample_n=1000, pt_size=2, cluster_labels=None):
+def _scatterColors(color_values, input_colorspace, sample_n=500, pt_size=3, cluster_labels=None):
     """
     Plot colors in a specified input color space (HLS or CIELAB or RGB), coloring each point by its actual color
     (converted to RGB if necessary) and changing the marker shape based on cluster ID.
@@ -55,7 +55,7 @@ def _scatterColors(color_values, input_colorspace, sample_n=1000, pt_size=2, clu
 
     plt.show()
 
-def _scatterColors_old(rgb_values, colorspace=None, sample_n= 500, pt_size=5, cluster_labels=None):
+def _scatterColors_old(rgb_values, colorspace=None, sample_n= 250, pt_size=5, cluster_labels=None):
     """
     Plot RGB colors in a specified color space (HLS or CIELAB),
     coloring each point by its actual RGB color and changing the marker shape based on cluster ID.

@@ -5,18 +5,20 @@ from numpy import unique
 import os
 from collections import Counter
 import random
+import matplotlib.pyplot as plt
 
 from bigcrittercolor.helpers import _bprint, _getIDsInFolder, _showImages
 from bigcrittercolor.helpers.clustering import _cluster
 from bigcrittercolor.helpers.image import _blur, _format, _imgToColorPatches, _reconstructImgFromPPD, _blackBgToTransparent
 from bigcrittercolor.helpers.image import _equalize
-from bigcrittercolor.helpers import makeCollage
+from bigcrittercolor.helpers import makeCollage, _imgIDToObsID
 
 def clusterColorsToPatterns(img_ids=None, cluster_individually=False, preclustered = False, group_cluster_records_colname = None,
                     by_patches=True, patch_args = {'min_patch_pixel_area':5,'cluster_args':{'n':5, 'algo':'gaussian_mixture'}}, visualize_patching=True,
                     cluster_args={'find_n_minmax':(2,7), 'algo':"gaussian_mixture"}, use_positions=False,
                     colorspace = "cielab",
                     height_resize = 200,
+                    group_histogram_matching_colname=None,
                     equalize_args={'type':"clahe"},
                     blur_args= {'type':"bilateral"},
                     preclust_read_subfolder = "", write_subfolder= "",
@@ -71,6 +73,29 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
     # this list holds either patch data or pixel data for every image - soon we will gather this
     patch_or_pixel_data = []
 
+    # for group histogram matching, compile master histograms for each species
+    if group_histogram_matching_colname is not None:
+        _bprint(print_steps, "Building master histograms for group histogram matching...")
+        # get records for ids
+        records = pd.read_csv(data_folder + '/records.csv')
+        filtered_df = records[records['img_id'].isin(img_ids)]
+        # save dict with ids for keys and species for values
+        ids_groups_dict = pd.Series(filtered_df.species.values, index=filtered_df.img_id).to_dict()
+        # group df by hist match colname
+        grouped = filtered_df.groupby(group_histogram_matching_colname)
+
+        master_histograms = {}
+        # for each group
+        for species, group in grouped:
+            imgs = []
+            for img_id in group['img_id']:
+                image_path = data_folder + "/segments/" + img_id + "_segment.png"
+                img = cv2.imread(image_path)
+                imgs.append(img)
+            # create master hist using image list and add
+            hist = getMasterHistogram(imgs)
+            master_histograms[species] = hist
+
     # print expected amount of time the function should take - need to rework this
     #if preclustered:
     #    _bprint(print_steps, "Estimated time " + str(len(img_ids)/30) + " minutes at default cluster mode, metric, and vert resize")
@@ -103,6 +128,24 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
         bg_mask = np.all(img == most_common_color, axis=-1)
         # convert the boolean mask to uint8 format for visualization
         bg_mask = bg_mask.astype(np.uint8) * 255
+
+        # group histogram match
+        if group_histogram_matching_colname is not None:
+            group = ids_groups_dict[id] # group is always species or genus really
+            #print(group)
+            #cv2.imshow("0",img)
+            #cv2.waitKey(0)
+            hist = master_histograms[group]
+            img = matchHistogram(img, master_histograms[group])
+            #cv2.imshow("0",img)
+            #cv2.waitKey(0)
+            # Plot the histogram
+            #plt.figure(figsize=(10, 5))
+            #plt.bar(range(256), hist, color='gray')
+            #plt.title('Master Histogram')
+            #plt.xlabel('Pixel Intensity')
+            #plt.ylabel('Normalized Frequency')
+            #plt.show()
 
         # blur
         if blur_args is not None:
@@ -300,3 +343,29 @@ def getPixelCoordsAndPixels(img):
                 pixels.append(p) # append pixel value
                 pixel_coords.append((i, j)) # append coordinate of pixel in img
     return (pixel_coords,pixels,img.shape)
+
+def getMasterHistogram(images):
+    master_histogram = np.zeros(256)
+    for img in images:
+        for channel in cv2.split(img):
+            hist, _ = np.histogram(channel, bins=256, range=(0, 256))
+            master_histogram += hist
+    master_histogram /= master_histogram.sum()  # Ensure normalization
+    return master_histogram
+
+def matchHistogram(img, master_histogram):
+    master_cdf = np.cumsum(master_histogram)
+    master_cdf = (255 * (master_cdf / master_cdf[-1])).astype(np.uint8)  # Normalize and convert to proper scale
+
+    matched_img = np.zeros_like(img)
+    for i, channel in enumerate(cv2.split(img)):
+        hist, bins = np.histogram(channel.flatten(), bins=256, range=[0, 256])
+        cdf = np.cumsum(hist)
+        cdf = (255 * (cdf / cdf[-1])).astype(np.uint8)  # Normalize and convert to proper scale
+
+        # Use np.interp for interpolation of pixel values
+        im2 = np.interp(channel.flatten(), bins[:-1], cdf)
+        matched_channel = np.interp(im2, master_cdf, np.arange(256))
+        matched_img[:, :, i] = matched_channel.reshape(channel.shape)
+
+    return matched_img
