@@ -21,14 +21,14 @@ def showBCCImages(img_ids=None, sample_n=None, show_type="img", preclust_folder_
         match show_type:
             case "img":
                 img_ids = _getIDsInFolder(data_folder + "/all_images")
-            case "mask":
+            case "mask" | "img_mask":
                 img_ids = _getIDsInFolder(data_folder + "/masks")
-            case "seg":
+            case "seg" | "img_mask_seg":
                 img_ids = _getIDsInFolder(data_folder + "/segments")
-            case "img_mask":
-                img_ids = _getIDsInFolder(data_folder + "/masks")
-            case "img_mask_seg":
-                img_ids = _getIDsInFolder(data_folder + "/segments")
+            case "seg_preclust":
+                img_ids = _getIDsInFolder(data_folder + "/patterns/" + preclust_folder_name)
+            case "seg_pattern" | "seg_preclust_pattern" | "img_seg_pattern":
+                img_ids = _getIDsInFolder(data_folder + "/patterns")
 
     # if sample, sample from the IDs
     if sample_n is not None and len(img_ids) > sample_n:
@@ -56,6 +56,12 @@ def showBCCImages(img_ids=None, sample_n=None, show_type="img", preclust_folder_
             segs = _readBCCImgs(img_ids, type="seg", data_folder=data_folder)
             pats = _readBCCImgs(img_ids, type="pattern", data_folder=data_folder)
             imgs = [makeCollage([seg, pat], resize_wh=collage_resize_wh, n_per_row=2) for seg, pat in zip(segs, pats)]
+        case "seg_preclust":
+            segs = _readBCCImgs(img_ids, type="seg", data_folder=data_folder)
+            preclusts = _readBCCImgs(img_ids, type="pattern", preclust_folder_name=preclust_folder_name,
+                                     data_folder=data_folder)
+            imgs = [makeCollage([seg, preclust], resize_wh=collage_resize_wh, n_per_row=2) for seg, preclust in
+                    zip(segs, preclusts)]
         case "seg_preclust_pattern":
             segs = _readBCCImgs(img_ids, type="seg", data_folder=data_folder)
             preclusts = _readBCCImgs(img_ids, type="pattern", preclust_folder_name = preclust_folder_name,data_folder=data_folder)
