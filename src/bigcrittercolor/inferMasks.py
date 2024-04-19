@@ -24,6 +24,7 @@ from bigcrittercolor.helpers.image import _removeIslands, _imgAndMaskAreValid
 def inferMasks(img_ids=None, skip_existing=True, gd_gpu=True, sam_gpu=True,
                strategy="prompt1", text_prompt="subject", box_threshold=0.25, text_threshold=0.25, # groundedSAM params
                aux_segmodel_location=None, # location of the auxiliary segmodel that get applied to SAM masks
+               sam_location=None,
                auxseg_normalize_params_dict={'lines_strategy':"skeleton_hough", 'best_line_metric':"overlap_sym"},
                erode_kernel_size=0, remove_islands=True,
                show=False, show_indv=False, print_steps=True, print_details=False, data_folder=""):
@@ -60,8 +61,11 @@ def inferMasks(img_ids=None, skip_existing=True, gd_gpu=True, sam_gpu=True,
 
     # sam currently must be downloaded from https://huggingface.co/ybelkada/segment-anything/tree/main/checkpoints and placed in
     #   the ml_checkpoints folder as sam.pth
-    _bprint(print_steps, "Loading SegmentAnything from data_folder/other/ml_checkpoints/sam.pth...")
-    sam_checkpoint = data_folder + '/other/ml_checkpoints/sam.pth'
+    _bprint(print_steps, "Loading SegmentAnything...")
+    if sam_location is None:
+        sam_checkpoint = data_folder + '/other/ml_checkpoints/sam.pth'
+    else:
+        sam_checkpoint = sam_location
     sam = build_sam(checkpoint=sam_checkpoint)
     if sam_gpu:
         sam.to(device='cuda')
