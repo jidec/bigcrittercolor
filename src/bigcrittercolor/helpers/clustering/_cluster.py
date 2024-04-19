@@ -4,11 +4,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-from sklearn.cluster import KMeans, OPTICS, SpectralClustering, AgglomerativeClustering, DBSCAN, AffinityPropagation
+from sklearn.cluster import KMeans, HDBSCAN, OPTICS, SpectralClustering, AgglomerativeClustering, DBSCAN, AffinityPropagation
 from sklearn.mixture import GaussianMixture
 from sklearn.metrics import calinski_harabasz_score, davies_bouldin_score, silhouette_samples, silhouette_score
+from sklearn.metrics import pairwise_distances_argmin_min
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.neighbors import NearestNeighbors
 
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
@@ -24,7 +26,8 @@ from bigcrittercolor.helpers import _scatterColors, _bprint
 def _cluster(values, algo="kmeans", n=3,
              find_n_minmax = None, find_n_metric = "ch",
              eps = 0.1,
-             min_samples = 24,
+             min_samples = 5,
+             cluster_selection_method="eom",
              linkage="ward",
              preference=None,
              scale=None, # whether to scale the features between 0 and 1 to equalize the importance of each (happens before weighting if applicable)
@@ -36,6 +39,7 @@ def _cluster(values, algo="kmeans", n=3,
              show=True,
              outlier_percentile=None, return_fuzzy_probs=False,
              unique_values_only=False,
+             dbscan_outliers_to_nearest_centroid=False,
              show_color_centroids=False,
              merge_with_user_input=False,
              return_values_as_centroids=False,
@@ -106,8 +110,7 @@ def _cluster(values, algo="kmeans", n=3,
             case "kmeans":
                 models = [KMeans(n_clusters=n).fit(values) for n in ns]
             case "gaussian_mixture":
-                models = [GaussianMixture(n_components=n, covariance_type='diag', reg_covar=1).fit(values) for n in ns]
-
+                models = [GaussianMixture(n_components=n, covariance_type='full', reg_covar=1e-5).fit(values) for n in ns]
         #models = [KMeans(n).fit(values) for n in ns]
         labels_list = [m.fit_predict(values) for m in models]
 
@@ -179,7 +182,7 @@ def _cluster(values, algo="kmeans", n=3,
         case "kmeans":
             model = KMeans(n_clusters=n)
         case "gaussian_mixture":
-            model = GaussianMixture(n_components=n,covariance_type='diag',reg_covar=1)#,reg_covar=2)
+            model = GaussianMixture(n_components=n,covariance_type='full',reg_covar=1e-5)#,reg_covar=2)
         case "agglom":
             if show:
                 dendrogram_sample = np.copy(values)
@@ -199,7 +202,14 @@ def _cluster(values, algo="kmeans", n=3,
 
             model = AgglomerativeClustering(n_clusters=n,linkage=linkage)
         case "dbscan":
+            eps = findDBSCANeps(values)
+            min_samples = np.shape(values)[1] + 1
             model = DBSCAN(eps=eps, min_samples=min_samples)#, #algorithm='ball_tree')  # , metric='manhattan')
+        case "hdbscan":
+            #eps = findDBSCANeps(values)
+            min_samples = np.shape(values)[1] + 1
+            #min_samples=25
+            model = HDBSCAN(min_samples=min_samples,cluster_selection_method=cluster_selection_method)#cluster_selection_epsilon=eps)#cluster_selection_method="leaf")
         case "affprop":
             if preference is None:
                 distances = euclidean_distances(values, squared=True)
@@ -243,9 +253,15 @@ def _cluster(values, algo="kmeans", n=3,
     if scale:
         values = start_values
 
+    # if unique_values_only
+    if unique_values_only:
+        labels = labels[inverse]
+        values = start_values
+
     # if merging with user input, ALWAYS show the color centroids
     if merge_with_user_input:
         show_color_centroids = True
+
     # visualize the color clusters by their centroids
     if show_color_centroids:
         # Print centroids of each cluster
@@ -321,10 +337,30 @@ def _cluster(values, algo="kmeans", n=3,
 
         _scatterColors._scatterColors(values2, input_colorspace=input_colorspace, cluster_labels=labels2)
 
-    # if unique_values_only
-    if unique_values_only:
-        labels = labels[inverse]
-        values = start_values
+    if False:
+        # Identify points in each cluster and outliers
+        core_samples_mask = np.zeros_like(labels, dtype=bool)
+        core_samples_mask[model.core_sample_indices_] = True
+        unique_labels = set(labels)
+
+        # Calculate centroids of the clusters
+        centroids = []
+        for k in unique_labels:
+            if k != -1:  # Ignoring noise if present
+                class_member_mask = (labels == k)
+                xy = values[class_member_mask & core_samples_mask]
+                centroids.append(np.mean(xy, axis=0))
+
+        # Convert list to array for distance calculation
+        centroids = np.array(centroids)
+
+        # Forcibly assign outliers to the nearest cluster centroid
+        outlier_indices = np.where(labels == -1)[0]
+        if len(centroids) > 0 and len(outlier_indices) > 0:
+            closest, _ = pairwise_distances_argmin_min(values[outlier_indices], centroids)
+            labels[outlier_indices] = [labels[model.core_sample_indices_[closest[i]]] for i in range(len(closest))]
+
+    # unique code was here
 
     if return_values_as_centroids:
         labels = np.array(labels)  # Convert labels to a numpy array
@@ -339,3 +375,48 @@ def _cluster(values, algo="kmeans", n=3,
         return values_centroids
 
     return labels
+
+from kneed import KneeLocator
+def findDBSCANeps(data, k=4):
+    """
+    Finds and visualizes the optimal eps parameter for DBSCAN clustering by identifying the knee point
+    in the k-distance plot.
+
+    Parameters:
+        data (array-like): The input dataset for which to calculate the eps parameter.
+        k (int): The number of nearest neighbors to consider for the k-distance plot.
+
+    Returns:
+        float: The recommended eps value for DBSCAN clustering, and visualizes the plot.
+    """
+    # Compute the nearest neighbors
+    neighbors = NearestNeighbors(n_neighbors=k)
+    neighbors_fit = neighbors.fit(data)
+    distances, indices = neighbors_fit.kneighbors(data)
+
+    # Sort the distances to the k-th nearest neighbor
+    sorted_distances = np.sort(distances[:, k-1], axis=0)
+
+    # Use KneeLocator to find the knee point
+    knee_locator = KneeLocator(range(len(sorted_distances)), sorted_distances, curve='convex', direction='increasing',S=3)
+
+    # Determine the eps value at the knee point
+    eps_value = sorted_distances[knee_locator.knee] if knee_locator.knee is not None else None
+
+    # Plotting the k-distance graph and the knee point
+    plt.figure(figsize=(10, 6))
+    plt.plot(sorted_distances)
+    plt.title('k-Distance Plot')
+    plt.xlabel('Points sorted by distance')
+    plt.ylabel(f'Distance to {k}-th nearest neighbor')
+
+    # Highlight the knee
+    if knee_locator.knee is not None:
+        plt.axvline(x=knee_locator.knee, color='red', linestyle='--', label=f'Knee point at index {knee_locator.knee}')
+        plt.legend()
+
+    plt.show()
+
+    # subtract 5
+    eps_value = eps_value
+    return eps_value
