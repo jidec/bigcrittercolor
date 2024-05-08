@@ -14,7 +14,7 @@ from bigcrittercolor.helpers.image import _padImgToSize,_resizeImgToTotalDim
 
 # helper that takes a list of numpy arr images and returns labels clustered by AffinityProp on features
 #   extracted by a pretrained VGG16 model
-def _clusterByImgFeatures(imgs, feature_extractor="resnet18", cluster_algo="kmeans", cluster_n=3,
+def _clusterByImgFeatures(imgs, feature_extractor="resnet18",
                             cluster_params_dict={'eps':10,'min_samples':3}, fuzzy_probs_threshold=None,
                             pad_imgs =True,
                             full_display_ids=None, full_display_data_folder=None,
@@ -112,11 +112,8 @@ def _clusterByImgFeatures(imgs, feature_extractor="resnet18", cluster_algo="kmea
     # cluster
     _bprint(print_steps,"Clustering mask features...")
 
-    if cluster_n is None:
-        cluster_n = _findNClusters(features, show=show)
-
     if fuzzy_probs_threshold is not None:
-        probs = _cluster(features,params_dict=cluster_params_dict,algo=cluster_algo,n=cluster_n,return_fuzzy_probs=True)
+        probs = _cluster(features,params_dict=cluster_params_dict,return_fuzzy_probs=True)
         # Get the indices of the maximum probabilities
         max_prob_indices = np.argmax(probs, axis=1)
         # Get the values of the maximum probabilities
@@ -125,7 +122,7 @@ def _clusterByImgFeatures(imgs, feature_extractor="resnet18", cluster_algo="kmea
         labels = np.where(max_probs >= fuzzy_probs_threshold, max_prob_indices, -1)
 
     else:
-        labels = _cluster(features,algo=cluster_algo,n=cluster_n, **cluster_params_dict)
+        labels = _cluster(features, **cluster_params_dict)
 
     if show:
         # for each cluster label

@@ -103,6 +103,10 @@ def _cluster(values, algo="kmeans", n=3,
     # find n
     if find_n_minmax is not None:
         _bprint._bprint(print_steps,"Finding cluster N using metric(s)...")
+
+        # if n_components > n_samples, we get an error - avoid this by capping find_n_minmax[1] at n rows of values
+        if find_n_minmax[1] > values.shape[0]:
+            find_n_minmax[1] = values.shape[0]
         # create a vector of ns to try for knee assessment
         ns = np.arange(find_n_minmax[0], find_n_minmax[1] + 1)
 
@@ -111,71 +115,83 @@ def _cluster(values, algo="kmeans", n=3,
                 models = [KMeans(n_clusters=n).fit(values) for n in ns]
             case "gaussian_mixture":
                 models = [GaussianMixture(n_components=n, covariance_type='full', reg_covar=1e-5).fit(values) for n in ns]
-        #models = [KMeans(n).fit(values) for n in ns]
+
+        # assemble list of lists of labels, one for each model with a different n
         labels_list = [m.fit_predict(values) for m in models]
 
-        ch_scores = [calinski_harabasz_score(values, l) for l in labels_list]
-        db_scores = [davies_bouldin_score(values, l) for l in labels_list]
-        sil_scores = [silhouette_score(values, l) for l in labels_list]
-        #aic_scores = [m.aic(values) for m in models]
+        # these metrics ONLY work if you're not evaluating n=1
+        includes_n1 = find_n_minmax[0] == 1
+        if not includes_n1:
+            ch_scores = [calinski_harabasz_score(values, l) for l in labels_list]
+            db_scores = [davies_bouldin_score(values, l) for l in labels_list]
+            sil_scores = [silhouette_score(values, l) for l in labels_list]
+
+        # aics ONLY apply to gaussian mixture models
+        if algo == "gaussian_mixture":
+            aic_scores = [m.aic(values) for m in models]
 
         if show:
-            plt.plot(ns, ch_scores)
-            plt.title('Calinski-Harabasz Scores')
-            plt.xlabel('Number of clusters')
-            plt.ylabel('CH score')
-            plt.show()
+            if not includes_n1:
+                plt.plot(ns, ch_scores)
+                plt.title('Calinski-Harabasz Scores')
+                plt.xlabel('Number of clusters')
+                plt.ylabel('CH score')
+                plt.show()
 
-            plt.plot(ns, db_scores)
-            plt.title('Inverse Davies-Bouldin Scores')
-            plt.xlabel('Number of clusters')
-            plt.ylabel('Inverse DB score')
-            # Reverse the Y-axis
-            plt.gca().invert_yaxis()
-            plt.show()
+                plt.plot(ns, db_scores)
+                plt.title('Inverse Davies-Bouldin Scores')
+                plt.xlabel('Number of clusters')
+                plt.ylabel('Inverse DB score')
+                # Reverse the Y-axis
+                plt.gca().invert_yaxis()
+                plt.show()
 
-            #plt.plot(ns, aic_scores)
-            #plt.title('Cluster Model AICs')
-            #plt.xlabel('Number of clusters')
-            #plt.ylabel('AIC')
-            # Reverse the Y-axis
-            #plt.gca().invert_yaxis()
-            #plt.show()
+                plt.plot(ns, sil_scores, label='Silhouette score')
+                plt.title('Silhouette Scores')
+                plt.xlabel('Number of clusters')
+                plt.ylabel('Silhouette score')
+                plt.show()
+            if algo == "gaussian_mixture":
+                plt.plot(ns, aic_scores)
+                plt.title('Cluster Model AICs')
+                plt.xlabel('Number of clusters')
+                plt.ylabel('AIC')
+                # Reverse the Y-axis
+                plt.gca().invert_yaxis()
+                plt.show()
 
-            plt.plot(ns, sil_scores, label='Silhouette score')
-            plt.title('Silhouette Scores')
-            plt.xlabel('Number of clusters')
-            plt.ylabel('Silhouette score')
-            plt.show()
+        match find_n_metric:
+            case "ch":
+                n = ns[np.argmax(ch_scores)]
+            case "db":
+                n = ns[np.argmin(db_scores)]
+            case "aic":
+                n = ns[np.argmin(aic_scores)]
+            case "all":
+                def rank_scores(scores):
+                    """Rank the scores within a set, lower scores get higher ranks."""
+                    sorted_scores = sorted(scores, reverse=True)
+                    ranks = [sorted_scores.index(score) + 1 for score in scores]
+                    return ranks
+                def aggregate_ranks(ranks_set1, ranks_set2, ranks_set3):
+                    """Aggregate ranks for each value and sort by total rank."""
+                    aggregated_ranks = [sum(ranks) for ranks in zip(ranks_set1, ranks_set2, ranks_set3)]
+                    value_ranks_pairs = list(zip(ns, aggregated_ranks))
+                    sorted_by_ranks = sorted(value_ranks_pairs, key=lambda x: x[1])
+                    return sorted_by_ranks
+                def rank_values_by_scores(scores_set1, scores_set2, scores_set3):
+                    # Rank the scores within each set
+                    ranks_set1 = rank_scores(scores_set1)
+                    ranks_set2 = rank_scores(scores_set2)
+                    ranks_set3 = rank_scores(scores_set3)
+                    #ranks_set4 = rank_scores(scores_set4)
 
-        if find_n_metric == "ch":
-            n = ns[np.argmax(ch_scores)]
-        elif find_n_metric == "db":
-            n = ns[np.argmax(db_scores)]
-        elif find_n_metric == "all":
-            def rank_scores(scores):
-                """Rank the scores within a set, lower scores get higher ranks."""
-                sorted_scores = sorted(scores, reverse=True)
-                ranks = [sorted_scores.index(score) + 1 for score in scores]
-                return ranks
-            def aggregate_ranks(ranks_set1, ranks_set2, ranks_set3):
-                """Aggregate ranks for each value and sort by total rank."""
-                aggregated_ranks = [sum(ranks) for ranks in zip(ranks_set1, ranks_set2, ranks_set3)]
-                value_ranks_pairs = list(zip(ns, aggregated_ranks))
-                sorted_by_ranks = sorted(value_ranks_pairs, key=lambda x: x[1])
-                return sorted_by_ranks
-            def rank_values_by_scores(scores_set1, scores_set2, scores_set3):
-                # Rank the scores within each set
-                ranks_set1 = rank_scores(scores_set1)
-                ranks_set2 = rank_scores(scores_set2)
-                ranks_set3 = rank_scores(scores_set3)
-                #ranks_set4 = rank_scores(scores_set4)
+                    # Aggregate and sort the ranks
+                    sorted_values_ranks = aggregate_ranks(ranks_set1, ranks_set2, ranks_set3)
 
-                # Aggregate and sort the ranks
-                sorted_values_ranks = aggregate_ranks(ranks_set1, ranks_set2, ranks_set3)
+                    return sorted_values_ranks
+                n = rank_values_by_scores(ch_scores,db_scores,sil_scores)[0][0]
 
-                return sorted_values_ranks
-            n = rank_values_by_scores(ch_scores,db_scores,sil_scores)[0][0]
         _bprint._bprint(print_steps, "Using N of " + str(n) + "...")
     # create cluster model
     match algo:
