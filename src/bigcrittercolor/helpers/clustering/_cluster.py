@@ -106,7 +106,7 @@ def _cluster(values, algo="kmeans", n=3,
 
         # if n_components > n_samples, we get an error - avoid this by capping find_n_minmax[1] at n rows of values
         if find_n_minmax[1] > values.shape[0]:
-            find_n_minmax[1] = values.shape[0]
+            find_n_minmax = (find_n_minmax[0], values.shape[0])
         # create a vector of ns to try for knee assessment
         ns = np.arange(find_n_minmax[0], find_n_minmax[1] + 1)
 
