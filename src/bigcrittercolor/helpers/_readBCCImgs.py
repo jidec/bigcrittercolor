@@ -1,16 +1,25 @@
 import cv2
 import numpy as np
+import random
+import copy
 
 from bigcrittercolor.helpers import _getIDsInFolder
 from bigcrittercolor.helpers.image import _segToMask, _format
 
-def _readBCCImgs(img_ids=None, type="img", preclust_folder_name=None, color_format=None, make_3channel=False, print_steps=False, show=False, data_folder=''):
+def _readBCCImgs(img_ids=None, sample_n=None,type="img", preclust_folder_name=None, color_format=None, make_3channel=False, print_steps=False, show=False, data_folder=''):
+    img_ids = copy.deepcopy(img_ids)
+
     if img_ids is None:
         img_ids = _getIDsInFolder(data_folder + "/masks")
-    was_single =False
+
+    was_single = False
     if not isinstance(img_ids, list):
         img_ids = [img_ids]
         was_single = True
+
+    if sample_n is not None and len(img_ids) > sample_n:
+        img_ids = random.sample(img_ids,sample_n)
+
     match type:
         case "img":
             imgs = [cv2.imread(data_folder + "/all_images/" + id + ".jpg") for id in img_ids]

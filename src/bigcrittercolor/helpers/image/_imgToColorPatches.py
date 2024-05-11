@@ -8,7 +8,8 @@ from collections import Counter
 # from an image, create a new smoothed image that is a series of color patches
 # note that blur (typically bilateral) should be done before this function is applied
 # this is used in clusterColorsFromPatterns
-def _imgToColorPatches(img, bg_mask=None, cluster_args={'n':10, 'algo':'kmeans'}, input_colorspace="rgb", use_median=False, min_patch_pixel_area = 5, return_patch_masks_colors_imgshapes=False, show=False):
+# returned color patch object is a tuple of the form (patch_bool_masks,patch_colors,shape,id)
+def _imgToColorPatches(img, id, bg_mask=None, cluster_args={'n':10, 'algo':'kmeans'}, input_colorspace="rgb", use_median=False, min_patch_pixel_area = 5, return_patch_masks_colors_imgshapes=False, show=False):
 
     shape = img.shape
     original_shape = img.shape[:2]  # height, width
@@ -91,7 +92,7 @@ def _imgToColorPatches(img, bg_mask=None, cluster_args={'n':10, 'algo':'kmeans'}
     #_showImages(show, [img, overlay_image], ['Image', 'Patch Image'])
 
     if return_patch_masks_colors_imgshapes:
-        return((patch_bool_masks,patch_colors,shape))
+        return((patch_bool_masks,patch_colors,shape,id))
 
     return overlay_image
 

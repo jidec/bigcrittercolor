@@ -24,8 +24,7 @@ def clusterExtractSegs(img_ids=None, sample_n=None, batch_size=None,
     filter_hw_ratio_minmax = None, filter_prop_img_minmax = None, filter_symmetry_min = None, filter_intersects_sides=True, # filters
     mask_normalize_params_dict={'lines_strategy':"ellipse"}, # normalization/verticalization of masks
     feature_extractor="resnet18", # feature extractor
-    cluster_algo="kmeans", cluster_n = 4,
-    cluster_params_dict={'eps':0.1,'min_samples':24}, preselected_clusters_input = None,
+    cluster_params_dict={'algo':"kmeans",'n':4,'eps':0.1,'min_samples':24}, preselected_clusters_input = None,
     show=True, show_indv=False, print_steps=True, data_folder=""):
 
     """ Extract segments using masks, filter them, cluster them, keep clusters based on user input, then save kept segments
@@ -161,7 +160,7 @@ def clusterExtractSegs(img_ids=None, sample_n=None, batch_size=None,
             ids_for_full_display = None
 
         # show is always true here because we have to show for user input
-        labels = _clusterByImgFeatures(segs, feature_extractor=feature_extractor, cluster_algo=cluster_algo, cluster_n=cluster_n,
+        labels = _clusterByImgFeatures(segs, feature_extractor=feature_extractor,
                                        full_display_ids=ids_for_full_display, full_display_data_folder=data_folder,
                                        print_steps=print_steps, cluster_params_dict=cluster_params_dict, show=True)
 

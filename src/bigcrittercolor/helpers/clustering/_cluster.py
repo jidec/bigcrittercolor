@@ -90,6 +90,7 @@ def _cluster(values, algo="kmeans", n=3,
         values = scaler.fit_transform(values)
 
     if weights is not None:
+        weights = np.array(weights)
         values = values * weights
 
     if pca_n is not None:
@@ -341,12 +342,13 @@ def _cluster(values, algo="kmeans", n=3,
                         labels[i] = clusters_to_merge[0]  # Assign all merged clusters to the first cluster in the group
 
     if show_color_scatter:
-        values = np.array(values)
+        scatter_values = np.unique(values, axis=0)
+        #values = np.array(values)
 
         # Find indices where the first column value is 0 or less
-        indices_to_remove = [i for i, row in enumerate(values) if row[0] <= 0]
+        indices_to_remove = [i for i, row in enumerate(scatter_values) if row[0] <= 0]
         # Remove those rows from the 2D array
-        values2 = [row for i, row in enumerate(values) if i not in indices_to_remove]
+        values2 = [row for i, row in enumerate(scatter_values) if i not in indices_to_remove]
         values2 = np.array(values2)
         # Remove the same indices from the separate list
         labels2 = [item for i, item in enumerate(labels) if i not in indices_to_remove]

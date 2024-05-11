@@ -12,3 +12,4 @@ from bigcrittercolor.helpers.makeCollage import makeCollage
 from bigcrittercolor.helpers.plotPixels import plotPixels
 from bigcrittercolor.helpers._scatterColors import _scatterColors
 from bigcrittercolor.helpers._table import _table
+from bigcrittercolor.helpers._getRecordsColFromIDs import _getRecordsColFromIDs
