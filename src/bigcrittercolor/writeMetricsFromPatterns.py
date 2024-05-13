@@ -3,8 +3,10 @@ import numpy as np
 from PIL import Image
 import pandas as pd
 
-def writeMetricsFromPatterns(data_folder):
+def writeMetricsFromPatterns(data_folder, pattern_subfolder=None):
     img_dir = data_folder + "/patterns"
+    if pattern_subfolder is not None:
+        img_dir = img_dir + "/" + pattern_subfolder
     start_index = 1
     # Get paths
     paths = [os.path.join(img_dir, f) for f in os.listdir(img_dir) if f.endswith('.png')]
