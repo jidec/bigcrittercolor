@@ -119,6 +119,10 @@ def retrieveAllRecords(
     while more_records:
         params['page'] = page
         resp = requests.get(base_url + 'observations', params=params)
+        if not resp.content:
+            print("Empty response: erroring out")
+            print(resp.status_code)
+
         res = resp.json()
         # print(res)
         if len(res['results']) < params['per_page']:
