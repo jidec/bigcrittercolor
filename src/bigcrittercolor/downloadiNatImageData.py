@@ -79,6 +79,8 @@ def downloadiNatImageData(taxa_list, download_records=True, download_images=True
         #    records.to_csv(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '.csv', index=False,
         #                   mode='w+')
         for taxon in taxa_list:
+            _bprint(print_steps, "Starting image download for taxon " + taxon + "...")
+
             # create the dir for split records
             split_dir = data_folder + '/other/inat_download_records/iNat_images-' + taxon + '-records_split'
             if not os.path.isdir(split_dir):
@@ -88,8 +90,6 @@ def downloadiNatImageData(taxa_list, download_records=True, download_images=True
             if not os.path.isdir(dir):
                 os.mkdir(dir)
 
-            # if skip_existing...
-            _bprint(print_steps, "Skipping existing already downloaded images...")
             # get existing image names
             existing_imgnames = os.listdir(data_folder + '/all_images')
 
@@ -104,7 +104,7 @@ def downloadiNatImageData(taxa_list, download_records=True, download_images=True
             records = records[~in_mask]
             n_new_obs = records.shape[0]
             if n_new_obs == 0:
-                _bprint(print_steps, "No new observations to download, exiting...")
+                _bprint(print_steps, "No new observations to download, exiting or moving to next taxon...")
                 continue
             _bprint(print_steps, "Will download " + str(n_new_obs) + " new observations...")
 
@@ -113,14 +113,14 @@ def downloadiNatImageData(taxa_list, download_records=True, download_images=True
                 data_folder + '/other/inat_download_records/iNat_images-' + taxon + '-records_trimmed/trimmed_records.csv',
                 index=False, mode='w+')
 
-            _bprint(print_steps, "Splitting records into chunks...")
+            #_bprint(print_steps, "Splitting records into chunks...")
             # split the records using pd.read_csv with the chunksize arg
             j = 1
             for chunk in pd.read_csv(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '-records_trimmed/trimmed_records.csv', chunksize=7500):
                 chunk.to_csv(split_dir + '/' + str(j) + '.csv', index=False)
                 j += 1
 
-            _bprint(print_steps, "Using records to download images for taxon " + taxon + "...")
+            _bprint(print_steps, "Using records to download images...")
             # make raw images folder if it doesn't exist
             rawimg_dir = data_folder + "/other/inat_download_records/iNat_images-" + taxon + "-raw_images"
             if not os.path.exists(rawimg_dir):

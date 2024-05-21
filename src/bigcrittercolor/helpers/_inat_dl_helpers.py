@@ -551,7 +551,7 @@ class ImageDownloadWorker(mt.Thread):
     STOPVAL = MTListReader.STOPVAL
 
     def __init__(
-        self, downloads, outputq, outputdir, timeout=20, update_console=True
+        self, downloads, outputq, outputdir, timeout=20, update_console=True, print_interval=100
     ):
         """
         downloads: An MTListReader for retrieving download requests.
@@ -567,6 +567,8 @@ class ImageDownloadWorker(mt.Thread):
         self.outputdir = outputdir
         self.timeout = timeout
         self.update_console = update_console
+        self.download_counter = 0
+        self.print_interval = print_interval
 
     def _isImageIncomplete(self, fpath):
         """
@@ -601,7 +603,9 @@ class ImageDownloadWorker(mt.Thread):
             result = ImageDownloadWorkerResult()
             result.uri = uri
             result.identifier = fname
-            if self.update_console:
+
+            self.download_counter += 1
+            if self.update_console and self.download_counter % self.print_interval == 0:
                 print(
                     '({1:.1f}%) Downloading {0}...'.format(
                         uri, ((index + 1) / len(self.downloads)) * 100
