@@ -32,8 +32,8 @@ def normalize_lightness(image, target_lightness):
 
 import os
 
-image_folder = "E:/aeshna_data/segments"
-output_folder = "E:/aeshna_data/segments/normalized"
+image_folder = "D:/bcc/msr_imgs"
+output_folder = "D:/bcc/msr_imgs2"
 filenames = [f for f in os.listdir(image_folder) if os.path.isfile(os.path.join(image_folder, f))]
 
 # Calculate average lightness over all images

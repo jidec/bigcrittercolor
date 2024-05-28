@@ -24,4 +24,4 @@
 
 from bigcrittercolor import clusterColorsToPatterns
 
-clusterColorsToPatterns(data_folder="D:/bcc/my_taxon",colorspace="rgb")
+clusterColorsToPatterns(data_folder="D:/bcc/my_taxon",equalize_args=None,visualize_patching=True)

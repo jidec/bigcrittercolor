@@ -1,5 +1,9 @@
 from bigcrittercolor import clusterExtractSegs
+from bigcrittercolor.helpers import _getIDsInFolder
+#clusterExtractSegs(img_ids=_getIDsInFolder("E:/aeshna_data/masks"), used_aux_segmodel=True,
+#                   filter_hw_ratio_minmax=(3,100), filter_prop_img_minmax = (0.01, 0.9),
+#                   data_folder="E:/aeshna_data")
 
-clusterExtractSegs(img_ids=None, used_aux_segmodel=True,
-                   filter_hw_ratio_minmax=(3,100),
-                   data_folder="E:/aeshna_data")
+clusterExtractSegs(img_ids=_getIDsInFolder("E:/aeshna_data/masks"), used_aux_segmodel=True,
+                   filter_hw_ratio_minmax=(3,100), cluster_params_dict={'pca_n':8}, filter_prop_img_minmax = (0.01, 0.9),
+                   data_folder="E:/aeshna_data",feature_extractor="resnet18")
