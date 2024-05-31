@@ -20,7 +20,7 @@ def _rebuildiNatRecords(data_folder):
 
     # keep useful columns
     merged_data = merged_data[['obs_id', 'taxon', 'latitude', 'longitude', 'annotations',
-                               'img_url', 'img_cnt']]
+                               'img_url', 'img_cnt','date']]
 
     # rename taxon col to species
     merged_data = merged_data.rename(columns={'taxon': 'species'})
