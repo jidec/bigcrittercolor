@@ -1,9 +1,10 @@
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 def _showImages(show, images, titles=None, maintitle=None, list_cmaps=None, grid=False, num_cols=3, figsize=(10, 10),
-                    title_fontsize=30):
+                    title_fontsize=30, save_folder=None):
     '''
     Shows a grid of images, where each image is a Numpy array. The images can be either
     RGB or grayscale.
@@ -91,6 +92,12 @@ def _showImages(show, images, titles=None, maintitle=None, list_cmaps=None, grid
             fig.subplots_adjust(top=0.85)
             fig.suptitle(maintitle,fontsize=30)
             #plt.suptitle(maintitle,fontsize=40)#,horizontalalignment='left', verticalalignment='top')
+
+        if save_folder is not None:
+            filename = generate_unique_filename(save_folder, "img", ".jpg")
+            print(filename)
+            plt.savefig(save_folder + "/" + filename)
+
         _ = plt.show()
         # author: "stackoverflowuser2010"
 
@@ -102,3 +109,12 @@ def img_is_color(img):
             return True
 
     return False
+
+def generate_unique_filename(directory, base_filename, extension):
+    """Generate a unique filename in the specified directory."""
+    i = 1
+    unique_filename = f"{base_filename}{extension}"
+    while os.path.exists(os.path.join(directory, unique_filename)):
+        unique_filename = f"{base_filename}_{i}{extension}"
+        i += 1
+    return unique_filename
