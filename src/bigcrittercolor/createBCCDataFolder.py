@@ -1,6 +1,7 @@
 import os
+import rocksdbpy
 
-def createBCCDataFolder(parent_folder, new_folder_name="bcc_data"):
+def createBCCDataFolder(parent_folder, new_folder_name="bcc_data", use_rocksdb=False):
 
     """ Create a data folder as required for a bigcrittercolor project
 
@@ -49,3 +50,10 @@ def createBCCDataFolder(parent_folder, new_folder_name="bcc_data"):
     mkdir_if_new(base_path + "/other/filter_training/train")
     mkdir_if_new(base_path + "/other/filter_training/train/good")
     mkdir_if_new(base_path + "/other/filter_training/train/bad")
+
+    if use_rocksdb:
+        # Open the RocksDB at the specified path
+        db = rocksdbpy.open_default(base_path + "/db")
+        db.set(b'dummy', b'value')
+        # Close the database to ensure all operations are flushed and the database is safely closed
+        db.close()

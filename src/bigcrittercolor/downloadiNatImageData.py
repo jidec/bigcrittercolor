@@ -5,8 +5,9 @@ from datetime import datetime
 import shutil
 from pathlib import Path
 import copy
+import cv2
 
-from bigcrittercolor.helpers import _bprint, _inat_dl_helpers, _rebuildiNatRecords
+from bigcrittercolor.helpers import _bprint, _inat_dl_helpers, _rebuildiNatRecords, _writeBCCImgs, _getBCCIDs
 
 # works by:
 # 1. calls getiNatRecords which loads prev obs ids
@@ -91,7 +92,8 @@ def downloadiNatImageData(taxa_list, download_records=True, download_images=True
                 os.mkdir(dir)
 
             # get existing image names
-            existing_imgnames = os.listdir(data_folder + '/all_images')
+            existing_imgnames = _getBCCIDs(type="image", data_folder=data_folder)
+            #existing_imgnames = os.listdir(data_folder + '/all_images')
 
             # remove INAT- prefix to get original filenames
             existing_ogfilenames = [i.replace('INAT-', '') for i in existing_imgnames]
@@ -140,14 +142,19 @@ def downloadiNatImageData(taxa_list, download_records=True, download_images=True
                     newname = name.split('_')[0]
                     os.rename(dirname + "/" + name,dirname + "/INAT-" + newname)
 
-                _bprint(print_steps, "Renaming images as JPGs and moving them to all_images...")
+                _bprint(print_steps, "Moving images to all_images...")
                 # rename images as JPGs and move
                 dirname = data_folder + '/other/inat_download_records/iNat_images-' + taxon + "-raw_images"
-                for i, filename in enumerate(os.listdir(dirname)):
-                    file = Path(dirname + "/" + filename + ".jpg")
-                    if not file.exists():
-                        os.rename(dirname + "/" + filename, dirname + "/" + filename + ".jpg")
-                    shutil.move(dirname + "/" + filename + ".jpg", data_folder + "/all_images/" + filename + ".jpg")
+                filenames = os.listdir(dirname)
+                paths = [dirname + "/" + filename for filename in filenames]
+                imgs = [cv2.imread(path) for path in paths]
+                imgnames = [filename + ".jpg" for filename in filenames]
+
+                # write the images
+                _writeBCCImgs(imgs,imgnames,data_folder=data_folder)
+
+                # remove the raw images dir
+                shutil.rmtree(dirname)
 
                 # TODO could allow changing chunksize since medium images hit the servers more weakly
                 # if there are more chunks left, wait for an hour before doing the next chunk

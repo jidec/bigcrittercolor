@@ -17,7 +17,7 @@ from segment_anything import build_sam, SamPredictor
 import torch
 from huggingface_hub import hf_hub_download
 
-from bigcrittercolor.helpers import _bprint, _getIDsInFolder, _showImages
+from bigcrittercolor.helpers import _bprint, _getIDsInFolder, _showImages, _getBCCIDs,_writeBCCImgs,_readBCCImgs
 from bigcrittercolor.helpers.verticalize import _verticalizeImg
 from bigcrittercolor.helpers.image import _removeIslands, _imgAndMaskAreValid
 
@@ -74,12 +74,14 @@ def inferMasks(img_ids=None, skip_existing=True, gd_gpu=True, sam_gpu=True,
     # if no ids get all existing
     if img_ids is None:
         _bprint(print_steps, "No IDs specified, getting all existing image IDs from all_images")
-        img_ids = _getIDsInFolder(data_folder + "/all_images")
-        random.shuffle(img_ids)
+        img_ids = _getBCCIDs(type="image",data_folder=data_folder)
+        #img_ids = _getIDsInFolder(data_folder + "/all_images")
+        #random.shuffle(img_ids)
 
     if skip_existing:
         # get existing mask ids
-        existing_mask_ids = _getIDsInFolder(data_folder + "/masks")
+        existing_mask_ids = _getBCCIDs(type="mask",data_folder=data_folder)
+        #existing_mask_ids = _getIDsInFolder(data_folder + "/masks")
         # get failed mask infers
         with open(data_folder + "/other/processing_info/failed_mask_infers.txt") as file:
             failed_mask_ids = [line.strip() for line in file]
@@ -95,10 +97,10 @@ def inferMasks(img_ids=None, skip_existing=True, gd_gpu=True, sam_gpu=True,
         aux_device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     # create img_locs which starts as a copy of img_ids
-    img_locs = img_ids.copy()
+    #img_locs = img_ids.copy()
     # turn list of ids into list of file locations
-    for i in range(0,len(img_locs)):
-        img_locs[i] = data_folder + "/all_images/" + img_locs[i] + ".jpg"
+    #for i in range(0,len(img_locs)):
+    #    img_locs[i] = data_folder + "/all_images/" + img_locs[i] + ".jpg"
 
     # fun to write failed masks as all black zeroes images with the same shape
     #def write_failed_empty_mask(index, shape):
@@ -113,14 +115,16 @@ def inferMasks(img_ids=None, skip_existing=True, gd_gpu=True, sam_gpu=True,
         ids = list(set(ids))
         with open(data_folder + "/other/processing_info/failed_mask_infers.txt", 'w') as file: file.write('\n'.join(ids))
 
-    _bprint(print_steps, "Starting inferring masks for " + str(len(img_locs)) + " IDs...")
+    _bprint(print_steps, "Starting inferring masks for " + str(len(img_ids)) + " IDs...")
     # for each image location
-    for index, img_loc in enumerate(img_locs):
-
-        _bprint(print_details, "Reading in image from " + img_loc + "...")
+    for index, id in enumerate(img_ids):
+        img = _readBCCImgs(type="image",img_ids=id,data_folder=data_folder)
+        img_loc = data_folder + "/other/temp.jpg"
+        cv2.imwrite(filename=img_loc,img=img)
+        _bprint(print_details, "Reading in image " + id + "...")
         image_source, image = load_image(img_loc)
 
-        if (image_source is None):
+        if image_source is None:
             _bprint(print_details, "Image load failed, skipping...")
             write_failed_id(img_ids[index])
             continue
@@ -236,9 +240,9 @@ def inferMasks(img_ids=None, skip_existing=True, gd_gpu=True, sam_gpu=True,
 
             # if no contour found, skip
             if not contours:
-                _bprint(print_details, "No contour found when removing islands, writing empty mask...")
-                dest = data_folder + "/masks/" + img_ids[index] + "_mask.png"
-                cv2.imwrite(dest, mask)
+                _bprint(print_details, "No contour found when removing islands, writing as failed id...")
+                #dest = data_folder + "/masks/" + img_ids[index] + "_mask.png"
+                #cv2.imwrite(dest, mask)
                 write_failed_id(img_ids[index])
                 continue
 
@@ -318,15 +322,14 @@ def inferMasks(img_ids=None, skip_existing=True, gd_gpu=True, sam_gpu=True,
 
         # write the final mask
         _bprint(print_details, "Writing final mask...")
-        dest = data_folder + "/masks/" + img_ids[index] + "_mask.png"
-        cv2.imwrite(dest, mask)
+        _writeBCCImgs(imgs=mask,imgnames=img_ids[index] + "_mask.png",data_folder=data_folder)
+        #dest = data_folder + "/masks/" + img_ids[index] + "_mask.png"
+        #cv2.imwrite(dest, mask)
 
 
     # if show, show a sample of the masks we got
     if show:
-        masks = [cv2.imread(data_folder + "/masks/" + id + "_mask.png") for id in img_ids]
-        if len(masks) > 12:
-            masks = random.sample(masks,12)
+        masks = _readBCCImgs(type="mask",sample_n=12,data_folder=data_folder)
         _showImages(show,masks,maintitle="Sample Masks")
 
 
