@@ -177,7 +177,7 @@ def retrieveAllRecords(
 
                         row_out['obs_id'] = obs_id
                         row_out['usr_id'] = rec['user']['id']
-                        row_out['date'] = rec['observed_on_string']
+                        row_out['date'] = rec['time_observed_at']
                         row_out['latitude'] = latlong[0]
                         row_out['longitude'] = latlong[1]
                         row_out['taxon'] = rec['taxon']['name']
