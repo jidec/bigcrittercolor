@@ -40,4 +40,4 @@ def convertTIFs(source_folder, destination_folder, downscale_factor):
     print("Conversion completed.")
 
 # Example usage:
-convertTIFs('D:/GitProjects/new_wings_project/tifs', 'D:/GitProjects/new_wings_project/pngs', 5)
+#convertTIFs('D:/new_dragonfly_wings/zygoptera','D:/new_dragonfly_wings/zygoptera_pngs', 5)

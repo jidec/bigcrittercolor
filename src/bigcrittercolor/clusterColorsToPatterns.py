@@ -9,8 +9,10 @@ import matplotlib.pyplot as plt
 from multiprocessing import Pool, cpu_count
 from tqdm import tqdm
 from collections import defaultdict
+import logging
+import rocksdbpy
 
-from bigcrittercolor.helpers import _bprint, _getIDsInFolder, _showImages
+from bigcrittercolor.helpers import _bprint, _getIDsInFolder, _showImages, _readBCCImgs, _writeBCCImgs, _getBCCIDs
 from bigcrittercolor.helpers.clustering import _cluster
 from bigcrittercolor.helpers.image import _blur, _format, _imgToColorPatches, _reconstructImgFromPPD, _blackBgToTransparent
 from bigcrittercolor.helpers.image import _equalize
@@ -70,12 +72,9 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
 
     # get all ids if ids is None
     if img_ids is None:
-        img_ids = _getIDsInFolder(data_folder + "/segments")
+        img_ids = _getBCCIDs(type="segment",data_folder=data_folder)
         if preclustered:
             img_ids = _getIDsInFolder(data_folder + "/patterns/" + preclust_read_subfolder)
-
-    # this list holds either patch data or pixel data for every image - soon we will gather this
-    patch_or_pixel_data = []
 
     # for group histogram matching, compile master histograms for each species
     ids_groups_dict = None
@@ -95,8 +94,7 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
         for species, group in grouped:
             imgs = []
             for img_id in group['img_id']:
-                image_path = data_folder + "/segments/" + img_id + "_segment.png"
-                img = cv2.imread(image_path)
+                img = _readBCCImgs(img_id, type="segment",data_folder=data_folder)
                 imgs.append(img)
             # create master hist using image list and add
             hist = getMasterHistogram(imgs)
@@ -111,6 +109,7 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
     ###############################################
     # load images by id
     _bprint(print_steps, "Gathering pixel or patch data for each image...")
+
     # gatherImageData is the key function here: it is below
     patch_or_pixel_data = gatherImageDataMultiprocess(n_processes=n_processes,img_ids=img_ids, data_folder=data_folder,preclustered=preclustered,preclust_read_subfolder=preclust_read_subfolder,
                                 show_indv=show_indv,group_histogram_matching_colname=group_histogram_matching_colname,ids_groups_dict=ids_groups_dict,
@@ -198,15 +197,15 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
         patch_imgs = [_format(img,in_format=colorspace,out_format="rgb") for img in patch_imgs]
         ids = [ppd[3] for ppd in patch_or_pixel_data]
 
-        indices = random.sample(range(len(patch_imgs)), 18)
-        patch_imgs = [patch_imgs[i] for i in indices]
-        ids = [ids[i] for i in indices]
+        if len(patch_imgs) > 18:
+            indices = random.sample(range(len(patch_imgs)), 18)
+            patch_imgs = [patch_imgs[i] for i in indices]
+            ids = [ids[i] for i in indices]
 
-        raw_imgs = [cv2.imread(data_folder + "/segments/" + id + "_segment.png",cv2.IMREAD_UNCHANGED) for id in ids]
-        patch_imgs = [makeCollage([img,patch_img],n_per_row=2,resize_wh=(50,200)) for img, patch_img in zip(raw_imgs,patch_imgs)]
+            raw_imgs = [cv2.imread(data_folder + "/segments/" + id + "_segment.png",cv2.IMREAD_UNCHANGED) for id in ids]
+            patch_imgs = [makeCollage([img,patch_img],n_per_row=2,resize_wh=(50,200)) for img, patch_img in zip(raw_imgs,patch_imgs)]
 
-
-        _showImages(True,patch_imgs,maintitle="Example Patched Images")
+            _showImages(True,patch_imgs,maintitle="Example Patched Images")
 
     # cluster by group
     if group_cluster_records_colname is not None:
@@ -417,7 +416,7 @@ def gatherImageData(img_id_info):
 
     # Load the appropriate image
     if not preclustered:
-        img = cv2.imread(f"{data_folder}/segments/{img_id}_segment.png", cv2.IMREAD_UNCHANGED)
+        img = _readBCCImgs(img_ids=img_id,type="segment",data_folder=data_folder)
     else:
         img = cv2.imread(f"{data_folder}/patterns/{preclust_read_subfolder}/{img_id}_pattern.png",
                          cv2.IMREAD_UNCHANGED)
@@ -462,10 +461,12 @@ def gatherImageData(img_id_info):
     else:
         return getPixelCoordsAndPixels(img,img_id)
 
+from multiprocessing import Manager
 def gatherImageDataMultiprocess(n_processes, img_ids, data_folder, preclustered, preclust_read_subfolder,
                                 show_indv, group_histogram_matching_colname, ids_groups_dict,
                                 master_histograms, blur_args, equalize_args, colorspace,
                                 height_resize, by_patches, patch_args):
+
     # Prepare the list of arguments
     img_id_info_list = [
         (img_id, data_folder, preclustered, preclust_read_subfolder, show_indv, group_histogram_matching_colname,
@@ -501,6 +502,8 @@ def clusterGroup(group_info):
         show_imgs = _readBCCImgs(img_ids=group_ids,sample_n=9,type="seg",data_folder="D:/bcc/ringtails")
         _showImages(show,show_imgs,maintitle=g)
 
+    print(group_indices)
+    print(len(patch_or_pixel_data))
     # Get data for the group
     group_ppds = [patch_or_pixel_data[i] for i in group_indices]
 

@@ -3,7 +3,7 @@ import cv2
 import random
 
 from bigcrittercolor.helpers.verticalize import _verticalizeImg
-from bigcrittercolor.helpers import _showImages, _bprint, _getIDsInFolder, _readBCCImgs, _clusterByImgFeatures
+from bigcrittercolor.helpers import _showImages, _bprint, _getIDsInFolder, _readBCCImgs, _clusterByImgFeatures, _getBCCIDs, _writeBCCImgs
 from bigcrittercolor.projprep import showBCCImages
 from bigcrittercolor.helpers.image import _blobPassesFilter, _maskIsEmpty, _format
 
@@ -51,9 +51,7 @@ def clusterExtractSegs(img_ids=None, sample_n=None, batch_size=None,
     # if no ids specified load existing masks
     # note that if an aux segmodel was used, the images in masks are actually pre-extracted segments
     if img_ids is None:
-        img_ids = _getIDsInFolder(data_folder + "/masks")
-        if sample_n is not None:
-            img_ids = random.sample(img_ids,sample_n)
+        img_ids = _getBCCIDs(type="mask",data_folder=data_folder,sample_n=sample_n)
 
     # batching is necessary when cluster filtering large numbers of images (>10000)
     # not batching in this case will overload memory in the clustering step
@@ -218,12 +216,10 @@ def clusterExtractSegs(img_ids=None, sample_n=None, batch_size=None,
             # make seg 4 channel
             #segs = [_format(seg,)]
 
-        # zip segments and their ids
-        segs_ids = [(x, y) for x, y in zip(segs, kept_ids)]
-        # write each segment naming it by its ID
-        for seg_and_id in segs_ids:
-            dest = data_folder + "/segments/" + seg_and_id[1] + "_segment.png"
-            cv2.imwrite(dest, seg_and_id[0])
+        # build imgnames
+        kept_imgnames = [img_id + "_segment.png" for img_id in kept_ids]
+        # write
+        _writeBCCImgs(imgs=segs,imgnames=kept_imgnames,data_folder=data_folder)
 
         _bprint(print_steps, "Finished (batch)")
     _bprint(print_steps, "Finished (all batches)")
