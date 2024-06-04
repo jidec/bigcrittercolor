@@ -13,3 +13,7 @@ from bigcrittercolor.helpers.plotPixels import plotPixels
 from bigcrittercolor.helpers._scatterColors import _scatterColors
 from bigcrittercolor.helpers._table import _table
 from bigcrittercolor.helpers._getRecordsColFromIDs import _getRecordsColFromIDs
+from bigcrittercolor.helpers._readRocksdb import _readRocksdb
+from bigcrittercolor.helpers._writeRocksdb import _writeRocksdb
+from bigcrittercolor.helpers._getBCCIDs import _getBCCIDs
+from bigcrittercolor.helpers._writeBCCImgs import _writeBCCImgs
