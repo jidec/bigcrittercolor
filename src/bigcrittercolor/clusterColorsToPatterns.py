@@ -343,23 +343,19 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
 
         img = _blackBgToTransparent(img)
 
-        # id is part of ppd now (makes sense)
-        id = ppd[3]
-
         # setup write target
-        write_target = data_folder + "/patterns/" + id + "_pattern.png"
+        write_target = data_folder + "/patterns/" + ppd[3] + "_pattern.png"
         # if writing to subfolder
         if write_subfolder != "":
             if not os.path.exists(data_folder + "/patterns/" + write_subfolder):
                 os.mkdir(data_folder + "/patterns/" + write_subfolder)
             # change write target to subfolder
-            write_target = data_folder + "/patterns/" + write_subfolder + "/" + id + "_pattern.png"
+            write_target = data_folder + "/patterns/" + write_subfolder + "/" + ppd[3] + "_pattern.png"
 
 
         cv2.imwrite(write_target, img)
         if(print_details): print("Wrote to " + write_target)
-
-        print(i)
+        
     _showImages(show,patterns_to_show,maintitle="Final Patterns")
 
 #def getPatchesAndPatchPixelMeans(img):

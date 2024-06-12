@@ -4,3 +4,4 @@ from bigcrittercolor.projprep.printBCCDataStatus import printBCCDataStatus
 from bigcrittercolor.projprep.clearFolder import clearFolder
 from bigcrittercolor.projprep.setupBioencoderTrainingFolder import setupBioencoderTrainingFolder
 from bigcrittercolor.projprep.convertProjectToRocksdb import convertProjectToRocksdb
+from bigcrittercolor.projprep.zipImageFolder import zipImageFolder

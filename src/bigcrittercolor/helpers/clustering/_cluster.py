@@ -35,6 +35,7 @@ def _cluster(values, algo="kmeans", n=3,
              pca_n=None,
              show_pca_tsne = False,
              show_color_scatter = False,
+             show_silhouette = False,
              input_colorspace = "rgb",
              show=True,
              outlier_percentile=None, return_fuzzy_probs=False,
@@ -355,30 +356,59 @@ def _cluster(values, algo="kmeans", n=3,
 
         _scatterColors._scatterColors(values2, input_colorspace=input_colorspace, cluster_labels=labels2)
 
-    if False:
-        # Identify points in each cluster and outliers
-        core_samples_mask = np.zeros_like(labels, dtype=bool)
-        core_samples_mask[model.core_sample_indices_] = True
-        unique_labels = set(labels)
+    # if force_assign_outliers:
+    # # Identify points in each cluster and outliers
+    # core_samples_mask = np.zeros_like(labels, dtype=bool)
+    # core_samples_mask[model.core_sample_indices_] = True
+    # unique_labels = set(labels)
+    #
+    # # Calculate centroids of the clusters
+    # centroids = []
+    # for k in unique_labels:
+    #     if k != -1:  # Ignoring noise if present
+    #         class_member_mask = (labels == k)
+    #         xy = values[class_member_mask & core_samples_mask]
+    #         centroids.append(np.mean(xy, axis=0))
+    #
+    # # Convert list to array for distance calculation
+    # centroids = np.array(centroids)
+    #
+    # # Forcibly assign outliers to the nearest cluster centroid
+    # outlier_indices = np.where(labels == -1)[0]
+    # if len(centroids) > 0 and len(outlier_indices) > 0:
+    #     closest, _ = pairwise_distances_argmin_min(values[outlier_indices], centroids)
+    #     labels[outlier_indices] = [labels[model.core_sample_indices_[closest[i]]] for i in range(len(closest))]
 
-        # Calculate centroids of the clusters
-        centroids = []
-        for k in unique_labels:
-            if k != -1:  # Ignoring noise if present
-                class_member_mask = (labels == k)
-                xy = values[class_member_mask & core_samples_mask]
-                centroids.append(np.mean(xy, axis=0))
+    if show_silhouette:
+        silhouette_avg = silhouette_score(values, labels)
+        sample_silhouette_values = silhouette_samples(values, labels)
 
-        # Convert list to array for distance calculation
-        centroids = np.array(centroids)
+        fig, ax1 = plt.subplots(1, 1)
+        fig.set_size_inches(10, 7)
 
-        # Forcibly assign outliers to the nearest cluster centroid
-        outlier_indices = np.where(labels == -1)[0]
-        if len(centroids) > 0 and len(outlier_indices) > 0:
-            closest, _ = pairwise_distances_argmin_min(values[outlier_indices], centroids)
-            labels[outlier_indices] = [labels[model.core_sample_indices_[closest[i]]] for i in range(len(closest))]
+        y_lower = 10
+        for i in range(n):
+            ith_cluster_silhouette_values = sample_silhouette_values[labels == i]
+            ith_cluster_silhouette_values.sort()
 
-    # unique code was here
+            size_cluster_i = ith_cluster_silhouette_values.shape[0]
+            y_upper = y_lower + size_cluster_i
+
+            color = plt.cm.nipy_spectral(float(i) / n)
+            ax1.fill_betweenx(np.arange(y_lower, y_upper),
+                              0, ith_cluster_silhouette_values,
+                              facecolor=color, edgecolor=color, alpha=0.7)
+
+            ax1.text(-0.05, y_lower + 0.5 * size_cluster_i, str(i))
+            y_lower = y_upper + 10
+
+        ax1.set_title("The silhouette plot for the various clusters.")
+        ax1.set_xlabel("The silhouette coefficient values")
+        ax1.set_ylabel("Cluster label")
+        ax1.axvline(x=silhouette_avg, color="red", linestyle="--")
+        ax1.set_yticks([])
+        ax1.set_xticks(np.arange(-0.1, 1.1, 0.2))
+        plt.show()
 
     if return_values_as_centroids:
         labels = np.array(labels)  # Convert labels to a numpy array
