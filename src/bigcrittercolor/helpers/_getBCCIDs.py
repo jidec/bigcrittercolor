@@ -1,6 +1,6 @@
 import os
 import random
-import rocksdbpy
+#import rocksdbpy
 import copy
 
 from bigcrittercolor.helpers.ids import _imgNameToID

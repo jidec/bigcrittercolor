@@ -1,5 +1,5 @@
 import cv2
-import rocksdbpy
+#import rocksdbpy
 
 from bigcrittercolor import createBCCDataFolder, downloadiNatImageData, inferMasks, filterExtractSegs, clusterColorsToPatterns, writeMetricsFromPatterns
 from bigcrittercolor.helpers import _getBCCIDs, _readBCCImgs
