@@ -1,3 +1,3 @@
-::: bigcrittercolor.projprep.createBCCDataFolder
+::: bigcrittercolor.project.createBCCDataFolder
 
-::: bigcrittercolor.projprep.printBCCDataStatus
+::: bigcrittercolor.project.printBCCDataStatus

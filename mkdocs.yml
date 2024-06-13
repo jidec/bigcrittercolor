@@ -8,7 +8,7 @@ plugins:
 
 nav:
   - index.md
-  - Project Prep: projprep.md
+  - Project Prep: project.md
   - Image Download: imgdownload.md
   - Segmentation: segmentation.md
   - Mask Clustering & Segment Extraction: clusterextract.md

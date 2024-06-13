@@ -3,52 +3,55 @@ import random
 import rocksdbpy
 import copy
 
-from bigcrittercolor.helpers import _imgNameToID
+from bigcrittercolor.helpers.ids import _imgNameToID
+from bigcrittercolor.helpers.db import _getDbIDs
 
 def _getBCCIDs(type="image", sample_n=None, data_folder=''):
     use_db = os.path.exists(data_folder + "/db")
 
     if use_db:
-        # Open the database with default options
-        db = rocksdbpy.open_default(data_folder + "/db")
-        # Create an iterator to go through the database
-        iterator = db.iterator()
-        # Initialize an empty list to store keys
-        keys = []
+        filenames = _getDbIDs(data_folder=data_folder,type=type)
 
-        # Define suffix based on the type
-        type_suffix = {
-            "segment": "_segment",
-            "mask": "_mask",
-            "pattern": "_pattern"
-        }.get(type)
-
-        # Iterate over all key-value pairs in the database
-        for key, value in iterator:
-            # Decode the key
-            decoded_key = key.decode('utf-8')
-            # Filter keys based on type
-            if type_suffix:
-                if type_suffix in decoded_key:
-                    keys.append(decoded_key)
-            else:
-                # For type "img", include keys that don't match any specific type
-                if not any(suffix in decoded_key for suffix in ["_segment", "_mask", "_pattern"]):
-                    keys.append(decoded_key)
-
-        # Close the database to release resources
-        #db.close()
-        del iterator
-        del db
-
-        filenames = keys
+        # # Open the database with default options
+        # db = rocksdbpy.open_default(data_folder + "/db")
+        # # Create an iterator to go through the database
+        # iterator = db.iterator()
+        # # Initialize an empty list to store keys
+        # keys = []
+        #
+        # # Define suffix based on the type
+        # type_suffix = {
+        #     "segment": "_segment",
+        #     "mask": "_mask",
+        #     "pattern": "_pattern"
+        # }.get(type)
+        #
+        # # Iterate over all key-value pairs in the database
+        # for key, value in iterator:
+        #     # Decode the key
+        #     decoded_key = key.decode('utf-8')
+        #     # Filter keys based on type
+        #     if type_suffix:
+        #         if type_suffix in decoded_key:
+        #             keys.append(decoded_key)
+        #     else:
+        #         # For type "img", include keys that don't match any specific type
+        #         if not any(suffix in decoded_key for suffix in ["_segment", "_mask", "_pattern"]):
+        #             keys.append(decoded_key)
+        #
+        # # Close the database to release resources
+        # #db.close()
+        # del iterator
+        # del db
+        #
+        # filenames = keys
 
     else:
         # Define a mapping of types to subdirectories
         folder_mapping = {
-            "img": "all_images",
+            "image": "all_images",
             "mask": "masks",
-            "seg": "segments",
+            "segment": "segments",
             "pattern": "patterns"
         }
 

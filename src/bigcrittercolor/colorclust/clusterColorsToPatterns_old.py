@@ -16,7 +16,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from skimage import color
 from sklearn.metrics import silhouette_samples, silhouette_score
 from scipy.cluster import hierarchy
-from bigcrittercolor.helpers import _getIDsInFolder
+from bigcrittercolor.helpers.ids import _getIDsInFolder
 
 def clusterColorsToPatterns(img_ids=None, preclustered = False, group_cluster_records_col = None, group_cluster_raw_ids = False,
                     by_contours=False, contours_erode_size=0, contours_dilate_mult = 2, min_contour_pixel_area=10,

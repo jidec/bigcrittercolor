@@ -4,8 +4,8 @@ import random
 import copy
 import os
 
-from bigcrittercolor.helpers import _getIDsInFolder
-from bigcrittercolor.helpers import _readRocksdb
+from bigcrittercolor.helpers.ids import _getIDsInFolder
+from bigcrittercolor.helpers.db import _readDb
 from bigcrittercolor.helpers.image import _segToMask, _format
 
 def _readBCCImgs(img_ids=None, sample_n=None,type="image", preclust_folder_name=None, color_format=None, make_3channel=False, data_folder=''):
@@ -32,18 +32,18 @@ def _readBCCImgs(img_ids=None, sample_n=None,type="image", preclust_folder_name=
         match type:
             case "image":
                 imgnames = [img_id + ".jpg" for img_id in img_ids]
-                imgs = _readRocksdb._readRocksdb(imgnames=imgnames,rocksdb_path=data_folder+"/db")
+                imgs = _readDb(imgnames=imgnames,db_path=data_folder+"/db")
             case "mask":
                 imgnames = [img_id + "_mask.png" for img_id in img_ids]
-                imgs = _readRocksdb._readRocksdb(imgnames=imgnames,rocksdb_path=data_folder+"/db")
+                imgs = _readDb(imgnames=imgnames,db_path=data_folder+"/db")
             case "segment":
                 imgnames = [img_id + "_segment.png" for img_id in img_ids]
-                imgs = _readRocksdb._readRocksdb(imgnames=imgnames, rocksdb_path=data_folder + "/db")
+                imgs = _readDb(imgnames=imgnames, db_path=data_folder + "/db")
             case "raw_segment":
                 imgnames = [img_id + "_mask.png" for img_id in img_ids]
-                imgs = _readRocksdb(imgnames=imgnames, rocksdb_path=data_folder + "/db")
+                imgs = _readDb(imgnames=imgnames, db_path=data_folder + "/db")
                 imgnames = [img_id + "_segment.png" for img_id in img_ids]
-                masks = _readRocksdb(imgnames=imgnames, rocksdb_path=data_folder + "/db")
+                masks = _readDb(imgnames=imgnames, db_path=data_folder + "/db")
                 imgs_masks = zip(imgs, masks)
                 del imgs
                 del masks

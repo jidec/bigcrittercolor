@@ -17,7 +17,7 @@ from segment_anything import build_sam, SamPredictor
 import torch
 from huggingface_hub import hf_hub_download
 
-from bigcrittercolor.helpers import _bprint, _getIDsInFolder, _showImages, _getBCCIDs,_writeBCCImgs,_readBCCImgs
+from bigcrittercolor.helpers import _bprint, _showImages, _getBCCIDs,_writeBCCImgs,_readBCCImgs
 from bigcrittercolor.helpers.verticalize import _verticalizeImg
 from bigcrittercolor.helpers.image import _removeIslands, _imgAndMaskAreValid
 

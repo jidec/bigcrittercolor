@@ -1,12 +1,12 @@
 import os
 import cv2
-from bigcrittercolor.helpers import _writeRocksdb
+from bigcrittercolor.helpers.db import _writeDb
 
 def _writeBCCImgs(imgs, imgnames, data_folder=''):
     use_db = os.path.exists(data_folder + "/db")
 
     if use_db:
-        _writeRocksdb(imgs, imgnames, rocksdb_path=data_folder + "/db")
+        _writeDb(imgs, imgnames, db_path=data_folder + "/db")
     else:
         # Ensure input is in list format, even if only one image is provided
         if not isinstance(imgs, list):

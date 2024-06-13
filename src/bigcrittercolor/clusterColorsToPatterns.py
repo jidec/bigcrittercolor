@@ -10,13 +10,12 @@ from multiprocessing import Pool, cpu_count
 from tqdm import tqdm
 from collections import defaultdict
 import logging
-import rocksdbpy
+import py
 
-from bigcrittercolor.helpers import _bprint, _getIDsInFolder, _showImages, _readBCCImgs, _writeBCCImgs, _getBCCIDs
+from bigcrittercolor.helpers import _bprint, _showImages, _readBCCImgs, _writeBCCImgs, _getBCCIDs, makeCollage
+from bigcrittercolor.helpers.ids import _getIDsInFolder,  _imgIDToObsID
 from bigcrittercolor.helpers.clustering import _cluster
-from bigcrittercolor.helpers.image import _blur, _format, _imgToColorPatches, _reconstructImgFromPPD, _blackBgToTransparent
-from bigcrittercolor.helpers.image import _equalize
-from bigcrittercolor.helpers import makeCollage, _imgIDToObsID
+from bigcrittercolor.helpers.image import _blur, _format, _equalize, _imgToColorPatches, _reconstructImgFromPPD, _blackBgToTransparent
 
 def clusterColorsToPatterns(img_ids=None, cluster_individually=False, preclustered = False, group_cluster_records_colname = None,
                     by_patches=True, patch_args = {'min_patch_pixel_area':5,'cluster_args':{'n':5, 'algo':'gaussian_mixture'}}, visualize_patching=False,

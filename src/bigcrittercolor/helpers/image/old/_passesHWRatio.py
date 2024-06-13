@@ -1,4 +1,4 @@
-from bigcrittercolor.helpers.imgtransforms import _verticalizeImg
+from bigcrittercolor.helpers.verticalize import _verticalizeImg
 import numpy as np
 from bigcrittercolor.helpers import _showImages
 

@@ -1,2 +1,2 @@
-from bigcrittercolor.morphclust.inferClusterViewsMorphs import inferClusterViewsMorphs
+from bigcrittercolor.morphclust.inferMorphs import inferMorphs
 

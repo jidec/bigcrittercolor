@@ -28,6 +28,9 @@ dependencies = [
     'importlib-metadata; python_version<"3.8"'
 ]
 
+[pytest]
+norecursedirs = "old"
+
 #[tool.poetry.dependencies]
 #python = "^3.6"
 #my-dependency = { git = "https://github.com/facebookresearch/segment-anything.git", branch = "main" }
