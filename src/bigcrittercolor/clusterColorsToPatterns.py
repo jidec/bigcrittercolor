@@ -10,7 +10,6 @@ from multiprocessing import Pool, cpu_count
 from tqdm import tqdm
 from collections import defaultdict
 import logging
-import py
 
 from bigcrittercolor.helpers import _bprint, _showImages, _readBCCImgs, _writeBCCImgs, _getBCCIDs, makeCollage
 from bigcrittercolor.helpers.ids import _getIDsInFolder,  _imgIDToObsID
