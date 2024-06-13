@@ -1,9 +1,13 @@
 import os
 import cv2
 
-from bigcrittercolor.helpers.db import _writeDb
+from bigcrittercolor.helpers.db import _writeDb, _createDb
 
-def convertProjectToDb(data_folder):
+def convertProjectToDb(data_folder, map_size=50 * 1024 ** 3):
+
+    # create the db
+    _createDb(map_size=map_size,data_folder=data_folder)
+
     # list of image folders to convert images in
     img_folders_to_convert = ["all_images","masks","segments"]
     # paths to those folders

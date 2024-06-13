@@ -10,3 +10,4 @@ from bigcrittercolor.helpers._scatterColors import _scatterColors
 from bigcrittercolor.helpers._table import _table
 from bigcrittercolor.helpers._getBCCIDs import _getBCCIDs
 from bigcrittercolor.helpers._writeBCCImgs import _writeBCCImgs
+from bigcrittercolor.helpers._runtime import _runtime
