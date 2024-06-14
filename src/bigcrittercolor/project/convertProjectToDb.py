@@ -60,4 +60,7 @@ def convertProjectToDb(data_folder, map_size=50 * 1024 ** 3):
         for path in batch_paths:
             os.remove(path)
 
+        if i % 20 == 0:
+            print(i)
+
 
