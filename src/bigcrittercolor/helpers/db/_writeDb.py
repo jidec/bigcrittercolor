@@ -32,15 +32,20 @@ def _writeDb(imgs, imgnames, db_path):
                 # Default to JPEG if no known extension is provided
                 encode_format = '.jpg'
 
-            # Encode the image to the appropriate format
-            _, img_encoded = cv2.imencode(encode_format, img)
-            img_bytes = img_encoded.tobytes()
+            try:
+                # Encode the image to the appropriate format
+                _, img_encoded = cv2.imencode(encode_format, img)
+                img_bytes = img_encoded.tobytes()
 
-            # Encode the image name to bytes to use as the key
-            key_bytes = imgname.encode('utf-8')
+                # Encode the image name to bytes to use as the key
+                key_bytes = imgname.encode('utf-8')
 
-            # Store the image bytes in the database using the key
-            txn.put(key_bytes, img_bytes)
+                # Store the image bytes in the database using the key
+                txn.put(key_bytes, img_bytes)
+
+            except Exception as e:
+                # Handle the error, e.g., log it or pass it up the chain
+                print(f"Failed to encode or write the image {imgname} to the database...")
 
 # import cv2
 # import rocksdbpy
