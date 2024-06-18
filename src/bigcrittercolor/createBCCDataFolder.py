@@ -3,7 +3,7 @@ import lmdb
 
 from bigcrittercolor.helpers.db import _createDb
 
-def createBCCDataFolder(parent_folder, new_folder_name="bcc_data", use_db=False, map_size=50 * 1024 ** 3):
+def createBCCDataFolder(parent_folder, new_folder_name="bcc_data", use_db=False, map_size_gb=50):
 
     """ Create a data folder as required for a bigcrittercolor project
 
@@ -11,7 +11,7 @@ def createBCCDataFolder(parent_folder, new_folder_name="bcc_data", use_db=False,
             parent_folder (str): folder in which to place the new bigcrittercolor data folder
             new_folder_name (str): name of the new bigcrittercolor data folder
     """
-
+    map_size = map_size_gb * (1024 ** 3)
     base_path = parent_folder + "/" + new_folder_name
 
     def mkdir_if_new(path):
