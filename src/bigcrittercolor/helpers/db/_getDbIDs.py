@@ -27,8 +27,8 @@ def _getDbIDs(data_folder, type):
     # Close the environment when done
     env.close()
 
-    if type is "image":
-        keys = [key for key in keys if not ("_segment" in key | "_mask" in key | "_pattern" in key)]
+    if type == "image":
+        keys = [key for key in keys if not ("_segment" in key or "_mask" in key or "_pattern" in key)]
     else:
         # Define suffix based on the type
         type_suffix = {
