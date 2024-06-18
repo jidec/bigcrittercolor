@@ -21,6 +21,7 @@ def _getDbIDs(data_folder, type):
 
         # Use cursor.iternext(keys=True, values=False) to iterate over keys only
         for key in cursor.iternext(keys=True, values=False):
+            print(key.decode('utf-8'))
             # Decode the key and append to the list
             keys.append(key.decode('utf-8'))
 
