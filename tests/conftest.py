@@ -17,33 +17,52 @@ from bigcrittercolor.helpers import _getBCCIDs
 # note that they are NOT visual, just checking that functions don't error out and that the basic properties of their outputs are correct
 # the "visual_tests" folder contains visual tests for the clustering stages
 
+#pytest -s
+
 @pytest.fixture(scope="session")
 def shared_temp_folder():
     with TemporaryDirectory() as temp_folder:
         print("Creating temp directory for test session:", temp_folder)
 
+        # all temporary folders
+        empty_folder = temp_folder + "/empty"
+        downloaded_folder = temp_folder + "/downloaded"
+        masked_folder = temp_folder + "/masked"
+        filtered_folder = temp_folder + "/filtered"
+        masked_auxseg_folder = temp_folder + "/masked_auxseg"
+        filtered_auxseg_folder = temp_folder + "/filtered_auxseg"
+
         # create folders at intermediate stages of the pipeline
         # empty
         createBCCDataFolder(parent_folder=temp_folder,new_folder_name="empty")
 
-        # downloaded
-        shutil.copytree(temp_folder + "/empty", temp_folder + "/downloaded")
-        downloadiNatImageData(taxa_list=["Anaciaeschna"], data_folder=temp_folder + "/downloaded")
+        # downloaded (Anaciaeschna)
+        shutil.copytree(empty_folder, downloaded_folder)
+        downloadiNatImageData(taxa_list=["Anaciaeschna"], data_folder=downloaded_folder)
 
+        ## normal - not using auxseg
         # masked
-        shutil.copytree(temp_folder + "/downloaded", temp_folder + "/masked")
+        shutil.copytree(downloaded_folder, masked_folder)
         # get 30 IDs, inferring for hundreds will take too long
-        ids = _getBCCIDs(type="image", data_folder=temp_folder + "/masked")
+        ids = _getBCCIDs(type="image", data_folder=masked_folder)
         ids = random.sample(ids, 30)
-        inferMasks(img_ids=ids, data_folder=temp_folder + "/masked", gd_gpu=True, sam_gpu=True, sam_location="D:/bcc/sam.pth",
-                   aux_segmodel_location="D:/bcc/aux_segmenter.pt")
-
+        inferMasks(img_ids=ids, sam_location="D:/bcc/sam.pth",
+                   data_folder=masked_folder)
         # filtered
-        shutil.copytree(temp_folder + "/masked", temp_folder + "/filtered")
-        filterExtractSegs(used_aux_segmodel=True,
-                             filter_prop_img_minmax=None, cluster_params_dict={'pca_n':8}, filter_intersects_sides= None, filter_symmetry_min = None,
-                             filter_hw_ratio_minmax=None, preselected_clusters_input="2",
-                             feature_extractor="resnet18",data_folder=temp_folder + "/filtered")
+        shutil.copytree(masked_folder, filtered_folder)
+        filterExtractSegs(used_aux_segmodel=False, preselected_clusters_input="1", data_folder=filtered_folder)
+
+        ## aux - using auxseg
+        # masked auxseg
+        shutil.copytree(downloaded_folder, masked_auxseg_folder)
+        # get 30 IDs, inferring for hundreds will take too long
+        ids = _getBCCIDs(type="image", data_folder=masked_auxseg_folder)
+        ids = random.sample(ids, 30)
+        inferMasks(img_ids=ids, data_folder=masked_auxseg_folder, sam_location="D:/bcc/sam.pth",
+                   aux_segmodel_location="D:/bcc/aux_segmenter.pt")
+        # filtered auxseg
+        shutil.copytree(masked_auxseg_folder, filtered_auxseg_folder)
+        filterExtractSegs(used_aux_segmodel=True,preselected_clusters_input="1",data_folder=filtered_auxseg_folder)
         
         yield temp_folder
         # cleanup happens automatically when the block exits
