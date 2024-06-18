@@ -27,9 +27,9 @@ from bigcrittercolor.helpers import _bprint, _inat_dl_helpers, _rebuildiNatRecor
 #   will fail to download all records for a taxon if a previous records download was interrupted
 # 8. works in two pieces - downloading records and downloading images using records
 def downloadiNatImageData(taxa_list, download_records=True, download_images=True,
-                          lat_lon_box=None, usa_only=False, img_size="medium", research_grade_only=True, n_per_taxon=None, max_n_per_obs=1,
+                          lat_lon_box=None, usa_only=False, img_size="medium", research_grade_only=True, #n_per_taxon=None, max_n_per_obs=1,
                           skip_records_for_existing_taxa=False,
-                          print_steps=True, data_folder='../..'):
+                          print_steps=True, data_folder=''):
     """ Download iNat images and data by genus or species.
         This method downloads records then refers to those records to download in parallel.
         Images are always saved in data_folder/all_images.

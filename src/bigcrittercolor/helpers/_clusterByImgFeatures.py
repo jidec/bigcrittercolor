@@ -148,7 +148,7 @@ def _clusterByImgFeatures(imgs, feature_extractor="resnet18",
 
             # if using full display load in corresponding images and masks and apply them, then collage segments in
             if full_display_ids is not None:
-                images = _readBCCImgs(cluster_ids,type="img",data_folder=full_display_data_folder)
+                images = _readBCCImgs(cluster_ids,type="image",data_folder=full_display_data_folder)
                 masks = _readBCCImgs(cluster_ids, type="mask", data_folder=full_display_data_folder)
 
                 #for index, mask in enumerate(masks):

@@ -5,6 +5,7 @@ import copy
 import os
 
 from bigcrittercolor.helpers.ids import _getIDsInFolder
+from bigcrittercolor.helpers import _getBCCIDs
 from bigcrittercolor.helpers.db import _readDb
 from bigcrittercolor.helpers.image import _segToMask, _format
 
@@ -12,9 +13,15 @@ def _readBCCImgs(img_ids=None, sample_n=None,type="image", preclust_folder_name=
     # make sure that img_ids isn't modified
     img_ids = copy.deepcopy(img_ids)
 
-    # if none load masks
+    # if none load depending
     if img_ids is None:
-        img_ids = _getIDsInFolder(data_folder + "/masks")
+        match type:
+            case "image":
+                img_ids = _getBCCIDs(type="image",data_folder=data_folder)
+            case "mask":
+                img_ids = _getBCCIDs(type="mask",data_folder=data_folder)
+            case "segment" | "raw_segment" | "mask_from_segment":
+                img_ids = _getBCCIDs(type="segment", data_folder=data_folder)
 
     # sample
     if sample_n is not None and len(img_ids) > sample_n:

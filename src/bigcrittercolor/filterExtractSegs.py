@@ -21,10 +21,10 @@ from bigcrittercolor.helpers.image import _blobPassesFilter, _maskIsEmpty, _form
 #@profile
 def filterExtractSegs(img_ids=None, sample_n=None, batch_size=None,
     color_format_to_cluster = "grey", used_aux_segmodel=False,
-    filter_hw_ratio_minmax = None, filter_prop_img_minmax = None, filter_symmetry_min = None, filter_intersects_sides=True, # filters
+    filter_hw_ratio_minmax = None, filter_prop_img_minmax = None, filter_symmetry_min = None, filter_intersects_sides= False, # filters
     mask_normalize_params_dict={'lines_strategy':"ellipse"}, # normalization/verticalization of masks
     feature_extractor="resnet18", # feature extractor
-    cluster_params_dict={'algo':"kmeans",'n':4,'eps':0.1,'min_samples':24}, preselected_clusters_input = None,
+    cluster_params_dict={'algo':"kmeans",'find_n_minmax':(3,5)}, preselected_clusters_input = None,
     show=True, show_indv=False, print_steps=True, data_folder=""):
 
     """ Extract segments using masks, filter them, cluster them, keep clusters based on user input, then save kept segments
@@ -141,7 +141,7 @@ def filterExtractSegs(img_ids=None, sample_n=None, batch_size=None,
         if used_aux_segmodel:
             segs = _readBCCImgs(img_ids=mask_ids,type="mask",color_format=color_format_to_cluster,make_3channel=True, data_folder=data_folder)
         else:
-            segs = _readBCCImgs(img_ids=mask_ids,type="raw_seg",color_format=color_format_to_cluster,make_3channel=True,data_folder=data_folder)
+            segs = _readBCCImgs(img_ids=mask_ids,type="raw_segment",color_format=color_format_to_cluster,make_3channel=True,data_folder=data_folder)
 
         _bprint(print_steps,"Normalizing segments for feature and segment extraction if specified...")
         if not used_aux_segmodel:
@@ -193,7 +193,7 @@ def filterExtractSegs(img_ids=None, sample_n=None, batch_size=None,
             #    masks[index] = mask
 
             # get all images to match the masks
-            parent_imgs = _readBCCImgs(kept_ids, type="img", data_folder=data_folder)
+            parent_imgs = _readBCCImgs(kept_ids, type="image", data_folder=data_folder)
 
             # zip masks and their parents
             masks_parents = [(x, y) for x, y in zip(masks, parent_imgs)]

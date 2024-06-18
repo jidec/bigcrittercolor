@@ -9,7 +9,7 @@ def extractRawSegs(img_ids=None, sample_n=None, data_folder=''):
         if sample_n is not None:
             img_ids = random.sample(img_ids, sample_n)
 
-    segs = _readBCCImgs(img_ids=img_ids, type="raw_seg", grey=False, data_folder=data_folder)
+    segs = _readBCCImgs(img_ids=img_ids, type="raw_segment", grey=False, data_folder=data_folder)
 
     segs_ids = [(x, y) for x, y in zip(segs, img_ids)]
 

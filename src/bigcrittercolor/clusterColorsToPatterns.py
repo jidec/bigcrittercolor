@@ -17,7 +17,7 @@ from bigcrittercolor.helpers.clustering import _cluster
 from bigcrittercolor.helpers.image import _blur, _format, _equalize, _imgToColorPatches, _reconstructImgFromPPD, _blackBgToTransparent
 
 def clusterColorsToPatterns(img_ids=None, cluster_individually=False, preclustered = False, group_cluster_records_colname = None,
-                    by_patches=True, patch_args = {'min_patch_pixel_area':5,'cluster_args':{'n':5, 'algo':'gaussian_mixture'}}, visualize_patching=False,
+                    by_patches=True, patch_args = {'min_patch_pixel_area':5,'cluster_args':{'n':4, 'algo':'gaussian_mixture'}}, visualize_patching=False,
                     cluster_args={'find_n_minmax':(2,7), 'algo':"gaussian_mixture"}, use_positions=False,
                     colorspace = "cielab",
                     height_resize = 200,
@@ -493,7 +493,7 @@ def clusterGroup(group_info):
 
     if False:
         group_ids = [img_ids[i] for i in group_indices]
-        show_imgs = _readBCCImgs(img_ids=group_ids,sample_n=9,type="seg",data_folder="D:/bcc/ringtails")
+        show_imgs = _readBCCImgs(img_ids=group_ids,sample_n=9,type="segment",data_folder="D:/bcc/ringtails")
         _showImages(show,show_imgs,maintitle=g)
 
     print(group_indices)

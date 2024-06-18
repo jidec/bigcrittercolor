@@ -76,4 +76,4 @@ def writeMetricsFromPatterns(data_folder, pattern_subfolder=None):
 
     records_with_metrics.to_csv(data_folder + "/records_with_metrics.csv",index=False)
 
-#writeMetricsFromPatterns("D:/anac_tests")
+#writeMetricsFromPatterns("D:/bcc/ringtails")

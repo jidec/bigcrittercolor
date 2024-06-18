@@ -24,8 +24,8 @@ from bigcrittercolor.helpers.image import _removeIslands, _imgAndMaskAreValid
 def inferMasks(img_ids=None, skip_existing=True, gd_gpu=True, sam_gpu=True,
                strategy="prompt1", text_prompt="subject", box_threshold=0.25, text_threshold=0.25, # groundedSAM params
                aux_segmodel_location=None, # location of the auxiliary segmodel that get applied to SAM masks
-               sam_location=None,
                auxseg_normalize_params_dict={'lines_strategy':"skeleton_hough", 'best_line_metric':"overlap_sym"},
+               sam_location=None,
                erode_kernel_size=0, remove_islands=True,
                show=False, show_indv=False, print_steps=True, print_details=False, data_folder=""):
     """ Infer masks for the specified image ids using SegmentAnything prompted by the groundingDINO zero-shot object detector
@@ -40,7 +40,7 @@ def inferMasks(img_ids=None, skip_existing=True, gd_gpu=True, sam_gpu=True,
                 to add later:
                 3. prompt1_merged_and_prompt2_merged - save all instances of prompt1 merged together, AND all instances of prompt2 merged
                 4. prompt1_instances - save all instances of prompt1 separately
-                5. prompt1_instances_and_prompt2_instances - save all instances of prompt1 and
+                5. prompt1_instances_and_prompt2_instances - save all instances of prompt1 and prompt2
             text_prompt (str): the text prompt for groundingDINO to use in selecting bounding boxes
             box_threshold (float): confidence threshold to keep object bounding boxes - higher values means less boxes are kept
             text_threshold (float): confidence threshold that kept object bounding boxes are the object we prompted for
