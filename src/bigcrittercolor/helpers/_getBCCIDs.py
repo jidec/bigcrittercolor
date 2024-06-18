@@ -2,11 +2,12 @@ import os
 import random
 #import rocksdbpy
 import copy
+import pandas as pd
 
 from bigcrittercolor.helpers.ids import _imgNameToID
 from bigcrittercolor.helpers.db import _getDbIDs
 
-def _getBCCIDs(type="image", sample_n=None, data_folder=''):
+def _getBCCIDs(type="image", sample_n=None, records_filter_dict=None, data_folder=''):
     use_db = os.path.exists(data_folder + "/db")
 
     if use_db:
@@ -64,6 +65,17 @@ def _getBCCIDs(type="image", sample_n=None, data_folder=''):
 
     # for both approaches format to ID
     ids = [_imgNameToID(filename) for filename in filenames]
+
+    if records_filter_dict is not None:
+        # load the CSV file
+        df = pd.read_csv(data_folder + "/records.csv")
+
+        for column, value in records_filter_dict.items():
+            df = df[df[column] == value]
+
+        # Filter filenames based on the filtered IDs
+        filtered_ids = set(df['img_id'])  # Assuming 'id' is the column with IDs in the CSV
+        ids = [id for id in ids if id in filtered_ids]
 
     # Optionally sample a subset of filenames
     if sample_n is not None and len(ids) > sample_n:
