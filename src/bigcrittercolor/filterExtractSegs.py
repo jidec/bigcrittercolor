@@ -1,11 +1,14 @@
 import numpy as np
 import cv2
 import random
+from sklearn.ensemble import IsolationForest
+from sklearn.preprocessing import StandardScaler
 
 from bigcrittercolor.helpers.verticalize import _verticalizeImg
 from bigcrittercolor.helpers import _showImages, _bprint, _readBCCImgs, _clusterByImgFeatures, _getBCCIDs, _writeBCCImgs
 from bigcrittercolor.project import showBCCImages
 from bigcrittercolor.helpers.image import _blobPassesFilter, _maskIsEmpty, _format
+from bigcrittercolor.helpers.ids import _getRecordsColFromIDs
 
 # Image - the raw starting images, not changed in any way
 # Mask - masks that apply to the original image to yield a segment, created by inferMasks
@@ -24,7 +27,8 @@ def filterExtractSegs(img_ids=None, sample_n=None, batch_size=None,
     filter_hw_ratio_minmax = None, filter_prop_img_minmax = None, filter_symmetry_min = None, filter_intersects_sides= False, # filters
     mask_normalize_params_dict={'lines_strategy':"ellipse"}, # normalization/verticalization of masks
     feature_extractor="resnet18", # feature extractor
-    cluster_params_dict={'algo':"kmeans",'find_n_minmax':(3,5)}, preselected_clusters_input = None,
+    cluster_params_dict={'algo':"kmeans",'pca_n':5,'n':10}, preselected_clusters_input = None,
+    illum_outliers_percent = None,
     show=True, show_indv=False, print_steps=True, data_folder=""):
 
     """ Extract segments using masks, filter them, cluster them, keep clusters based on user input, then save kept segments
@@ -216,8 +220,41 @@ def filterExtractSegs(img_ids=None, sample_n=None, batch_size=None,
             # make seg 4 channel
             #segs = [_format(seg,)]
 
+
+        #
+        if illum_outliers_percent is not None:
+            species_labels = _getRecordsColFromIDs(img_ids=kept_ids,column="species",data_folder=data_folder)
+
+            # Dictionary to group segs and ids by species
+            species_data = {}
+            for seg, species, kept_id in zip(segs, species_labels, kept_ids):
+                if species not in species_data:
+                    species_data[species] = {"segs": [], "kept_ids": []}
+                species_data[species]["segs"].append(seg)
+                species_data[species]["kept_ids"].append(kept_id)
+
+            # Final lists to store inliers from all species
+            final_segs = []
+            final_ids = []
+
+            # Process each species
+            for species, data in species_data.items():
+                species_segs = data["segs"]
+                species_ids = data["kept_ids"]
+                inliers_segs, inliers_ids,outliers_segs = _getIllumInliers(species_segs, species_ids,contamination=illum_outliers_percent)
+                final_segs.extend(inliers_segs)
+                final_ids.extend(inliers_ids)
+                if len(inliers_segs) > 0:
+                    _showImages(show,images=inliers_segs,maintitle=species + " inliers",sample_n=9)
+                if len(outliers_segs) > 0:
+                    _showImages(show, images=outliers_segs, maintitle=species + " outliers", sample_n=9)
+
+            segs = final_segs
+            kept_ids = final_ids
+
         # build imgnames
         kept_imgnames = [img_id + "_segment.png" for img_id in kept_ids]
+
         # write
         _writeBCCImgs(imgs=segs,imgnames=kept_imgnames,data_folder=data_folder)
 
@@ -252,3 +289,31 @@ def _claheEqualize(img):
 #                       filter_hw_ratio_minmax=(3, 100), cluster_params_dict={'pca_n': None},
 #                       filter_prop_img_minmax=(0.01, 0.9),
 #                       data_folder="E:/aeshna_data")
+
+def _getIllumInliers(imgs,ids,contamination=0.1):
+    # Function to extract RGB features
+    def extract_rgb_features(image):
+        mean_r = np.mean(image[:, :, 2])
+        std_r = np.std(image[:, :, 2])
+        mean_g = np.mean(image[:, :, 1])
+        std_g = np.std(image[:, :, 1])
+        mean_b = np.mean(image[:, :, 0])
+        std_b = np.std(image[:, :, 0])
+        return [mean_r, std_r, mean_g, std_g, mean_b, std_b]
+
+    features = [extract_rgb_features(img) for img in imgs]
+    features = np.array(features)
+
+    # Normalize the features
+    scaler = StandardScaler()
+    normalized_features = scaler.fit_transform(features)
+
+    # Identify inliers using Isolation Forest
+    iso_forest = IsolationForest(contamination=contamination)  # Adjust contamination based on your needs
+    inliers_mask = iso_forest.fit_predict(normalized_features) == 1
+
+    inliers = [imgs[i] for i in range(len(imgs)) if inliers_mask[i]]
+    outliers = [imgs[i] for i in range(len(imgs)) if not inliers_mask[i]]
+    inliers_ids = [ids[i] for i in range(len(ids)) if inliers_mask[i]]
+
+    return inliers,inliers_ids,outliers
