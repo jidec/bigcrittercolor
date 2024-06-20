@@ -109,9 +109,10 @@ def downloadiNatImageData(taxa_list, download_records=True, download_images=True
                 continue
             _bprint(print_steps, "Will download " + str(n_new_obs) + " new observations...")
 
+            records_path = data_folder + '/other/inat_download_records/iNat_images-' + taxon + '-records_trimmed/trimmed_records.csv'
             # write trimmed records to trimmed records folder
             records.to_csv(
-                data_folder + '/other/inat_download_records/iNat_images-' + taxon + '-records_trimmed/trimmed_records.csv',
+                records_path,
                 index=False, mode='w+')
 
             _bprint(print_steps, "Using records to download images...")
@@ -122,7 +123,6 @@ def downloadiNatImageData(taxa_list, download_records=True, download_images=True
 
             fileout = data_folder + "/other/inat_download_records/" + taxon + '-download_log.csv'
             # download the images
-            records_path = data_folder + '/other/inat_download_records/iNat_images-' + taxon + '-records_trimmed/trimmed_records.csv'
             _inat_dl_helpers.downloadImages(img_records=records_path,imgdir=rawimg_folder,fileout=fileout)
 
             # rename raw images with INAT- prefix
