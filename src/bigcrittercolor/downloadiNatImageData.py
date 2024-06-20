@@ -8,6 +8,7 @@ import copy
 import cv2
 
 from bigcrittercolor.helpers import _bprint, _inat_dl_helpers, _rebuildiNatRecords, _writeBCCImgs, _getBCCIDs
+from bigcrittercolor.helpers.ids import _imgNameToID
 
 # works by:
 # 1. calls getiNatRecords which loads prev obs ids
@@ -91,16 +92,14 @@ def downloadiNatImageData(taxa_list, download_records=True, download_images=True
             if not os.path.isdir(dir):
                 os.mkdir(dir)
 
-            # get existing image names
-            existing_imgnames = _getBCCIDs(type="image", data_folder=data_folder)
-            #existing_imgnames = os.listdir(data_folder + '/all_images')
-
-            # remove INAT- prefix to get original filenames
-            existing_ogfilenames = [i.replace('INAT-', '') for i in existing_imgnames]
+            # get only records NOT in existing records for taxon
+            # get existing ids
+            existing_ids = _getBCCIDs(type="image", data_folder=data_folder)
+            existing_imgnames = [id + ".jpg" for id in existing_ids] # convert to existing imgnames
+            existing_ogfilenames = [i.replace('INAT-', '') for i in existing_imgnames] # remove INAT- prefix to get original filenames
 
             # read in records for taxon
             records = pd.read_csv(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '.csv')
-
             # get only records NOT in existing records for taxon
             in_mask = records["file_name"].isin(existing_ogfilenames)
             records = records[~in_mask]
