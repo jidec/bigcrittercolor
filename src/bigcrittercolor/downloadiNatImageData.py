@@ -114,54 +114,35 @@ def downloadiNatImageData(taxa_list, download_records=True, download_images=True
                 data_folder + '/other/inat_download_records/iNat_images-' + taxon + '-records_trimmed/trimmed_records.csv',
                 index=False, mode='w+')
 
-            #_bprint(print_steps, "Splitting records into chunks...")
-            # split the records using pd.read_csv with the chunksize arg
-            j = 1
-            for chunk in pd.read_csv(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '-records_trimmed/trimmed_records.csv', chunksize=7500):
-                chunk.to_csv(split_dir + '/' + str(j) + '.csv', index=False)
-                j += 1
-
             _bprint(print_steps, "Using records to download images...")
             # make raw images folder if it doesn't exist
-            rawimg_dir = data_folder + "/other/inat_download_records/iNat_images-" + taxon + "-raw_images"
-            if not os.path.exists(rawimg_dir):
-                os.mkdir(rawimg_dir)
+            rawimg_folder = data_folder + "/other/inat_download_records/iNat_images-" + taxon + "-raw_images"
+            if not os.path.exists(rawimg_folder):
+                os.mkdir(rawimg_folder)
 
-            dirname = data_folder + '/other/inat_download_records/iNat_images-' + taxon + "-raw_images"
-            # download each record chunk, waiting an hour between
-            for split_records_name in os.listdir(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '-records_split'):
-                fileout = data_folder + "/other/inat_download_records/" + taxon + '-download_log.csv'
-                # download the images
-                split_records_path = data_folder + '/other/inat_download_records/iNat_images-' + taxon + '-records_split/' + split_records_name
-                _inat_dl_helpers.downloadImages(img_records=split_records_path,imgdir=dirname,fileout=fileout)
+            fileout = data_folder + "/other/inat_download_records/" + taxon + '-download_log.csv'
+            # download the images
+            records_path = data_folder + '/other/inat_download_records/iNat_images-' + taxon + '-records_trimmed/trimmed_records.csv'
+            _inat_dl_helpers.downloadImages(img_records=records_path,imgdir=rawimg_folder,fileout=fileout)
 
-                # add INAT- prefix to images
-                imgnames = os.listdir(rawimg_dir)
-                for name in imgnames:
-                    newname = name.split('_')[0]
-                    os.rename(dirname + "/" + name,dirname + "/INAT-" + newname)
+            # rename raw images with INAT- prefix
+            imgnames = os.listdir(rawimg_folder)
+            for name in imgnames:
+                newname = name.split('_')[0]
+                os.rename(rawimg_folder + "/" + name,rawimg_folder + "/INAT-" + newname)
 
-                _bprint(print_steps, "Moving images to all_images...")
-                # rename images as JPGs and move
-                dirname = data_folder + '/other/inat_download_records/iNat_images-' + taxon + "-raw_images"
-                filenames = os.listdir(dirname)
-                paths = [dirname + "/" + filename for filename in filenames]
-                imgs = [cv2.imread(path) for path in paths]
-                imgnames = [filename + ".jpg" for filename in filenames]
+            _bprint(print_steps, "Moving images to dataset...")
+            # rename images as JPGs and move
+            filenames = os.listdir(rawimg_folder)
+            paths = [rawimg_folder + "/" + filename for filename in filenames]
+            imgs = [cv2.imread(path) for path in paths]
+            imgnames = [filename + ".jpg" for filename in filenames]
 
-                # write the images
-                _writeBCCImgs(imgs,imgnames,data_folder=data_folder)
+            # write the images
+            _writeBCCImgs(imgs,imgnames,data_folder=data_folder)
 
-                # remove the raw images dir
-                shutil.rmtree(dirname)
-
-                # TODO could allow changing chunksize since medium images hit the servers more weakly
-                # if there are more chunks left, wait for an hour before doing the next chunk
-                #if c < len(os.listdir(data_folder + '/other/inat_download_records/iNat_images-' + taxon + '-records_split')) - 1:
-                #    now = datetime.now()
-                #    current_time = now.strftime("%H:%M:%S")
-                #    print("Waiting one hour starting at " + current_time + "...")
-                #    time.sleep(3600)
+            # remove the raw images dir
+            shutil.rmtree(rawimg_folder)
 
     _rebuildiNatRecords(data_folder=data_folder)
     _bprint(print_steps, "Finished.")
