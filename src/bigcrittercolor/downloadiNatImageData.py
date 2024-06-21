@@ -134,17 +134,21 @@ def downloadiNatImageData(taxa_list, download_records=True, download_images=True
                 newname = name.split('_')[0]
                 os.rename(rawimg_folder + "/" + name,rawimg_folder + "/INAT-" + newname)
 
+            # batch image moving to avoid memory errors caused by loading 100k+ images at once
             _bprint(print_steps, "Moving images to dataset...")
-            # rename images as JPGs and move
+            batch_size = 5000
             filenames = os.listdir(rawimg_folder)
-            paths = [rawimg_folder + "/" + filename for filename in filenames]
-            imgs = [cv2.imread(path) for path in paths]
-            imgnames = [filename + ".jpg" for filename in filenames]
+            total_files = len(filenames)
+            for start in range(0, total_files, batch_size):
+                end = min(start + batch_size, total_files)
+                batch_filenames = filenames[start:end]
 
-            # write the images
-            _writeBCCImgs(imgs,imgnames,data_folder=data_folder)
+                paths = [os.path.join(rawimg_folder, filename) for filename in batch_filenames]
+                imgs = [cv2.imread(path) for path in paths]
+                imgnames = [filename + ".jpg" for filename in batch_filenames]
+                _writeBCCImgs(imgs, imgnames, data_folder="/blue/guralnick/jacob.idec/bcc_odonates")
 
-            # remove the raw images dir
+            # remove the raw images dir when moving is done
             shutil.rmtree(rawimg_folder)
 
     _rebuildiNatRecords(data_folder=data_folder)
