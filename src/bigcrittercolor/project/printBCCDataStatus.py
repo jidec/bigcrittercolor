@@ -1,4 +1,5 @@
 from bigcrittercolor.helpers.ids import _getIDsInFolder
+from bigcrittercolor.helpers import _getBCCIDs
 import glob
 import pandas as pd
 import os
@@ -30,7 +31,6 @@ def printBCCDataStatus(data_folder):
     n_recs = total_rows
     n_obs = df['obs_id'].nunique()
     print("Number of downloaded observation records: " + str(n_obs))
-    print("Number of downloaded image records (greater than n_obs if max_n_per_obs > 1): " + str(n_recs))
 
     # List to hold the filenames
     filenames_starting_with_iNat = []
@@ -44,20 +44,20 @@ def printBCCDataStatus(data_folder):
     print("Taxa with downloaded records: " + str(taxa_names))
     print()
 
-    n_imgs = len(_getIDsInFolder(data_folder + "/all_images"))
+    n_imgs = len(_getBCCIDs(type="image",data_folder=data_folder))
     print("Number of downloaded images: " + str(n_imgs))
-    percent_records_with_images = str(n_imgs / total_rows)
     print("Percent of records with images: " + get_str_percent_rounded(n_imgs,n_recs))
     print()
 
-    n_masks = len(_getIDsInFolder(data_folder + "/masks"))
+    n_masks = len(_getBCCIDs(type="mask",data_folder=data_folder))
     print("Number of inferred masks: " + str(n_masks))
     print("Percent of images with masks: " + get_str_percent_rounded(n_masks,n_imgs))
     print()
 
-    n_segs = len(_getIDsInFolder(data_folder + "/segments"))
+    n_segs = len(_getBCCIDs(type="segment",data_folder=data_folder))
     print("Number of segments extracted after filtering: " + str(n_segs))
     print("Percent of images with segments: " + get_str_percent_rounded(n_segs, n_imgs))
+    print()
 
     n_pats = len(_getIDsInFolder(data_folder + "/patterns"))
     print("Number of final patterns: " + str(n_pats))
