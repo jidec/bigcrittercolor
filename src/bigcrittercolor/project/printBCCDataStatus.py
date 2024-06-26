@@ -22,14 +22,19 @@ def printBCCDataStatus(data_folder):
     path = data_folder + "/other/inat_download_records/"
     pattern = f"{path}/iNat*.csv"
     total_rows = 0
+    unique_obs_ids = set()
     # Find all matching CSV files
     csv_files = glob.glob(pattern)
     # Iterate over the list of file paths & read each file
     for file_path in csv_files:
-        df = pd.read_csv(file_path)
-        total_rows += len(df)
+        try:
+            df = pd.read_csv(file_path)
+            total_rows += len(df)
+            unique_obs_ids.update(df['obs_id'].unique())
+        except pd.errors.EmptyDataError:
+            print(f"No data to parse from file: {file_path}")
     n_recs = total_rows
-    n_obs = df['obs_id'].nunique()
+    n_obs = len(unique_obs_ids)
     print("Number of downloaded observation records: " + str(n_obs))
 
     # List to hold the filenames
