@@ -11,19 +11,9 @@ def _getDbIDs(data_folder, type):
     # Open the LMDB database at the specified path in read-only mode
     env = lmdb.open(db_path, map_size=map_size, readonly=True)
 
-    # Initialize an empty list to store keys
-    keys = []
-
-    # Start a transaction in read mode
     with env.begin(write=False) as txn:
-        # Create a cursor to iterate over the items in the database
-        cursor = txn.cursor()
-
-        # Use cursor.iternext(keys=True, values=False) to iterate over keys only
-        for key in cursor.iternext(keys=True, values=False):
-            # Decode the key and append to the list
-            keys.append(key.decode('utf-8'))
-
+        keys = list(txn.cursor().iternext(values=False))
+        keys = [key.decode('utf-8') for key in keys]
     # Close the environment when done
     env.close()
 
