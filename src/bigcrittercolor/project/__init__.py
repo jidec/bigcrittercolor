@@ -5,3 +5,5 @@ from bigcrittercolor.project.clearFolder import clearFolder
 from bigcrittercolor.project.setupBioencoderTrainingFolder import setupBioencoderTrainingFolder
 from bigcrittercolor.project.convertProjectToDb import convertProjectToDb
 from bigcrittercolor.project.zipImageFolder import zipImageFolder
+from bigcrittercolor.project.readSpeciesBalancedIDs import readSpeciesBalancedIDs
+from bigcrittercolor.project.saveSpeciesBalancedImageIDs import saveSpeciesBalancedImageIDs

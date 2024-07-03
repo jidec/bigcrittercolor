@@ -3,4 +3,4 @@ from bigcrittercolor.downloadiNatImageData import downloadiNatImageData
 from bigcrittercolor.inferMasks import inferMasks
 from bigcrittercolor.filterExtractSegs import filterExtractSegs
 from bigcrittercolor.clusterColorsToPatterns import clusterColorsToPatterns
-from bigcrittercolor.writeMetricsFromPatterns import writeMetricsFromPatterns
+from bigcrittercolor.writeColorMetrics import writeColorMetrics
