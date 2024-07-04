@@ -48,18 +48,6 @@ def test_skip_existing(shared_temp_folder):
 
     assert prop_time_first > 1.5
 
-
-def test_skip_existing_a_few(shared_temp_folder):
-    data_folder = _createTempTestFolder(shared_temp_folder, "empty")
-
-    time_first = _runtime(downloadiNatImageData, taxa_list=["Anaciaeschna"], data_folder=data_folder)
-    time_second = _runtime(downloadiNatImageData, taxa_list=["Anaciaeschna"], data_folder=data_folder)
-
-    prop_time_first = time_first / time_second
-
-    assert prop_time_first > 1.5
-
-
 # def test_n_records_n_imgs(shared_temp_folder):
 #     ## CREATE DATA FOLDER TO ACT ON
 #     data_folder = shared_temp_folder + "/tmp"

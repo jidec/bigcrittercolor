@@ -21,7 +21,7 @@ ids = _getIDsInFolder("D:/GitProjects/bigcrittercolor/tests/train_import/masks")
 n_test=70
 for index, id in enumerate(ids):
     # load raw seg
-    seg = _readBCCImgs(img_ids=id,type="raw_seg",data_folder="D:/GitProjects/bigcrittercolor/tests/train_import")
+    seg = _readBCCImgs(img_ids=id,type="raw_segment",data_folder="D:/GitProjects/bigcrittercolor/tests/train_import")
     # load mask
     mask = cv2.imread("D:/GitProjects/bigcrittercolor/tests/train_import/prev_training_masks/" + id + "_mask.jpg")
 

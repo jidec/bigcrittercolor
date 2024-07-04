@@ -18,7 +18,6 @@ from bigcrittercolor.helpers import _getBCCIDs
 # the "visual_tests" folder contains visual tests for the clustering stages
 
 #pytest --permanent-folder="D:/GitProjects/bigcrittercolor/tests/intermediate_data_folders" -s
-
 @pytest.fixture(scope="session")
 def shared_temp_folder(request):
     # whether to use a permanent folder, which allows you save time running tests

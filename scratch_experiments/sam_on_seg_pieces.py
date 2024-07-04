@@ -21,7 +21,7 @@ def show_anns(anns):
 from bigcrittercolor.helpers import _readBCCImgs
 import random
 
-imgs = _readBCCImgs(type="raw_seg", data_folder="D:/dfly_appr_expr/appr1")
+imgs = _readBCCImgs(type="raw_segment", data_folder="D:/dfly_appr_expr/appr1")
 imgs = random.sample(imgs,100)
 
 import sys
