@@ -58,6 +58,7 @@ def filterExtractSegs(img_ids=None, sample_n=None, batch_size=None,
     if img_ids is None:
         _bprint(print_steps,"No ids specified, getting existing mask ids...")
         img_ids = _getBCCIDs(type="mask",data_folder=data_folder,sample_n=sample_n)
+        img_ids = list(img_ids)
 
     # batching is necessary when cluster filtering large numbers of images (>10000)
     # not batching in this case will overload memory in the clustering step
