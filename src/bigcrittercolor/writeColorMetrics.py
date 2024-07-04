@@ -179,4 +179,4 @@ def _getColorClusterMetrics(images, img_ids):
     df = pd.DataFrame(data, columns=columns)
     return df
 
-writeColorMetrics(from_stage="segment",data_folder="D:/bcc/ringtails")
+#writeColorMetrics(from_stage="segment",data_folder="D:/bcc/ringtails")
