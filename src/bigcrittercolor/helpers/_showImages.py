@@ -98,13 +98,11 @@ def _showImages(show, images, titles=None, maintitle=None, list_cmaps=None, grid
         if maintitle is not None:
             fig.subplots_adjust(top=0.85)
             fig.suptitle(maintitle,fontsize=30)
-            #plt.suptitle(maintitle,fontsize=40)#,horizontalalignment='left', verticalalignment='top')
 
         if save_folder is not None:
             filename = generate_unique_filename(save_folder, "plot", ".jpg")
-            print(filename)
             plt.savefig(save_folder + "/" + filename)
-            
+
         _ = plt.show()
         # author: "stackoverflowuser2010"
 

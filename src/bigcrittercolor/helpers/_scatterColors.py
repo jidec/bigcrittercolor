@@ -1,10 +1,14 @@
 import random
 import numpy as np
-import matplotlib.pyplot as plt
 import cv2
+import os
+
 from bigcrittercolor.helpers.image import _format
 
-def _scatterColors(color_values, input_colorspace, sample_n=500, pt_size=3, cluster_labels=None):
+import matplotlib
+import matplotlib.pyplot as plt
+
+def _scatterColors(color_values, input_colorspace, sample_n=500, pt_size=3, cluster_labels=None,save_folder=False):
     """
     Plot colors in a specified input color space (HLS or CIELAB or RGB), coloring each point by its actual color
     (converted to RGB if necessary) and changing the marker shape based on cluster ID.
@@ -21,12 +25,9 @@ def _scatterColors(color_values, input_colorspace, sample_n=500, pt_size=3, clus
     # Reshape the color_values for OpenCV and convert to RGB if necessary
     reshaped_colors = color_values.reshape((-1, 1, 3))
     if input_colorspace.lower() == 'hls':
-        point_colors = cv2.cvtColor(np.uint8(reshaped_colors), cv2.COLOR_HLS2RGB)
+        point_colors = cv2.cvtColor(np.uint8(reshaped_colors), cv2.COLOR_HLS2BGR)
     elif input_colorspace.lower() == 'cielab':
         point_colors = cv2.cvtColor(np.uint8(reshaped_colors), cv2.COLOR_Lab2BGR) #RGB
-        #print("COLORS IN SCATTER")
-        #print(color_values)
-        #print(point_colors)
     else:
         point_colors = color_values
 
@@ -52,6 +53,10 @@ def _scatterColors(color_values, input_colorspace, sample_n=500, pt_size=3, clus
     ax.set_xlabel(channel_names[input_colorspace][0])
     ax.set_ylabel(channel_names[input_colorspace][1])
     ax.set_zlabel(channel_names[input_colorspace][2])
+
+    if save_folder is not None:
+        filename = generate_unique_filename(save_folder, "plot", ".jpg")
+        plt.savefig(save_folder + "/" + filename)
 
     plt.show()
 
@@ -105,9 +110,14 @@ def _scatterColors_old(rgb_values, colorspace=None, sample_n= 250, pt_size=5, cl
     ax.set_xlabel(channel_names[0])
     ax.set_ylabel(channel_names[1])
     ax.set_zlabel(channel_names[2])
+
     plt.show()
 
-# Example usage:
-#rgb_values = np.array([[255, 0, 0], [0, 255, 0], [0, 0, 255]])
-#cluster_labels = [1, 1, 2]
-#_scatterColors(rgb_values, 'hls', cluster_labels)
+def generate_unique_filename(directory, base_filename, extension):
+    """Generate a unique filename in the specified directory."""
+    i = 1
+    unique_filename = f"{base_filename}{extension}"
+    while os.path.exists(os.path.join(directory, unique_filename)):
+        unique_filename = f"{base_filename}_{i}{extension}"
+        i += 1
+    return unique_filename
