@@ -52,11 +52,8 @@ def _getSimpleColorMetrics(imgs, img_ids):
     data = []
 
     for img, img_id in zip(imgs, img_ids):
-        # Read the image
-        image = cv2.imread(img)
-        if image is None:
-            continue
 
+        image = img
         # Convert image to RGB
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
@@ -101,15 +98,12 @@ def _getSimpleColorMetrics(imgs, img_ids):
     df = pd.DataFrame(data)
     return df
 
-def _getThresholdMetrics(segs, img_ids, thresh_values):
+def _getThresholdMetrics(segs, img_ids, thresh_values=[0.1]):
     data = []
 
     for img, img_id in zip(segs, img_ids):
-        # Read the image
-        image = cv2.imread(img)
-        if image is None:
-            continue
 
+        image = img
         # Convert image to RGB
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
@@ -184,3 +178,5 @@ def _getColorClusterMetrics(images, img_ids):
 
     df = pd.DataFrame(data, columns=columns)
     return df
+
+writeColorMetrics(from_stage="segment",data_folder="D:/bcc/ringtails")

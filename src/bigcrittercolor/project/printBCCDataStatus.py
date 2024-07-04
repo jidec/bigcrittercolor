@@ -1,10 +1,12 @@
 from bigcrittercolor.helpers.ids import _getIDsInFolder
 from bigcrittercolor.helpers import _getBCCIDs
+from bigcrittercolor.project import showBCCImages
+
 import glob
 import pandas as pd
 import os
 
-def printBCCDataStatus(data_folder):
+def printBCCDataStatus(data_folder,show=False):
 
     """ Print information about a bigcrittercolor data folder, such as the number of raw images, masks, and segments
 
@@ -37,6 +39,7 @@ def printBCCDataStatus(data_folder):
     n_obs = len(unique_obs_ids)
     print("Number of downloaded observation records: " + str(n_obs))
 
+
     # List to hold the filenames
     filenames_starting_with_iNat = []
     path = data_folder + "/other/inat_download_records"
@@ -49,10 +52,14 @@ def printBCCDataStatus(data_folder):
     print("Taxa with downloaded records: " + str(taxa_names))
     print()
 
-    n_imgs = len(_getBCCIDs(type="image",data_folder=data_folder))
+    img_ids = _getBCCIDs(type="image",data_folder=data_folder)
+    n_imgs = len(img_ids)
     print("Number of downloaded images: " + str(n_imgs))
     print("Percent of records with images: " + get_str_percent_rounded(n_imgs,n_recs))
     print()
+
+    if show:
+        showBCCImages(img_ids,sample_n=18,type="image",title="Raw Images", data_folder=data_folder)
 
     n_masks = len(_getBCCIDs(type="mask",data_folder=data_folder))
     print("Number of inferred masks: " + str(n_masks))

@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 def _format(image, in_format, out_format, alpha=False):
-    """ Convert an image from one color format to another and add or removal an alpha channel if specified
+    """ Convert an image from one color format to another and add or remove an alpha channel if specified
 
         Args:
             image (numpy.ndarray): The input image to be formatted.
@@ -16,6 +16,7 @@ def _format(image, in_format, out_format, alpha=False):
 
     if in_format == out_format:
         return image
+
     # Convert the input image to the desired format
     converted_image = _convert_image(image, in_format, out_format)
 
@@ -32,13 +33,15 @@ def _format(image, in_format, out_format, alpha=False):
         # Add alpha channel if it doesn't exist
         if len(converted_image.shape) == 2 or converted_image.shape[2] < 4:
             alpha_channel = np.ones(converted_image.shape[:2], dtype=converted_image.dtype) * 255
-            converted_image = cv2.merge((converted_image, alpha_channel)) if len(converted_image.shape) == 2 else np.dstack([converted_image, alpha_channel])
+            converted_image = cv2.merge((converted_image, alpha_channel)) if len(
+                converted_image.shape) == 2 else np.dstack([converted_image, alpha_channel])
     else:
         # Remove alpha channel if it exists
         if len(converted_image.shape) == 3 and converted_image.shape[2] == 4:
             converted_image = converted_image[:, :, :3]
 
     return converted_image
+
 
 def _convert_image(image, in_format, out_format):
     image = np.uint8(image)
@@ -53,9 +56,16 @@ def _convert_image(image, in_format, out_format):
             converted_image = image
     else:
         conversion_code = _get_conversion_code(in_format, out_format)
-        converted_image = cv2.cvtColor(image, conversion_code)
+        if isinstance(conversion_code, tuple):
+            # Handle sequential conversions
+            for code in conversion_code:
+                image = cv2.cvtColor(image, code)
+            converted_image = image
+        else:
+            converted_image = cv2.cvtColor(image, conversion_code)
 
     return converted_image
+
 
 def _get_conversion_code(in_format, out_format):
     # Define format conversion codes
@@ -73,21 +83,13 @@ def _get_conversion_code(in_format, out_format):
         'hls': {
             'rgb': cv2.COLOR_HLS2RGB,
             'bgr': cv2.COLOR_HLS2BGR,
-            #'cielab': cv2.COLOR_HLS2Lab
+            'cielab': (cv2.COLOR_HLS2BGR, cv2.COLOR_BGR2Lab)  # Sequential conversion
         },
         'cielab': {
             'rgb': cv2.COLOR_Lab2RGB,
             'bgr': cv2.COLOR_Lab2BGR,
-            #'hls': cv2.COLOR_Lab2HLS
+            'hls': (cv2.COLOR_Lab2BGR, cv2.COLOR_BGR2HLS)  # Sequential conversion
         }
     }
 
     return format_codes[in_format][out_format]
-
-# Example usage
-#image = cv2.imread('D:/GitProjects/bigcrittercolor/tests/dummy_bcc_folder/all_images/INAT-215236-1.jpg', cv2.IMREAD_GRAYSCALE) # Load your image
-#formatted_image = _format(image, 'grey', 'grey3', False) # Convert from BGR to 3-channel grayscale and add alpha channel
-
-#cv2.imshow('0',formatted_image)
-#print(np.shape(formatted_image))
-#cv2.waitKey(0)

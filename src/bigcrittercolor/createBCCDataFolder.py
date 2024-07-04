@@ -26,6 +26,7 @@ def createBCCDataFolder(parent_folder, new_folder_name="bcc_data", use_db=False,
     mkdir_if_new(base_path + "/segments")
     mkdir_if_new(base_path + "/masks")
     mkdir_if_new(base_path + "/patterns")
+    mkdir_if_new(base_path + "/plots")
 
     # make other folder
     mkdir_if_new(base_path + "/other")

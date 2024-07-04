@@ -10,7 +10,7 @@ def readSpeciesBalancedIDs(stage_type="image",print_steps=True,data_folder=''):
     with open(balanced_ids_path, 'r') as f:
         balanced_ids = [line.strip() for line in f.readlines()]
 
-    if stage_type is "image":
+    if stage_type == "image":
         return balanced_ids
 
     _bprint(print_steps, "Filtering for species-balanced ids that have reached the {stage_type} stage...")
