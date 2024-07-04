@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 
 import matplotlib.pyplot as plt
+
 import matplotlib.patches as patches
 
 from sklearn.cluster import KMeans, HDBSCAN, OPTICS, SpectralClustering, AgglomerativeClustering, DBSCAN, AffinityPropagation
@@ -25,8 +26,8 @@ from bigcrittercolor.helpers import _scatterColors, _bprint
 # kmeans, gaussian_mixture, agglom, dbscan
 def _cluster(values, algo="kmeans", n=3,
              find_n_minmax = None, find_n_metric = "ch",
-             eps = 0.1,
-             min_samples = 5,
+             eps = 0.6,
+             min_samples = 2,
              cluster_selection_method="eom",
              linkage="ward",
              preference=None,
@@ -38,6 +39,7 @@ def _cluster(values, algo="kmeans", n=3,
              show_silhouette = False,
              input_colorspace = "rgb",
              show=True,
+             show_save=True,
              outlier_percentile=None, return_fuzzy_probs=False,
              unique_values_only=False,
              dbscan_outliers_to_nearest_centroid=False,
@@ -47,7 +49,6 @@ def _cluster(values, algo="kmeans", n=3,
              print_steps=False,
              print_details=False):
 
-    #_bprint._bprint(print_steps, "Shape of values: " + str(np.shape(values)))
     if show_pca_tsne:
         scaled = StandardScaler().fit_transform(values)
 
@@ -89,22 +90,23 @@ def _cluster(values, algo="kmeans", n=3,
         scaler = StandardScaler()
         # Scale the data
         values = scaler.fit_transform(values)
-
     if weights is not None:
         weights = np.array(weights)
         values = values * weights
 
     if pca_n is not None:
+        if pca_n > np.array(values).shape[0]:
+            pca_n = np.array(values).shape[0]
         pca = PCA(n_components=pca_n)
         values = pca.fit_transform(values)
 
     if unique_values_only:
         values, indices, inverse = np.unique(values, axis=0, return_index=True, return_inverse=True)
-        _bprint._bprint(print_steps, "Using " + str(np.shape(values)[0]) + " unique values only...")
+        _bprint(print_steps, "Using " + str(np.shape(values)[0]) + " unique values only...")
 
     # find n
     if find_n_minmax is not None:
-        _bprint._bprint(print_steps,"Finding cluster N using metric(s)...")
+        _bprint(print_steps,"Finding cluster N using metric(s)...")
 
         # if n_components > n_samples, we get an error - avoid this by capping find_n_minmax[1] at n rows of values - 1
         if find_n_minmax[1] >= values.shape[0]:
@@ -194,7 +196,7 @@ def _cluster(values, algo="kmeans", n=3,
                     return sorted_values_ranks
                 n = rank_values_by_scores(ch_scores,db_scores,sil_scores)[0][0]
 
-        _bprint._bprint(print_steps, "Using N of " + str(n) + "...")
+        _bprint(print_steps, "Using N of " + str(n) + "...")
     # create cluster model
     match algo:
         case "kmeans":
@@ -220,14 +222,14 @@ def _cluster(values, algo="kmeans", n=3,
 
             model = AgglomerativeClustering(n_clusters=n,linkage=linkage)
         case "dbscan":
-            eps = findDBSCANeps(values)
-            min_samples = np.shape(values)[1] + 1
+            #eps = findDBSCANeps(values)
+            #min_samples = np.shape(values)[1] + 1
             model = DBSCAN(eps=eps, min_samples=min_samples)#, #algorithm='ball_tree')  # , metric='manhattan')
         case "hdbscan":
             #eps = findDBSCANeps(values)
             min_samples = np.shape(values)[1] + 1
             #min_samples=25
-            model = HDBSCAN(min_samples=min_samples,cluster_selection_method=cluster_selection_method)#cluster_selection_epsilon=eps)#cluster_selection_method="leaf")
+            model = HDBSCAN(min_samples=10,cluster_selection_method=cluster_selection_method)#cluster_selection_epsilon=eps)#cluster_selection_method="leaf")
         case "affprop":
             if preference is None:
                 distances = euclidean_distances(values, squared=True)
@@ -268,7 +270,7 @@ def _cluster(values, algo="kmeans", n=3,
     labels = model.fit_predict(values)
 
     # if we scaled, revert back to the unscaled values we had before clustering - the labels stay the same
-    if scale:
+    if scale or (weights is not None):
         values = start_values
 
     # if unique_values_only
@@ -286,7 +288,8 @@ def _cluster(values, algo="kmeans", n=3,
         centroids = {}
 
         labels = np.array(labels)  # Convert labels to a numpy array
-        values = np.array(values)
+        values = np.array(values) # CHANGED THIS
+        values = values[:, :3]
 
         for label in np.unique(labels):
             centroids[label] = np.mean(values[labels == label], axis=0)
@@ -302,7 +305,7 @@ def _cluster(values, algo="kmeans", n=3,
                 elif input_colorspace == "hls":
                     # Convert from HLS to RGB
                     hls = np.uint8(np.round(centroids[label])).reshape(1, 1, 3)
-                    rgb = cv2.cvtColor(hls, cv2.COLOR_HLS2RGB)
+                    rgb = cv2.cvtColor(hls, cv2.COLOR_HLS2BGR)
                     centroids[label] = rgb[0, 0]
         # print centroids
         for label in np.unique(labels):
@@ -344,7 +347,6 @@ def _cluster(values, algo="kmeans", n=3,
 
     if show_color_scatter:
         scatter_values = np.unique(values, axis=0)
-        #values = np.array(values)
 
         # Find indices where the first column value is 0 or less
         indices_to_remove = [i for i, row in enumerate(scatter_values) if row[0] <= 0]
