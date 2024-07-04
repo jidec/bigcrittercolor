@@ -17,8 +17,8 @@ from bigcrittercolor.helpers.image import _padImgToSize,_resizeImgToTotalDim
 def _clusterByImgFeatures(imgs, feature_extractor="resnet18",
                             cluster_params_dict={'eps':10,'min_samples':3}, fuzzy_probs_threshold=None,
                             pad_imgs =True,
-                            full_display_ids=None, full_display_data_folder=None,
-                            print_steps=True, show=True, show_n=18):
+                            full_display_ids=None, data_folder=None,
+                            print_steps=True, show=True, show_save=False, show_n=18):
 
     if pad_imgs:
         imgs = [_resizeImgToTotalDim(img,300) for img in imgs] #800
@@ -148,8 +148,8 @@ def _clusterByImgFeatures(imgs, feature_extractor="resnet18",
 
             # if using full display load in corresponding images and masks and apply them, then collage segments in
             if full_display_ids is not None:
-                images = _readBCCImgs(cluster_ids,type="image",data_folder=full_display_data_folder)
-                masks = _readBCCImgs(cluster_ids, type="mask", data_folder=full_display_data_folder)
+                images = _readBCCImgs(cluster_ids,type="image",data_folder=data_folder)
+                masks = _readBCCImgs(cluster_ids, type="mask", data_folder=data_folder)
 
                 #for index, mask in enumerate(masks):
                 #    print(cluster_ids[index])
@@ -161,7 +161,10 @@ def _clusterByImgFeatures(imgs, feature_extractor="resnet18",
                 cluster_imgs = [makeCollage.makeCollage([img, segment], n_per_row=2) for img, segment in zip(cluster_imgs, segments)]
 
             # visualize them for the user
-            _showImages(show, cluster_imgs, titles=None,maintitle= "Cluster " + str(cluster_label) + ", " + str(n_imgs_in_cluster) + " images")
+            save_folder = None
+            if show_save:
+                save_folder = data_folder + "/plots"
+            _showImages(show, cluster_imgs, titles=None,maintitle= "Cluster " + str(cluster_label) + ", " + str(n_imgs_in_cluster) + " images",save_folder=save_folder)
 
     # return labels
     return labels

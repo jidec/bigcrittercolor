@@ -24,12 +24,13 @@ from bigcrittercolor.helpers.ids import _getRecordsColFromIDs
 #@profile
 def filterExtractSegs(img_ids=None, sample_n=None, batch_size=None,
     color_format_to_cluster = "grey", used_aux_segmodel=False,
-    filter_hw_ratio_minmax = None, filter_prop_img_minmax = None, filter_symmetry_min = None, filter_intersects_sides= False, # filters
+    filter_hw_ratio_minmax = None, filter_prop_img_minmax = None, filter_symmetry_min = None, filter_not_intersects_sides= False, # standard img processing filters
     mask_normalize_params_dict={'lines_strategy':"ellipse"}, # normalization/verticalization of masks
     feature_extractor="resnet18", # feature extractor
-    cluster_params_dict={'algo':"kmeans",'pca_n':5,'n':10}, preselected_clusters_input = None,
+    cluster_params_dict={'algo':"gaussian_mixture",'pca_n':5,'n':10,'scale':"standard"}, preselected_clusters_input = None,
+    hist_cluster_params_dict = {'algo':"gaussian_mixture",'pca_n':3,'n':5},
     illum_outliers_percent = None,
-    show=True, show_indv=False, print_steps=True, data_folder=""):
+    show=True, show_save=True, show_indv=False, print_steps=True, data_folder=""):
 
     """ Extract segments using masks, filter them, cluster them, keep clusters based on user input, then save kept segments
 
@@ -55,6 +56,7 @@ def filterExtractSegs(img_ids=None, sample_n=None, batch_size=None,
     # if no ids specified load existing masks
     # note that if an aux segmodel was used, the images in masks are actually pre-extracted segments
     if img_ids is None:
+        _bprint(print_steps,"No ids specified, getting existing mask ids...")
         img_ids = _getBCCIDs(type="mask",data_folder=data_folder,sample_n=sample_n)
 
     # batching is necessary when cluster filtering large numbers of images (>10000)
@@ -112,7 +114,7 @@ def filterExtractSegs(img_ids=None, sample_n=None, batch_size=None,
                     failed_sym_ids.append(id)
                     continue
 
-            if filter_intersects_sides:
+            if filter_not_intersects_sides:
                 if not _blobPassesFilter(mask, intersects_sides=True):
                     failed_edge_ids.append(id)
                     continue
@@ -125,17 +127,17 @@ def filterExtractSegs(img_ids=None, sample_n=None, batch_size=None,
         show_type = "mask"
         if filter_prop_img_minmax is not None:
             _bprint(print_steps, str(len(failed_prop_ids)) + " masks failed for proportion of image")
-            if show: showBCCImages(img_ids=failed_prop_ids, show_type=show_type, sample_n=18, title="Failed Prop",data_folder=data_folder)
+            if show: showBCCImages(img_ids=failed_prop_ids, type=show_type, sample_n=18, title="Failed Prop",data_folder=data_folder)
         if filter_hw_ratio_minmax is not None:
             _bprint(print_steps, str(len(failed_hw_ids)) + " masks failed for polygon-verticalized height-to-width ratio")
-            if show: showBCCImages(img_ids=failed_hw_ids, show_type=show_type, sample_n=18, title="Failed H/W",data_folder=data_folder)
+            if show: showBCCImages(img_ids=failed_hw_ids, type=show_type, sample_n=18, title="Failed H/W",data_folder=data_folder)
         if filter_symmetry_min is not None:
             _bprint(print_steps, str(len(failed_sym_ids)) + " masks failed for symmetry")
-            if show: showBCCImages(img_ids=failed_sym_ids, show_type=show_type, sample_n=18, title="Failed Sym",data_folder=data_folder)
-        if filter_intersects_sides:
+            if show: showBCCImages(img_ids=failed_sym_ids, type=show_type, sample_n=18, title="Failed Sym",data_folder=data_folder)
+        if filter_not_intersects_sides:
             _bprint(print_steps, str(len(failed_edge_ids)) + " masks failed for edge intersection")
             if len(failed_edge_ids) > 0:
-                if show: showBCCImages(img_ids=failed_edge_ids, show_type=show_type, sample_n=18, title="Failed Edge",data_folder=data_folder)
+                if show: showBCCImages(img_ids=failed_edge_ids, type=show_type, sample_n=18, title="Failed Edge",data_folder=data_folder)
 
         masks_unchanged = masks.copy() # save unchanged masks to use for seg extraction later
 
@@ -163,8 +165,8 @@ def filterExtractSegs(img_ids=None, sample_n=None, batch_size=None,
 
         # show is always true here because we have to show for user input
         labels = _clusterByImgFeatures(segs, feature_extractor=feature_extractor,
-                                       full_display_ids=ids_for_full_display, full_display_data_folder=data_folder,
-                                       print_steps=print_steps, cluster_params_dict=cluster_params_dict, show=True)
+                                       full_display_ids=ids_for_full_display, data_folder=data_folder,
+                                       print_steps=print_steps, cluster_params_dict=cluster_params_dict, show=True,show_save=show_save)
 
         if preselected_clusters_input is None:
             # take user input selecting the cluster number to extract segments for
@@ -190,12 +192,6 @@ def filterExtractSegs(img_ids=None, sample_n=None, batch_size=None,
         else:
             masks = _readBCCImgs(kept_ids, type="mask", data_folder=data_folder)
 
-            # temporary fix to probably a jpg corruption issue
-            #for index, mask in enumerate(masks):
-            #    mask[(mask > 10)] = 255
-            #    mask[(mask < 10)] = 0
-            #    masks[index] = mask
-
             # get all images to match the masks
             parent_imgs = _readBCCImgs(kept_ids, type="image", data_folder=data_folder)
 
@@ -205,52 +201,45 @@ def filterExtractSegs(img_ids=None, sample_n=None, batch_size=None,
             # extract segments using masks
             segs = [cv2.bitwise_and(parent_img, parent_img, mask=cv2.cvtColor(mask,cv2.COLOR_RGB2GRAY).astype(np.uint8)) for mask, parent_img in masks_parents]
 
-            #seg = np.copy(segs[0])
-            #seg[np.where((seg == [0, 0, 0]).all(axis=2))] = [0, 0, 255]
-            #cv2.imshow("0",seg)
-            #cv2.waitKey(0)
-
             segs = [_verticalizeImg(seg, **mask_normalize_params_dict) for seg in segs]
-
-            #seg = np.copy(segs[0])
-            #seg[np.where((seg == [0, 0, 0]).all(axis=2))] = [0, 0, 255]
-            #cv2.imshow("1", seg)
-            #cv2.waitKey(0)
 
             # make seg 4 channel
             #segs = [_format(seg,)]
 
 
+        # # illum approaches
+        # if illum_outliers_percent is not None:
+        #     species_labels = _getRecordsColFromIDs(img_ids=kept_ids,column="species",data_folder=data_folder)
         #
-        if illum_outliers_percent is not None:
-            species_labels = _getRecordsColFromIDs(img_ids=kept_ids,column="species",data_folder=data_folder)
-
-            # Dictionary to group segs and ids by species
-            species_data = {}
-            for seg, species, kept_id in zip(segs, species_labels, kept_ids):
-                if species not in species_data:
-                    species_data[species] = {"segs": [], "kept_ids": []}
-                species_data[species]["segs"].append(seg)
-                species_data[species]["kept_ids"].append(kept_id)
-
-            # Final lists to store inliers from all species
-            final_segs = []
-            final_ids = []
-
-            # Process each species
-            for species, data in species_data.items():
-                species_segs = data["segs"]
-                species_ids = data["kept_ids"]
-                inliers_segs, inliers_ids,outliers_segs = _getIllumInliers(species_segs, species_ids,contamination=illum_outliers_percent)
-                final_segs.extend(inliers_segs)
-                final_ids.extend(inliers_ids)
-                if len(inliers_segs) > 0:
-                    _showImages(show,images=inliers_segs,maintitle=species + " inliers",sample_n=9)
-                if len(outliers_segs) > 0:
-                    _showImages(show, images=outliers_segs, maintitle=species + " outliers", sample_n=9)
-
-            segs = final_segs
-            kept_ids = final_ids
+        #     # Dictionary to group segs and ids by species
+        #     species_data = {}
+        #     for seg, species, kept_id in zip(segs, species_labels, kept_ids):
+        #         if species not in species_data:
+        #             species_data[species] = {"segs": [], "kept_ids": []}
+        #         species_data[species]["segs"].append(seg)
+        #         species_data[species]["kept_ids"].append(kept_id)
+        #
+        #     # Final lists to store inliers from all species
+        #     final_segs = []
+        #     final_ids = []
+        #
+        #     # Process each species
+        #     for species, data in species_data.items():
+        #         species_segs = data["segs"]
+        #         species_ids = data["kept_ids"]
+        #         top_hist_cluster_imgs, top_hist_cluster_ids = _getTopHistClusterImgs(species_segs,species_ids,hist_cluster_params_dict)
+        #         final_segs = final_segs + top_hist_cluster_imgs
+        #         final_ids = final_ids + top_hist_cluster_ids
+        #         #inliers_segs, inliers_ids,outliers_segs = _getIllumInliers(species_segs, species_ids,contamination=illum_outliers_percent)
+        #         #final_segs.extend(inliers_segs)
+        #         #final_ids.extend(inliers_ids)
+        #         #if len(inliers_segs) > 0:
+        #         #    _showImages(show,images=inliers_segs,maintitle=species + " inliers",sample_n=9)
+        #         #if len(outliers_segs) > 0:
+        #         #    _showImages(show, images=outliers_segs, maintitle=species + " outliers", sample_n=9)
+        #
+        #     segs = final_segs
+        #     kept_ids = final_ids
 
         # build imgnames
         kept_imgnames = [img_id + "_segment.png" for img_id in kept_ids]
@@ -289,7 +278,7 @@ def _claheEqualize(img):
 #                       filter_hw_ratio_minmax=(3, 100), cluster_params_dict={'pca_n': None},
 #                       filter_prop_img_minmax=(0.01, 0.9),
 #                       data_folder="E:/aeshna_data")
-
+from sklearn.decomposition import PCA
 def _getIllumInliers(imgs,ids,contamination=0.1):
     # Function to extract RGB features
     def extract_rgb_features(image):
@@ -317,3 +306,96 @@ def _getIllumInliers(imgs,ids,contamination=0.1):
     inliers_ids = [ids[i] for i in range(len(ids)) if inliers_mask[i]]
 
     return inliers,inliers_ids,outliers
+
+# modified version that uses histograms instead of just mean rgbs
+def _getIllumInliers2(imgs, ids, contamination=0.1, hist_bins=256,pca_n=10):
+    # Function to extract histogram features
+    def extract_histogram_features(image, bins=hist_bins):
+        # Calculate histogram for each channel
+        hist_r = cv2.calcHist([image], [2], None, [bins], [0, 256]).flatten()
+        hist_g = cv2.calcHist([image], [1], None, [bins], [0, 256]).flatten()
+        hist_b = cv2.calcHist([image], [0], None, [bins], [0, 256]).flatten()
+        return np.concatenate([hist_r, hist_g, hist_b])
+
+    features = [extract_histogram_features(img) for img in imgs]
+    features = np.array(features)
+
+    # Normalize the features
+    scaler = StandardScaler()
+    normalized_features = scaler.fit_transform(features)
+
+    # Apply PCA to reduce dimensionality
+    pca = PCA(n_components=pca_n)
+    pca_features = pca.fit_transform(normalized_features)
+
+    # Identify inliers using Isolation Forest
+    iso_forest = IsolationForest(contamination=contamination)  # Adjust contamination based on your needs
+    inliers_mask = iso_forest.fit_predict(pca_features) == 1
+
+    inliers = [imgs[i] for i in range(len(imgs)) if inliers_mask[i]]
+    outliers = [imgs[i] for i in range(len(imgs)) if not inliers_mask[i]]
+    inliers_ids = [ids[i] for i in range(len(ids)) if inliers_mask[i]]
+
+    return inliers, inliers_ids, outliers
+
+
+import cv2
+import numpy as np
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+from sklearn.metrics import silhouette_samples
+
+import matplotlib.pyplot as plt
+from collections import Counter
+from bigcrittercolor.helpers.clustering import _cluster
+def _getTopHistClusterImgs(images, ids, hist_cluster_args_dict,show=True):
+    histograms = []
+    n_hist_bins = [32,32,32]
+
+    if len(images) < 5:
+        return images,ids
+    # Compute histograms for each image, ignoring pure black pixels
+    for img in images:
+        # Convert image to HSV
+        #hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+        # Create mask to ignore pure black pixels
+        mask = cv2.inRange(img, (1, 1, 1), (255, 255, 255))
+
+        # Compute histogram for the image
+        #hist = cv2.calcHist([img], [0, 1, 2], mask, n_hist_bins, [0, 180, 0, 256, 0, 256])
+        hist = cv2.calcHist([img], [0, 1, 2], mask, n_hist_bins, [0, 256, 0, 256, 0, 256])
+
+        hist = cv2.normalize(hist, hist).flatten()
+        hist = hist.flatten()
+        histograms.append(hist)
+
+    # show is always true here because we have to show for user input
+    #labels = _clusterByImgFeatures(images, feature_extractor="resnet18",full_display_data_folder="D:/bcc/ringtails",
+    #                               print_steps=True, cluster_params_dict=hist_cluster_args_dict, show=True,
+    #                               show_save=True)
+
+    labels = _cluster(histograms,**hist_cluster_args_dict)
+
+    # get sils
+    silhouette_vals = silhouette_samples(histograms, labels)
+    silhouette_per_cluster = []
+    unique_clusters = np.unique(labels)
+    for cluster in unique_clusters:
+        avg_silhouette = silhouette_vals[labels == cluster].mean()
+        silhouette_per_cluster.append(avg_silhouette)
+
+    n_clusters = len(set(labels))
+    # Display examples of images in each cluster
+    plt.figure(figsize=(15, 8))
+    for cluster in range(n_clusters):
+        cluster_images = [img for img, label in zip(images, labels) if label == cluster]
+        _showImages(True, cluster_images, sample_n=9, maintitle=str(cluster) + " " + str(len(cluster_images)) + " " + str(silhouette_per_cluster[cluster]),
+                    save_folder="D:/bcc/ringtails/plots")
+
+    # Find the cluster with the most images
+    most_common_cluster = Counter(labels).most_common(1)[0][0]
+    most_common_cluster_images = [images[i] for i in range(len(images)) if labels[i] == most_common_cluster]
+    ids = [ids[i] for i in range(len(images)) if labels[i] == most_common_cluster]
+
+    return most_common_cluster_images, ids
