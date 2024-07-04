@@ -4,32 +4,22 @@ import shutil
 import random
 
 from bigcrittercolor import filterExtractSegs
-from bigcrittercolor.helpers import _getBCCIDs
+from bigcrittercolor.helpers import _getBCCIDs, _createTempTestFolder
 
 def test_default(shared_temp_folder):
-    ## CREATE DATA FOLDER TO ACT ON
-    data_folder = shared_temp_folder + "/tmp"
-    shutil.copytree(shared_temp_folder + "/masked", data_folder)
+    data_folder = _createTempTestFolder(shared_temp_folder, "masked")
 
-    filterExtractSegs(data_folder=data_folder,preselected_clusters_input=1)
+    filterExtractSegs(data_folder=data_folder,preselected_clusters_input="1")
 
     n_imgs = len(_getBCCIDs(type="segment", data_folder=data_folder))
-
-    ## DELETE DATA FOLDER
-    shutil.rmtree(data_folder)
 
     assert(n_imgs > 0)
 
 def test_aux(shared_temp_folder):
-    ## CREATE DATA FOLDER TO ACT ON
-    data_folder = shared_temp_folder + "/tmp"
-    shutil.copytree(shared_temp_folder + "/masked", data_folder)
+    data_folder = _createTempTestFolder(shared_temp_folder, "masked")
 
     filterExtractSegs(used_aux_segmodel=True,preselected_clusters_input="1",data_folder=data_folder)
 
     n_imgs = len(_getBCCIDs(type="segment", data_folder=data_folder))
-
-    ## DELETE DATA FOLDER
-    shutil.rmtree(data_folder)
 
     assert (n_imgs > 0)

@@ -12,3 +12,5 @@ def _runtime(fun, *args, **kwargs):
     total_time = end_time - start_time
 
     print("Total time taken: {:.2f} seconds".format(total_time))
+
+    return(total_time)
