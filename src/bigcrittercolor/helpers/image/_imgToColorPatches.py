@@ -1,100 +1,131 @@
 import numpy as np
 import cv2
+import matplotlib.pyplot as plt
+from skimage.color import rgb2lab, deltaE_cie76
+from bigcrittercolor.helpers.image import _blur, _format
+from bigcrittercolor.helpers.image import _resizeImgToTotalDim, _reconstructImgFromPPD
 from bigcrittercolor.helpers import _showImages
-from bigcrittercolor.helpers.clustering import _cluster
-from bigcrittercolor.helpers.image import _format
-from collections import Counter
 
-# from an image, create a new smoothed image that is a series of color patches
-# note that blur (typically bilateral) should be done before this function is applied
-# this is used in clusterColorsFromPatterns
-# returned color patch object is a tuple of the form (patch_bool_masks,patch_colors,shape,id)
-def _imgToColorPatches(img, id, bg_mask=None, cluster_args={'n':10, 'algo':'kmeans'}, input_colorspace="rgb", use_median=False, min_patch_pixel_area = 5, return_patch_masks_colors_imgshapes=False, show=False):
-
+def _imgToColorPatches(img, id, bg_mask=None, input_colorspace="rgb", min_patch_pixel_area=5,
+                       use_patch_positions=False,
+                       n_seeds=40, region_threshold=20, show=False):
     shape = img.shape
     original_shape = img.shape[:2]  # height, width
 
-    # reshape the image to a 2D array of pixels
-    pixel_values = np.float32(img.reshape((-1, 3)))
-
-    labels = _cluster(pixel_values, **cluster_args)
-
-    # Convert labels to a 1D array if necessary
-    labels = labels.flatten() if labels.ndim > 1 else labels
-
-    # Copy the original image for overlaying patches
-    overlay_image = img.copy()
+    # Initialize variables
     patch_bool_masks = []
     patch_colors = []
+    patch_xys = []
 
-    # for each unique label (i.e. each cluster)
-    for label in np.unique(labels):
-        # create a mask for the current cluster
-        mask = (labels.reshape(original_shape) == label).astype(np.uint8) * 255
+    rgb_img = _format._format(img,in_format=input_colorspace,out_format="rgb")
+    regions = _getRegionGrowRegions(rgb_img, n_seeds=n_seeds,initial_threshold=region_threshold)
 
-        # find connected components in the mask
-        num_labels, labels_im, stats, centroids = cv2.connectedComponentsWithStats(mask, connectivity=4,
-                                                                           ltype=cv2.CV_32S)
-        # this shows details of what all the patches look like for a cluster
-        if show:
-            # map component labels to hue val
-            label_hue = np.uint8(179 * labels_im / np.max(labels_im))
-            blank_ch = 255 * np.ones_like(label_hue)
+    for region in regions:
+        if len(region) >= min_patch_pixel_area:
+            component_mask = np.zeros(original_shape, dtype=np.uint8)
+            for (x, y) in region:
+                component_mask[y, x] = 255
 
-            # create a colored image to visualize the components
-            labeled_img = cv2.merge([label_hue, blank_ch, blank_ch])
+            if bg_mask is not None:
+                component_mask = component_mask & ~bg_mask
 
-            # convert from HSV to BGR for display
-            labeled_img = cv2.cvtColor(labeled_img, cv2.COLOR_HSV2BGR)
+            if show:
+                cv2.imshow("0",component_mask)
+                cv2.waitKey(0)
+            mean_color = cv2.mean(img, mask=component_mask)[:3]
 
-            # set background label to black
-            labeled_img[label_hue == 0] = 0
+            if mean_color[0] + mean_color[1] + mean_color[2] < 10:
+                continue
 
-            # overlay component numbers
-            for i in range(1, num_labels):  # Start from 1 to skip the background
-                cv2.putText(labeled_img, str(i), (int(centroids[i][0]), int(centroids[i][1])), cv2.FONT_HERSHEY_SIMPLEX,
-                            0.5, (255, 255, 255), 2)
+            if use_patch_positions:
+                coordinates = np.argwhere(component_mask)
+                mask_y, mask_x = np.mean(coordinates, axis=0)
+                #print((mask_x, mask_y))
+                mean_color = mean_color + (mask_x, mask_y)
+                patch_xys.append((mask_x, mask_y))
+            #if input_colorspace == "cielab":
+            #    if np.sum(mean_color) < 10:
+            #        continue
 
-            _showImages(show, [mask,labeled_img], titles=["Patch Cluster Mask","Connected Components"])
+            patch_bool_masks.append(component_mask == 255)
+            patch_colors.append(mean_color)
 
-        # for each patch (connected component) within a cluster
-        for j in range(1, num_labels):
-            if stats[j, cv2.CC_STAT_AREA] >= min_patch_pixel_area:
-                # create a mask for the current component
-                component_mask = (labels_im == j).astype(np.uint8) * 255
+    return (patch_bool_masks, patch_colors, shape, id, patch_xys)
 
-                if bg_mask is not None:
-                    component_mask = component_mask & ~bg_mask
+# region grow regions takes an RGB image
+def _getRegionGrowRegions(image, n_seeds, initial_threshold=10,show=False):
+    height, width, channels = image.shape
+    processed = np.zeros((height, width), dtype=bool)
+    regions = []
 
-                # Compute the mean color of the pixels in the original image where the current component is located
-                mean_color = cv2.mean(img, mask=component_mask)[:3]
+    grid_size = max(height, width) // n_seeds
+    seeds = [(x, y) for x in range(0, width, grid_size) for y in range(0, height, grid_size)]
+    def get_neighbors(x, y):
+        neighbors = []
+        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]:
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < width and 0 <= ny < height:
+                neighbors.append((nx, ny))
+        return neighbors
 
-                if use_median:
-                    masked_pixels = img[component_mask != 0]
-                    mean_color = np.median(masked_pixels, axis=0)
+    def color_distance(c1, c2):
+        # Use deltaE_cie76 for better color difference measurement
+        lab1 = rgb2lab(np.uint8([[c1]]))
+        lab2 = rgb2lab(np.uint8([[c2]]))
+        return deltaE_cie76(lab1, lab2)[0][0]
 
-                # hack fix for weird reds in cielab
-                if input_colorspace == "cielab":
-                    if np.sum(mean_color) < 10:
-                        continue
+    for seed in seeds:
+        x, y = seed
+        if processed[y, x]:
+            continue
+        region = []
+        stack = [(x, y)]
+        seed_color = image[y, x]
+        while stack:
+            px, py = stack.pop()
+            if processed[py, px]:
+                continue
+            processed[py, px] = True
+            region.append((px, py))
+            current_threshold = initial_threshold
+            for nx, ny in get_neighbors(px, py):
+                if not processed[ny, nx]:
+                    neighbor_color = image[ny, nx]
+                    if not np.array_equal(neighbor_color, [0, 0, 0]):  # Exclude black background
+                        if color_distance(neighbor_color, seed_color) < current_threshold:
+                            stack.append((nx, ny))
+                        else:
+                            # If not similar enough, reduce the threshold to capture fine details
+                            current_threshold = initial_threshold / 2
+                            if color_distance(neighbor_color, seed_color) < current_threshold:
+                                stack.append((nx, ny))
+        if region:
+            regions.append(region)
 
-                # apply the mean color to the component in the overlay image
-                overlay_image[component_mask == 255] = mean_color
+    if show:
+        # Visualize the regions with their mean colors
+        output_image = np.zeros_like(image)
+        for region in regions:
+            # Calculate the mean color of the region
+            region_pixels = np.array([image[y, x] for (x, y) in region])
+            mean_color = np.mean(region_pixels, axis=0).astype(int)
+            for (x, y) in region:
+                output_image[y, x] = mean_color
+        _showImages(show, [image, output_image], titles=["Original Image", "Region Growing Result"])
 
-                # _showImages(show, [component_mask,overlay_image], titles=["New Component Mask","Updated Overlay Image"])
+    return regions
 
-                patch_bool_masks.append(component_mask == 255)
-                patch_colors.append(mean_color)
 
-    img_rgb = _format._format(img,in_format=input_colorspace,out_format="rgb")
-    overlay_img_rgb = _format._format(overlay_image, in_format=input_colorspace, out_format="rgb")
-    _showImages(show, [img_rgb, overlay_img_rgb], ['Image', 'Patch Image'])
-    #_showImages(show, [img, overlay_image], ['Image', 'Patch Image'])
-
-    if return_patch_masks_colors_imgshapes:
-        return((patch_bool_masks,patch_colors,shape,id))
-
-    return overlay_image
-
-#img = cv2.imread("D:/bcc/beetles/segments/INATRANDOM-16257682_segment.png")
-#img = _imgToColorPatches2(img,show=True)
+# # Load the image
+# image_path = 'D:/bcc/ringtails/segments/INAT-147315-1_segment.png'
+# image_path = 'D:/bcc/ringtails/segments/INAT-150591-1_segment.png'
+# image_path = 'D:/bcc/ringtails/segments/INAT-144691-1_segment.png'
+# image_path = 'D:/bcc/ringtails/segments/INAT-147316-1_segment.png'
+#
+# image = cv2.imread(image_path)
+# image = _blur._blur(image, type="bilateral")
+# #image = _getRegionGrowRegions(image,n_seeds=40,initial_threshold=20,show=True)
+#
+# ppd = _imgToColorPatches(image,id=1,show=False)
+# reconstruct = _reconstructImgFromPPD._reconstructImgFromPPD(ppd)
+# _showImages(True,[reconstruct])

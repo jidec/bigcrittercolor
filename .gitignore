@@ -153,5 +153,4 @@ cython_debug/
 *.pth
 
 # Test images
-/tests/dummy_bcc_folder/masks
-/tests/dummy_bcc_folder/segments
+/tests/intermediate_data_folders

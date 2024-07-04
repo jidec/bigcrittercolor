@@ -17,8 +17,8 @@ from bigcrittercolor.helpers.clustering import _cluster
 from bigcrittercolor.helpers.image import _blur, _format, _equalize, _imgToColorPatches, _reconstructImgFromPPD, _blackBgToTransparent
 
 def clusterColorsToPatterns(img_ids=None, cluster_individually=False, preclustered = False, group_cluster_records_colname = None,
-                    by_patches=True, patch_args = {'min_patch_pixel_area':5,'cluster_args':{'n':4, 'algo':'gaussian_mixture'}}, visualize_patching=False,
-                    cluster_args={'find_n_minmax':(2,7), 'algo':"gaussian_mixture"}, use_positions=False,
+                    by_patches=True, use_patch_positions=False, patch_args = {'min_patch_pixel_area':5,'cluster_args':{'n':4, 'algo':'gaussian_mixture'}}, visualize_patching=False,
+                    cluster_args={'find_n_minmax':(2,7), 'algo':"gaussian_mixture"},
                     colorspace = "cielab",
                     height_resize = 200,
                     group_histogram_matching_colname=None,
@@ -114,81 +114,6 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
                                 master_histograms=master_histograms,blur_args=blur_args,equalize_args=equalize_args,colorspace=colorspace,
                                 height_resize=height_resize,by_patches=by_patches,patch_args=patch_args)
 
-    ## OLD CODE FOR NON-MULTIPROCESSING JUST IN CASE
-    ###############################################
-    # for i, id in enumerate(img_ids):
-    #     if i % 100 == 0:
-    #         print(i)
-    #     if not preclustered: # if clustering normally, just read in segments
-    #         img = cv2.imread(data_folder + "/segments/" + id + "_segment.png",cv2.IMREAD_UNCHANGED)
-    #     else: # otherwise read in from the preclust_read_subfolder in patterns
-    #         img = cv2.imread(data_folder + "/patterns/" + preclust_read_subfolder + "/" + id + "_pattern.png", cv2.IMREAD_UNCHANGED) #_pattern.ong
-    #
-    #     _showImages(show_indv,[img],"Segment")
-    #
-    #     _bprint(print_details, "Loaded segment for ID " + id)
-    #     if img is None:
-    #         _bprint(print_details, "Image is empty - skipping")
-    #         continue
-    #
-    #     # get mask using black pixels before blur
-    #     # find the black background color, which will always be the most common color
-    #     pixels = img.reshape(-1, img.shape[2])
-    #     pixel_tuples = [tuple(pixel) for pixel in pixels]
-    #     most_common_color, _ = Counter(pixel_tuples).most_common(1)[0]
-    #     # create a mask for the black background
-    #     bg_mask = np.all(img == most_common_color, axis=-1)
-    #     # convert the boolean mask to uint8 format for visualization
-    #     bg_mask = bg_mask.astype(np.uint8) * 255
-    #
-    #     # group histogram match
-    #     if group_histogram_matching_colname is not None:
-    #         group = ids_groups_dict[id] # group is always species or genus really
-    #         #print(group)
-    #         #cv2.imshow("0",img)
-    #         #cv2.waitKey(0)
-    #         hist = master_histograms[group]
-    #         img = matchHistogram(img, master_histograms[group])
-    #         #cv2.imshow("0",img)
-    #         #cv2.waitKey(0)
-    #         # Plot the histogram
-    #         #plt.figure(figsize=(10, 5))
-    #         #plt.bar(range(256), hist, color='gray')
-    #         #plt.title('Master Histogram')
-    #         #plt.xlabel('Pixel Intensity')
-    #         #plt.ylabel('Normalized Frequency')
-    #         #plt.show()
-    #
-    #     # blur
-    #     if blur_args is not None:
-    #         img = _blur(img, **blur_args,show=show_indv)
-    #
-    #     # equalize
-    #     if equalize_args is not None:
-    #         img = _equalize(img, **equalize_args,show=show_indv)
-    #
-    #     # format colorspace
-    #     img = _format(img, in_format='rgb', out_format=colorspace,alpha=False)
-    #
-    #     # resize
-    #     if height_resize is not None:
-    #         resize_proportion = height_resize / img.shape[0]
-    #         img = cv2.resize(img, dsize=(int(img.shape[1] * resize_proportion),height_resize),interpolation = cv2.INTER_NEAREST)
-    #         bg_mask = cv2.resize(bg_mask, dsize=(int(bg_mask.shape[1] * resize_proportion),height_resize),interpolation = cv2.INTER_NEAREST)
-    #
-    #     # gather data for the image
-    #     # patch_or_pixel_data is a list of tuples that allows us to reconstruct the image later
-    #     #   each tuple contains: a list of locations of the pixels and patches as its first element
-    #     #                        a list of the values of the pixels or patches as its second element
-    #     #                        an ndarray of the image shape
-    #     if by_patches: # patch data
-    #         patch_or_pixel_data.append(_imgToColorPatches(img, bg_mask, **patch_args, return_patch_masks_colors_imgshapes=True,show=show_indv, input_colorspace=colorspace))
-    #         _bprint(print_details, "Gathered image patch data")
-    #     else: # pixel data
-    #         patch_or_pixel_data.append(getPixelCoordsAndPixels(img))
-    #         _bprint(print_details, "Gathered image pixel data")
-    ####################################
-
     # if visualizing patching...
     if by_patches and visualize_patching:
         patch_imgs = [_reconstructImgFromPPD(ppd,is_patch_data=True) for ppd in patch_or_pixel_data]
@@ -200,11 +125,13 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
             patch_imgs = [patch_imgs[i] for i in indices]
             ids = [ids[i] for i in indices]
 
-            raw_imgs = [cv2.imread(data_folder + "/segments/" + id + "_segment.png",cv2.IMREAD_UNCHANGED) for id in ids]
-            patch_imgs = [makeCollage([img,patch_img],n_per_row=2,resize_wh=(50,200)) for img, patch_img in zip(raw_imgs,patch_imgs)]
+        raw_imgs = [cv2.imread(data_folder + "/segments/" + id + "_segment.png",cv2.IMREAD_UNCHANGED) for id in ids]
+        patch_imgs = [makeCollage([img,patch_img],n_per_row=2,resize_wh=(50,200)) for img, patch_img in zip(raw_imgs,patch_imgs)]
 
-            _showImages(True,patch_imgs,maintitle="Example Patched Images")
+        _showImages(True,patch_imgs,maintitle="Example Patched Images")
 
+    if by_patches and use_patch_positions:
+        patch_or_pixel_data
     # cluster by group
     if group_cluster_records_colname is not None:
         _bprint(print_steps, "Started group clustering by a records column (probably 'species' or 'genus')")
@@ -291,7 +218,7 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
 
             # cluster patch_or_pixel_data_point[1] which is the pixel colors OR the patch colors
             #   and return the centroids
-            clustered_values = _cluster(ppd[1], **cluster_args, show_color_scatter=show, show_color_centroids=show, input_colorspace=colorspace, return_values_as_centroids=True,show=show)
+            clustered_values = _cluster(ppd[1], **cluster_args, input_colorspace=colorspace, return_values_as_centroids=True,show=show)
             # reassign the centroids to the data
             ppd = (ppd[0], clustered_values, ppd[2],ppd[3])
             # put back into the list
@@ -309,7 +236,7 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
         all_indices = [index for index, sublist in enumerate(all_values_per_image) for item in sublist]
 
         _bprint(print_steps, "Clustering " + str(len(all_values)) + " colors...")
-        clustered_values = _cluster(all_values, **cluster_args, show_color_scatter=show, show_color_centroids=True, input_colorspace=colorspace, return_values_as_centroids=True,print_steps=print_steps,show=show)
+        clustered_values = _cluster(all_values, **cluster_args, input_colorspace=colorspace, return_values_as_centroids=True,print_steps=print_steps,show=show)
 
         def group_values_by_indices(values, indices):
             groups = {}
@@ -352,7 +279,7 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
 
 
         cv2.imwrite(write_target, img)
-        if(print_details): print("Wrote to " + write_target)
+        _bprint(print_details,"Wrote to " + write_target)
         
     _showImages(show,patterns_to_show,maintitle="Final Patterns")
 
@@ -383,7 +310,7 @@ def getMasterHistogram(images):
     master_histogram = np.zeros(256)
     for img in images:
         for channel in cv2.split(img):
-            hist, _ = np.histogram(channel, bins=256, range=(0, 256))
+            hist, _ = np.histogram(channel, bins=256, range=(0, 255))
             master_histogram += hist
     master_histogram /= master_histogram.sum()  # Ensure normalization
     return master_histogram
@@ -392,17 +319,20 @@ def matchHistogram(img, master_histogram):
     master_cdf = np.cumsum(master_histogram)
     master_cdf = (255 * (master_cdf / master_cdf[-1])).astype(np.uint8)  # Normalize and convert to proper scale
 
-    matched_img = np.zeros_like(img)
-    for i, channel in enumerate(cv2.split(img)):
-        hist, bins = np.histogram(channel.flatten(), bins=256, range=[0, 256])
+    channels = cv2.split(img)
+    matched_channels = []
+
+    for channel in channels:
+        hist, bins = np.histogram(channel.flatten(), bins=256, range=[0, 255])
         cdf = np.cumsum(hist)
         cdf = (255 * (cdf / cdf[-1])).astype(np.uint8)  # Normalize and convert to proper scale
 
         # Use np.interp for interpolation of pixel values
         im2 = np.interp(channel.flatten(), bins[:-1], cdf)
-        matched_channel = np.interp(im2, master_cdf, np.arange(256))
-        matched_img[:, :, i] = matched_channel.reshape(channel.shape)
+        matched_channel = np.interp(im2, master_cdf, np.arange(256)).astype(np.uint8)
+        matched_channels.append(matched_channel.reshape(channel.shape))
 
+    matched_img = cv2.merge(matched_channels)
     return matched_img
 
 def gatherImageData(img_id_info):
@@ -450,7 +380,7 @@ def gatherImageData(img_id_info):
 
     # Gather data (patch or pixel)
     if by_patches:
-        return _imgToColorPatches(img, img_id, bg_mask, **patch_args, return_patch_masks_colors_imgshapes=True,
+        return _imgToColorPatches(img, img_id, bg_mask, **patch_args,
                                   show=show_indv, input_colorspace=colorspace)
     else:
         return getPixelCoordsAndPixels(img,img_id)
@@ -496,8 +426,6 @@ def clusterGroup(group_info):
         show_imgs = _readBCCImgs(img_ids=group_ids,sample_n=9,type="segment",data_folder="D:/bcc/ringtails")
         _showImages(show,show_imgs,maintitle=g)
 
-    print(group_indices)
-    print(len(patch_or_pixel_data))
     # Get data for the group
     group_ppds = [patch_or_pixel_data[i] for i in group_indices]
 
