@@ -1,10 +1,10 @@
 import cv2
 import numpy as np
 from bigcrittercolor.helpers import _showImages
-from bigcrittercolor.helpers.imgtransforms import _vertUsingLine
+from bigcrittercolor.helpers.verticalize import _vertUsingLine
 
 # new rot invariant blob sym function
-def _getRotInvariantBlobSymmetry2(binary_img, epsilon_mult=0.02, return_sym_img=False, show=False):
+def _getRotInvariantBlobSymmetry(binary_img, epsilon_mult=0.02, return_sym_img=False, show=False):
     def is_inside_polygon(polygon, point):
         return cv2.pointPolygonTest(polygon, (point[0], point[1]), False) >= 0
 
@@ -31,8 +31,8 @@ def _getRotInvariantBlobSymmetry2(binary_img, epsilon_mult=0.02, return_sym_img=
     # Use brute force approach: For each vertex combo of the polygon,
     # compute the symmetry and return the line of best symmetry
 
-    print("Started looking at each vertex combo")
-    print(str(len(polygon)))
+    #print("Started looking at each vertex combo")
+    #print(str(len(polygon)))
     max_sym = 0
     start = None
     end = None
@@ -45,7 +45,7 @@ def _getRotInvariantBlobSymmetry2(binary_img, epsilon_mult=0.02, return_sym_img=
                     end = (polygon[j][0][0],polygon[j][0][1])
                     max_sym = sym_score
 
-    print("Done looking at each vertex combo")
+    #print("Done looking at each vertex combo")
     if return_sym_img:
         img = cv2.merge([binary_img,binary_img,binary_img])
         return(_vertUsingLine(img,line=[start,end],show=show))

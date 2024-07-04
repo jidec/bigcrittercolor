@@ -18,3 +18,4 @@ from bigcrittercolor.helpers.image._blur import _blur
 from bigcrittercolor.helpers.image._equalize import _equalize
 from bigcrittercolor.helpers.image._format import _format
 from bigcrittercolor.helpers.image._blackBgToTransparent import _blackBgToTransparent
+from bigcrittercolor.helpers.image._getRotInvariantBlobSymmetry import _getRotInvariantBlobSymmetry
