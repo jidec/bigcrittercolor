@@ -1,10 +1,13 @@
 import cv2
+
 import matplotlib.pyplot as plt
+
 import numpy as np
 import os
+import random
 
 def _showImages(show, images, titles=None, maintitle=None, list_cmaps=None, grid=False, num_cols=3, figsize=(10, 10),
-                    title_fontsize=30, save_folder=None):
+                    title_fontsize=30, sample_n=None, save_folder=None):
     '''
     Shows a grid of images, where each image is a Numpy array. The images can be either
     RGB or grayscale.
@@ -37,6 +40,10 @@ def _showImages(show, images, titles=None, maintitle=None, list_cmaps=None, grid
             titles = [titles]
         list_images = images
         list_titles = titles
+
+        # sample n
+        if sample_n is not None and sample_n < len(list_images):
+            list_images = random.sample(list_images,sample_n)
 
         for index, img in enumerate(list_images):
             if len(img.shape) == 4:
@@ -94,10 +101,10 @@ def _showImages(show, images, titles=None, maintitle=None, list_cmaps=None, grid
             #plt.suptitle(maintitle,fontsize=40)#,horizontalalignment='left', verticalalignment='top')
 
         if save_folder is not None:
-            filename = generate_unique_filename(save_folder, "img", ".jpg")
+            filename = generate_unique_filename(save_folder, "plot", ".jpg")
             print(filename)
             plt.savefig(save_folder + "/" + filename)
-
+            
         _ = plt.show()
         # author: "stackoverflowuser2010"
 
