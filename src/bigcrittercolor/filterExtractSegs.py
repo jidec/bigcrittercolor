@@ -141,7 +141,7 @@ def filterExtractSegs(img_ids=None, sample_n=None, batch_size=None,
             if len(failed_edge_ids) > 0:
                 if show: showBCCImages(img_ids=failed_edge_ids, type=show_type, sample_n=18, title="Failed Edge",data_folder=data_folder)
 
-        masks_unchanged = masks.copy() # save unchanged masks to use for seg extraction later
+        #masks_unchanged = masks.copy() # save unchanged masks to use for seg extraction later
 
         # if aux segmodel was used, we would take the segments in masks folder and greyscale or binarize them
         # otherwise we would get the raw segs then either greyscale or binarize them
@@ -188,6 +188,7 @@ def filterExtractSegs(img_ids=None, sample_n=None, batch_size=None,
 
         # if we used an aux segmodel, we can just write the kept RGB segs in "masks" to segments
         if used_aux_segmodel:
+            del segs
             segs = _readBCCImgs(kept_ids, type="mask", data_folder=data_folder)
 
         # if we did not use an aux segmodel, we get the masks for the ids, apply them to the original images, and verticalize them
