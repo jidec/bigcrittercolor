@@ -20,4 +20,6 @@ def readSpeciesBalancedIDs(stage_type="image",print_steps=True,data_folder=''):
     # get balanced ids that have actually reached the stage
     balanced_ids = set(balanced_ids).intersection(set(stage_ids))
 
+    balanced_ids = list(balanced_ids)
+
     return balanced_ids

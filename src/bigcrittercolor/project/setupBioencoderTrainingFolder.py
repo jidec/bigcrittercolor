@@ -4,18 +4,15 @@ import cv2
 import shutil
 import yaml
 
-from bigcrittercolor.helpers import _readBCCImgs
-from bigcrittercolor.helpers.ids import _getIDsInFolder
+from bigcrittercolor.helpers import _readBCCImgs, _getBCCIDs
 
-def setupBioencoderTrainingFolder(data_folder, min_imgs_per_class=20, max_imgs_per_class=100, img_size=None, batch_size=None, n_workers=None):
+def setupBioencoderTrainingFolder(img_ids=None, data_folder='', min_imgs_per_class=20, max_imgs_per_class=100, img_size=None, batch_size=None, n_workers=None):
 
-    # get IDs of images i.e., INAT-31231-1
-    img_ids = _getIDsInFolder(data_folder + "/segments")
-    # get IDs of observations i.e., INAT-32312
-    obs_ids = [s.rsplit('-', 1)[0] for s in img_ids]
+    if img_ids is None:
+        img_ids = _getBCCIDs(type="segment",data_folder=data_folder)
 
     # read images and records
-    imgs = _readBCCImgs(img_ids=img_ids, type="seg", data_folder=data_folder)
+    imgs = _readBCCImgs(img_ids=img_ids, type="segment", data_folder=data_folder)
     records = pd.read_csv(data_folder + '/records.csv')
 
     # create new folder "bioencoder_training" in "data_folder/other" - it will contain many subfolders
@@ -26,9 +23,12 @@ def setupBioencoderTrainingFolder(data_folder, min_imgs_per_class=20, max_imgs_p
         "bioencoder_wd": ["data", "logs", "plots", "runs", "weights"],
         "data_raw": ["aligned_train_val"]
     }
-    # create the main folder if it doesn't exist
-    if not os.path.exists(new_folder):
-        os.makedirs(new_folder)
+
+    # delete the previous training folder if we already made one
+    if os.path.exists(new_folder):
+        shutil.rmtree(new_folder)
+
+    os.makedirs(new_folder)
     # create subfolders
     for subfolder, nested_folders in subfolders.items():
         subfolder_path = os.path.join(new_folder, subfolder)
