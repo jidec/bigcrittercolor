@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import pandas as pd
 from skimage.color import rgb2hsv, rgb2lab
+import matplotlib.pyplot as plt
 
 from bigcrittercolor.helpers import _readBCCImgs, _getBCCIDs
 from bigcrittercolor.helpers.ids import _imgNameToID, _imgPathToName
@@ -17,15 +18,15 @@ def writeColorMetrics(img_ids=None, from_stage="pattern", batch_size=None, patte
     all_metrics = []
     if batch_size is None:
         batch_size = len(img_ids)
-    def process_batch(batch_img_ids):
+    def process_batch(batch_img_ids, from_stage):
         # todo - make sure read works for patterns
-        imgs = _readBCCImgs(img_ids=batch_img_ids, data_folder=data_folder)
+        imgs = _readBCCImgs(type=from_stage,img_ids=batch_img_ids, data_folder=data_folder)
 
         if from_stage == "segment":
             simple_metrics = _getSimpleColorMetrics(imgs, batch_img_ids)
-            #thresh_metrics = _getThresholdMetrics(imgs, batch_img_ids)
-            #metrics = pd.merge(simple_metrics, thresh_metrics, on='img_id')
-            metrics = simple_metrics
+            thresh_metrics = _getThresholdMetrics(imgs, batch_img_ids)
+            metrics = pd.merge(simple_metrics, thresh_metrics, on='img_id')
+            #metrics = simple_metrics
         if from_stage == "pattern":
             metrics = _getColorClusterMetrics(imgs, batch_img_ids)
 
@@ -34,7 +35,7 @@ def writeColorMetrics(img_ids=None, from_stage="pattern", batch_size=None, patte
     # Iterate over the image IDs in batches
     for i in range(0, len(img_ids), batch_size):
         batch_img_ids = img_ids[i:i + batch_size]
-        batch_metrics = process_batch(batch_img_ids)
+        batch_metrics = process_batch(batch_img_ids,from_stage)
         all_metrics.append(batch_metrics)
         print(str(i) + "/" + str(len(img_ids)))
 
@@ -103,11 +104,10 @@ def _getSimpleColorMetrics(imgs, img_ids):
     df = pd.DataFrame(data)
     return df
 
-def _getThresholdMetrics(segs, img_ids, thresh_values=[0.1]):
+def _getThresholdMetrics(segs, img_ids, thresh_values=[0.15,0.2,0.25,0.30],show=False):
     data = []
 
     for img, img_id in zip(segs, img_ids):
-
         image = img
         # Convert image to RGB
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -119,11 +119,8 @@ def _getThresholdMetrics(segs, img_ids, thresh_values=[0.1]):
             # Skip if no non-black pixels
             continue
 
-        # Apply mask
-        image_rgb = image_rgb[mask]
-
         # Convert to HSV
-        hsv_image = rgb2hsv(image_rgb.reshape(-1, 1, 3) / 255.0)
+        hsv_image = rgb2hsv(image_rgb / 255.0)
 
         # Extract the value channel
         value_channel = hsv_image[:, :, 2]
@@ -131,10 +128,24 @@ def _getThresholdMetrics(segs, img_ids, thresh_values=[0.1]):
         # Initialize the data dictionary for this image
         image_data = {'img_id': img_id}
 
-        # Calculate the percentage for each threshold value
         for thresh in thresh_values:
-            dark_pixels_percent = np.mean(value_channel <= thresh)
+            dark_pixels_percent = np.mean(value_channel[mask] <= thresh)
             image_data[f'percent_dark_or_darker_than_{thresh}'] = dark_pixels_percent * 100
+
+            # Create a mask for pixels below the threshold
+            below_thresh_mask = value_channel <= thresh
+
+            # Create a copy of the image to mark the red pixels
+            marked_image_rgb = image_rgb.copy()
+            marked_image_rgb[below_thresh_mask & mask] = [255, 0, 0]  # Mark in red
+
+            if show:
+                # Plot the image with marked pixels
+                plt.figure()
+                plt.imshow(marked_image_rgb)
+                plt.title(f'Image ID: {img_id} - Pixels below threshold {thresh}')
+                plt.axis('off')
+                plt.show()
 
         # Append the metrics to the data list
         data.append(image_data)
