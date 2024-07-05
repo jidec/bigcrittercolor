@@ -8,33 +8,38 @@ from skimage.color import rgb2hsv, rgb2lab
 from bigcrittercolor.helpers import _readBCCImgs, _getBCCIDs
 from bigcrittercolor.helpers.ids import _imgNameToID, _imgPathToName
 
-def writeColorMetrics(img_ids=None, from_stage="pattern", pattern_subfolder=None, data_folder=''):
+def writeColorMetrics(img_ids=None, from_stage="pattern", batch_size=None, pattern_subfolder=None, data_folder=''):
 
-    # if writing using segments, we get simple and threshold
-    if from_stage == "segment":
-        # if no ids provided, get all segment ids
-        if img_ids is None:
-            img_ids = _getBCCIDs(type="segment",data_folder=data_folder)
+    # get all segment or pattern ids if None
+    if img_ids is None:
+        img_ids = _getBCCIDs(type=from_stage, data_folder=data_folder)
 
-        # load all segments
-        segs = _readBCCImgs(img_ids=img_ids,data_folder=data_folder)
-        simple_metrics = _getSimpleColorMetrics(segs,img_ids)
-        thresh_metrics = _getThresholdMetrics(segs,img_ids)
+    all_metrics = []
+    if batch_size is None:
+        batch_size = len(img_ids)
+    def process_batch(batch_img_ids):
+        # todo - make sure read works for patterns
+        imgs = _readBCCImgs(img_ids=batch_img_ids, data_folder=data_folder)
 
-        metrics = pd.merge(simple_metrics, thresh_metrics, on='img_id')
+        if from_stage == "segment":
+            simple_metrics = _getSimpleColorMetrics(imgs, batch_img_ids)
+            #thresh_metrics = _getThresholdMetrics(imgs, batch_img_ids)
+            #metrics = pd.merge(simple_metrics, thresh_metrics, on='img_id')
+            metrics = simple_metrics
+        if from_stage == "pattern":
+            metrics = _getColorClusterMetrics(imgs, batch_img_ids)
 
-    # if writing using patterns, we get all 3
-    if from_stage == "pattern":
-        img_dir = data_folder + "/patterns"
-        if pattern_subfolder is not None:
-            img_dir = img_dir + "/" + pattern_subfolder
-        # get paths and imgs
-        paths = [os.path.join(img_dir, f) for f in os.listdir(img_dir) if f.endswith('.png')]
-        img_ids = [_imgNameToID(_imgPathToName(p)) for p in paths]
-        imgs = [cv2.imread(path) for path in paths]
+        return metrics
 
-        cluster_metrics = _getColorClusterMetrics(imgs,img_ids)
-        metrics = cluster_metrics
+    # Iterate over the image IDs in batches
+    for i in range(0, len(img_ids), batch_size):
+        batch_img_ids = img_ids[i:i + batch_size]
+        batch_metrics = process_batch(batch_img_ids)
+        all_metrics.append(batch_metrics)
+        print(str(i) + "/" + str(len(img_ids)))
+
+    # Concatenate all the batch metrics into a single DataFrame
+    metrics = pd.concat(all_metrics, ignore_index=True)
 
     # TEMP while only doing 1 img per obs
     metrics['obs_id'] = metrics['img_id'].str.replace('-1$', '', regex=True)
