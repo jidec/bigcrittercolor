@@ -88,7 +88,8 @@ def inferMasks(img_ids=None, skip_existing=True, gd_gpu=True, sam_gpu=True,
         # combine
         existing_mask_ids = existing_mask_ids + failed_mask_ids
         # create new image ids removing existing
-        img_ids = set(img_ids) - set(existing_mask_ids)
+        img_ids = list(set(img_ids) - set(existing_mask_ids))
+
 
     if aux_segmodel_location is not None:
         aux_model = torch.load(aux_segmodel_location)
