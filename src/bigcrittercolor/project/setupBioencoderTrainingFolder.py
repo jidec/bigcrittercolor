@@ -5,6 +5,7 @@ import shutil
 import yaml
 
 from bigcrittercolor.helpers import _readBCCImgs, _getBCCIDs
+from bigcrittercolor.helpers.ids import _imgIDToObsID
 
 def setupBioencoderTrainingFolder(img_ids=None, data_folder='', min_imgs_per_class=20, max_imgs_per_class=100, img_size=None, batch_size=None, n_workers=None):
 
@@ -40,6 +41,7 @@ def setupBioencoderTrainingFolder(img_ids=None, data_folder='', min_imgs_per_cla
             if not os.path.exists(nested_path):
                 os.makedirs(nested_path)
 
+    obs_ids = [_imgIDToObsID(img_id) for img_id in img_ids]
     # move images of each species to "bioencoder_training/data_raw/aligned_train_val/*species*"
     species_image_count = {}
     for img, img_id, obs_id in zip(imgs, img_ids, obs_ids):
