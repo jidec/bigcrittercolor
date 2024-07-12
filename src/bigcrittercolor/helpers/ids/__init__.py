@@ -2,3 +2,4 @@ from bigcrittercolor.helpers.ids._imgNameToID import _imgNameToID
 from bigcrittercolor.helpers.ids._imgIDToObsID import _imgIDToObsID
 from bigcrittercolor.helpers.ids._getIDsInFolder import _getIDsInFolder
 from bigcrittercolor.helpers.ids._getRecordsColFromIDs import _getRecordsColFromIDs
+from bigcrittercolor.helpers.ids._getSpeciesBalancedIDs import _getSpeciesBalancedIDs
