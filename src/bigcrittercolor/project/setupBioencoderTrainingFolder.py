@@ -4,14 +4,16 @@ import cv2
 import shutil
 import yaml
 
-from bigcrittercolor.helpers import _readBCCImgs, _getBCCIDs
+from bigcrittercolor.helpers import _readBCCImgs, _getBCCIDs, _bprint
 from bigcrittercolor.helpers.ids import _imgIDToObsID
 
-def setupBioencoderTrainingFolder(img_ids=None, data_folder='', min_imgs_per_class=20, max_imgs_per_class=100, img_size=None, batch_size=None, n_workers=None):
+def setupBioencoderTrainingFolder(img_ids=None, data_folder='', min_imgs_per_class=20, max_imgs_per_class=100, print_steps=True, img_size=None, batch_size=None, n_workers=None):
 
+    _bprint(print_steps, "Started setting up bioencoder training folder...")
     if img_ids is None:
         img_ids = _getBCCIDs(type="segment",data_folder=data_folder)
 
+    _bprint(print_steps, "Reading in all images and records...")
     # read images and records
     imgs = _readBCCImgs(img_ids=img_ids, type="segment", data_folder=data_folder)
     records = pd.read_csv(data_folder + '/records.csv')
@@ -42,6 +44,7 @@ def setupBioencoderTrainingFolder(img_ids=None, data_folder='', min_imgs_per_cla
                 os.makedirs(nested_path)
 
     obs_ids = [_imgIDToObsID(img_id) for img_id in img_ids]
+    _bprint(print_steps, "Saving images for each species...")
     # move images of each species to "bioencoder_training/data_raw/aligned_train_val/*species*"
     species_image_count = {}
     for img, img_id, obs_id in zip(imgs, img_ids, obs_ids):
