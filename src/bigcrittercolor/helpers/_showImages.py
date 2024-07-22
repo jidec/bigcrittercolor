@@ -94,6 +94,7 @@ def _showImages(show, images, titles=None, maintitle=None, list_cmaps=None, grid
             list_axes[i].set_yticks([])
 
         fig.tight_layout()
+        fig.subplots_adjust(wspace=0, hspace=0)
         # add maintitle to top of plt
         if maintitle is not None:
             fig.subplots_adjust(top=0.85)

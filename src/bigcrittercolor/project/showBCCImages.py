@@ -5,7 +5,7 @@ import os
 from bigcrittercolor.helpers import _readBCCImgs, _showImages, makeCollage, _getBCCIDs
 from bigcrittercolor.helpers.ids import _getIDsInFolder
 
-def showBCCImages(img_ids=None, sample_n=None, type="image", preclust_folder_name=None, title="", collage_resize_wh=(100,100), data_folder=""):
+def showBCCImages(img_ids=None, sample_n=18, type="image", preclust_folder_name=None, title="", collage_resize_wh=(100,100), num_cols=10, data_folder=""):
     """ Show bigcrittercolor images, masks, and/or segments in a data folder
         Args:
             img_ids (list): the image IDs to draw images, masks, and/or segments for
@@ -69,4 +69,4 @@ def showBCCImages(img_ids=None, sample_n=None, type="image", preclust_folder_nam
             pats = _readBCCImgs(img_ids, type="pattern", data_folder=data_folder)
             imgs = [makeCollage([seg, preclust, pat], resize_wh=collage_resize_wh, n_per_row=3) for seg, preclust, pat in zip(segs, preclusts, pats)]
     # at the end we show what was kept
-    _showImages(True, images=imgs, maintitle=title)
+    _showImages(True, images=imgs, maintitle=title, num_cols=num_cols)
