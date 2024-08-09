@@ -8,3 +8,4 @@ from bigcrittercolor.project.zipImageFolder import zipImageFolder
 from bigcrittercolor.project.readSpeciesBalancedIDs import readSpeciesBalancedIDs
 from bigcrittercolor.project.saveSpeciesBalancedImageIDs import saveSpeciesBalancedImageIDs
 from bigcrittercolor.project.createManualCodingsDataset import createManualCodingsDataset
+from bigcrittercolor.project.saveSpeciesGenusAverageImages import saveSpeciesGenusAverageImages
