@@ -23,6 +23,8 @@ def saveSpeciesGenusAverageImages(data_folder, print_steps=True):
         matching_ids = [id for id, label in zip(ids, species_labels) if label == species]
         # Read images
         imgs = _readBCCImgs(type="segment", img_ids=matching_ids, data_folder=data_folder)
+        if not imgs:
+            continue
         avg_img = getAverageImage(imgs)
         avg_img = _blackBgToTransparent(avg_img, threshold=0)
 
@@ -38,8 +40,6 @@ def saveSpeciesGenusAverageImages(data_folder, print_steps=True):
     for genus, species_avgs in genus_species_averages.items():
         if species_avgs:
             genus_avg_img = getAverageImage(species_avgs)
-            cv2.imshow("0", genus_avg_img)
-            cv2.waitKey(0)
 
             # Save genus-level average image
             genus_underscore = genus.replace(" ", "_")
