@@ -5,8 +5,7 @@ from bigcrittercolor.helpers.ids import _getRecordsColFromIDs
 from bigcrittercolor.helpers import _getBCCIDs, _readBCCImgs, _bprint
 from bigcrittercolor.helpers.image import _blackBgToTransparent
 
-
-def saveSpeciesGenusAverageImages(data_folder, max_n_per_species=15, print_steps=True):
+def saveSpeciesGenusAverageImages(data_folder, max_n_per_species=3, print_steps=True):
     ids = _getBCCIDs(type="segment", data_folder=data_folder)
     species_labels = _getRecordsColFromIDs(img_ids=ids, column="species", data_folder=data_folder)
     genus_labels = _getRecordsColFromIDs(img_ids=ids, column="genus", data_folder=data_folder)
@@ -23,7 +22,7 @@ def saveSpeciesGenusAverageImages(data_folder, max_n_per_species=15, print_steps
         # Find matching IDs for the species
         matching_ids = [id for id, label in zip(ids, species_labels) if label == species]
         if len(matching_ids) > max_n_per_species:
-            matching_ids = random.sample(matching_ids,10)
+            matching_ids = random.sample(matching_ids,max_n_per_species)
         # Read images
         imgs = _readBCCImgs(type="segment", img_ids=matching_ids, data_folder=data_folder)
         if not imgs:
