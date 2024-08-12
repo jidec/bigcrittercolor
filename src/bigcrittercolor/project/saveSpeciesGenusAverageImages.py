@@ -1,11 +1,12 @@
 import cv2
 import numpy as np
+import random
 from bigcrittercolor.helpers.ids import _getRecordsColFromIDs
 from bigcrittercolor.helpers import _getBCCIDs, _readBCCImgs, _bprint
 from bigcrittercolor.helpers.image import _blackBgToTransparent
 
 
-def saveSpeciesGenusAverageImages(data_folder, print_steps=True):
+def saveSpeciesGenusAverageImages(data_folder, max_n_per_species=15, print_steps=True):
     ids = _getBCCIDs(type="segment", data_folder=data_folder)
     species_labels = _getRecordsColFromIDs(img_ids=ids, column="species", data_folder=data_folder)
     genus_labels = _getRecordsColFromIDs(img_ids=ids, column="genus", data_folder=data_folder)
@@ -21,12 +22,14 @@ def saveSpeciesGenusAverageImages(data_folder, print_steps=True):
     for species in unique_species:
         # Find matching IDs for the species
         matching_ids = [id for id, label in zip(ids, species_labels) if label == species]
+        if len(matching_ids) > max_n_per_species:
+            matching_ids = random.sample(matching_ids,10)
         # Read images
         imgs = _readBCCImgs(type="segment", img_ids=matching_ids, data_folder=data_folder)
         if not imgs:
             continue
         avg_img = getAverageImage(imgs)
-        avg_img = _blackBgToTransparent(avg_img, threshold=0)
+        avg_img = _blackBgToTransparent(avg_img, threshold=3)
 
         # Save species-level average image
         species_underscore = species.replace(" ", "_")
