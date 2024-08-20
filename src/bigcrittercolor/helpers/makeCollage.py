@@ -3,6 +3,8 @@ import cv2
 import numpy as np
 from PIL import Image, ImageOps
 
+from bigcrittercolor.helpers.image import _meanDim
+
 # rotation can be:
 # a number
 # center
@@ -15,7 +17,7 @@ from PIL import Image, ImageOps
 # make rotate to center or corner
 # allow full overlap rather than blending
 
-def makeCollage(imgs,n_per_row,resize_wh=(100,100),white_bg=False,overlap_wh=None,rotation=None,rot_jitter=0,show=False):
+def makeCollage(imgs,n_per_row,resize_wh=None,white_bg=False,overlap_wh=None,rotation=None,rot_jitter=0,show=False):
     """ Create a collage, a set of images stitched together. Args allow for a variety of arrangements
         Args:
             imgs (list): a list of images to stitch
@@ -26,6 +28,9 @@ def makeCollage(imgs,n_per_row,resize_wh=(100,100),white_bg=False,overlap_wh=Non
     """
 
     # resize all images
+    if resize_wh is None:
+        resize_wh = _meanDim(imgs)
+    print(resize_wh)
     imgs = [cv2.resize(im,resize_wh) for im in imgs]
     collage = None
 
