@@ -27,8 +27,14 @@ from bigcrittercolor.helpers.ids import _imgNameToID
 # 7. skip_existing_taxa bypasses downloading a new copy of records, and assumes that the records already downloaded are complete - this
 #   will fail to download all records for a taxon if a previous records download was interrupted
 # 8. works in two pieces - downloading records and downloading images using records
+
+# if I was to allow downloading n_per_species, it would require downloading all records first anyway, then
+# sampling from those and resaving
+# alternatively in the download half of the function, could just subsample when you save the trimmed records
+# this makes more sense
 def downloadiNatImageData(taxa_list, download_records=True, download_images=True,
                           lat_lon_box=None, usa_only=False, img_size="medium", research_grade_only=True, #n_per_taxon=None, max_n_per_obs=1,
+                          download_n_per_species=None,
                           skip_records_for_existing_taxa=False,
                           print_steps=True, data_folder=''):
     """ Download iNat images and data by genus or species.
@@ -105,6 +111,9 @@ def downloadiNatImageData(taxa_list, download_records=True, download_images=True
             records = records[~in_mask]
             # remove gifs (WEIRD that these are in here)
             records = records[~records['img_url'].str.contains('.gif')]
+            # if download n_per_species
+            if download_n_per_species is not None:
+                records = records.groupby('taxon').apply(lambda x: x.sample(n=download_n_per_species)).reset_index(drop=True)
             n_new_obs = records.shape[0]
             if n_new_obs == 0:
                 _bprint(print_steps, "No new observations to download, exiting or moving to next taxon...")
