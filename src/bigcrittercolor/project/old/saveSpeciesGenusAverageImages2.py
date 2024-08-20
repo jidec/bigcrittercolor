@@ -14,7 +14,6 @@ from PIL import Image
 import shutil
 
 def saveSpeciesGenusAverageImages2(data_folder, max_n_per_species=2, print_steps=True):
-
     # assemble directory to train autoencoder
     shutil.rmtree(data_folder + "/other/species_mean_autoencoder_training")
     os.mkdir(data_folder + "/other/species_mean_autoencoder_training")

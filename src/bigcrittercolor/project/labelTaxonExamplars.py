@@ -13,7 +13,7 @@ def labelTaxonExemplars(img_ids=None, taxon="genus", data_folder=''):
 
     # Filter records by the provided img_ids
     filtered_records = records_df[records_df['img_id'].isin(img_ids)]
-
+    #avg_size = calculate_average_size("D:/bcc/autoencoder/ringtails")
     # Dictionary to store the exemplar images
     exemplars = {}
 
@@ -41,4 +41,4 @@ def labelTaxonExemplars(img_ids=None, taxon="genus", data_folder=''):
 
     print("Exemplars have been saved to exemplars.csv")
 
-#labelExamplars(data_folder="D:/bcc/ringtails")
+#labelTaxonExemplars(taxon="genus",data_folder="D:/bcc/ringtails")
