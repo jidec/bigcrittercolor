@@ -307,7 +307,21 @@ def getTaxonID(taxon_name):
     return taxon_id
 
 
+from requests.exceptions import JSONDecodeError
 def getRecCnt(base_params):
+    try:
+        resp = requests.get(base_url + 'observations', params=base_params)
+        resp.raise_for_status()  # Raises HTTPError for bad responses
+        res = resp.json()  # This is where JSONDecodeError might be raised
+        return int(res.get('total_results', 0))
+    except JSONDecodeError as e:
+        print(f"JSON decoding failed: {e.msg}")
+        return 0
+    except requests.exceptions.RequestException as e:
+        print(f"Request failed: {e}")
+        return 0
+
+def getRecCnt_old(base_params):
     # print("Getting record count")
     resp = requests.get(base_url + 'observations', params=base_params)
     res = resp.json()
