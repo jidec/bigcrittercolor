@@ -1,8 +1,7 @@
 import cv2
 import numpy as np
-
+import random
 import matplotlib.pyplot as plt
-
 import matplotlib.patches as patches
 
 from sklearn.cluster import KMeans, HDBSCAN, OPTICS, SpectralClustering, AgglomerativeClustering, DBSCAN, AffinityPropagation
@@ -38,6 +37,7 @@ def _cluster(values, algo="kmeans", n=3,
              show_color_scatter = False,
              show_silhouette = False,
              input_colorspace = "rgb",
+             seed = random.randint(0, 2**32 - 1),
              show=True,
              show_save=True,
              outlier_percentile=None, return_fuzzy_probs=False,
@@ -116,9 +116,9 @@ def _cluster(values, algo="kmeans", n=3,
 
         match algo:
             case "kmeans":
-                models = [KMeans(n_clusters=n).fit(values) for n in ns]
+                models = [KMeans(n_clusters=n,random_state=seed).fit(values) for n in ns]
             case "gaussian_mixture":
-                models = [GaussianMixture(n_components=n, covariance_type='full', reg_covar=1e-5).fit(values) for n in ns]
+                models = [GaussianMixture(n_components=n, covariance_type='full', reg_covar=1e-5,random_state=seed).fit(values) for n in ns]
 
         # assemble list of lists of labels, one for each model with a different n
         labels_list = [m.fit_predict(values) for m in models]
@@ -202,7 +202,7 @@ def _cluster(values, algo="kmeans", n=3,
         case "kmeans":
             model = KMeans(n_clusters=n)
         case "gaussian_mixture":
-            model = GaussianMixture(n_components=n,covariance_type='full',reg_covar=1e-5)#,reg_covar=2)
+            model = GaussianMixture(n_components=n,covariance_type='full',reg_covar=1e-5,random_state=seed)#,reg_covar=2)
         case "agglom":
             if show:
                 dendrogram_sample = np.copy(values)

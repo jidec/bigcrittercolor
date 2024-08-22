@@ -18,27 +18,24 @@ def createBCCDataFolder(parent_folder, new_folder_name="bcc_data", use_db=False,
         if not os.path.isdir(path):
             os.mkdir(path)
 
+    def mkdirs(base_path,folder_strs):
+        for str in folder_strs:
+            mkdir_if_new(base_path + str)
+
     # make folder
     mkdir_if_new(base_path)
 
     # make images folders
-    mkdir_if_new(base_path + "/all_images")
-    mkdir_if_new(base_path + "/segments")
-    mkdir_if_new(base_path + "/masks")
-    mkdir_if_new(base_path + "/patterns")
-    mkdir_if_new(base_path + "/plots")
+    mkdirs(base_path,["/all_images","/segments","/masks","/patterns","/plots"])
 
     # make other folder
     mkdir_if_new(base_path + "/other")
 
-    # make inat_download_records folder
-    mkdir_if_new(base_path + "/other/inat_download_records")
-
-    # make ml checkpoints
-    mkdir_if_new(base_path + "/other/ml_checkpoints")
-
-    # make raw records folder
-    mkdir_if_new(base_path + "/other/raw_records")
+    # make other subfolders
+    mkdirs(base_path + "/other", ["/bioencoder_encodings_images","/bioencoder_training",
+                                  "/inat_download_records","/manual_coding_datasets",
+                                  "/ml_checkpoints","/raw_records",
+                                  "/species_genus_exemplars"])
 
     # make processing info folder
     mkdir_if_new(base_path + "/other/processing_info")

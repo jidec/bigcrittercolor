@@ -8,7 +8,7 @@ from bigcrittercolor.helpers.image import _format
 import matplotlib
 import matplotlib.pyplot as plt
 
-def _scatterColors(color_values, input_colorspace, sample_n=500, pt_size=3, cluster_labels=None,save_folder=False):
+def _scatterColors(color_values, input_colorspace, sample_n=500, pt_size=3, cluster_labels=None,save_folder=None):
     """
     Plot colors in a specified input color space (HLS or CIELAB or RGB), coloring each point by its actual color
     (converted to RGB if necessary) and changing the marker shape based on cluster ID.

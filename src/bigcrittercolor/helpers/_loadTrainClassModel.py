@@ -80,7 +80,7 @@ def _loadTrainClassModel(training_folder, num_epochs, batch_size, num_workers, m
     # Decay LR by a factor of 0.1 every 5 epochs
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
     
-    model = _trainClassifier(model=model, dataloaders=dataloaders,dataset_sizes=dataset_sizes, criterion=criterion,
+    model = _trainClassifier._trainClassifier(model=model, dataloaders=dataloaders,dataset_sizes=dataset_sizes, criterion=criterion,
                              optimizer=optimizer, scheduler=exp_lr_scheduler, num_epochs=num_epochs,class_names=class_names,loss_matrix_name=loss_matrix_name)
 
     model_path = proj_dir + "/other/ml_checkpoints" + model_name + ".pt"
