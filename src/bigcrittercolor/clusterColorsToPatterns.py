@@ -16,10 +16,10 @@ from bigcrittercolor.helpers.ids import _getIDsInFolder,  _imgIDToObsID
 from bigcrittercolor.helpers.clustering import _cluster
 from bigcrittercolor.helpers.image import _blur, _format, _equalize, _imgToColorPatches, _reconstructImgFromPPD, _blackBgToTransparent
 
-def clusterColorsToPatterns(img_ids=None, cluster_individually=False, preclustered = False, group_cluster_records_colname = None,
-                    by_patches=True, use_patch_positions=False, patch_args = {'min_patch_pixel_area':5,'cluster_args':{'n':4, 'algo':'gaussian_mixture'}}, visualize_patching=False,
+def clusterColorsToPatterns(img_ids=None, cluster_individually=False, preclustered = False, group_cluster_records_colname = "species",
+                    by_patches=True, use_patch_positions=False, patch_args = {'min_patch_pixel_area':5}, visualize_patching=True,
                     cluster_args={'find_n_minmax':(2,7), 'algo':"gaussian_mixture"},
-                    colorspace = "cielab",
+                    colorspace = "hls",
                     height_resize = 200,
                     group_histogram_matching_colname=None,
                     equalize_args=None,
@@ -306,23 +306,28 @@ def getPixelCoordsAndPixels(img, id):
                 pixel_coords.append((i, j)) # append coordinate of pixel in img
     return (pixel_coords,pixels,img.shape,id)
 
+
 def getMasterHistogram(images):
-    master_histogram = np.zeros(256)
+    # Separate histograms for each color channel
+    master_histograms = [np.zeros(256) for _ in range(3)]
     for img in images:
-        for channel in cv2.split(img):
+        for i, channel in enumerate(cv2.split(img)):
             hist, _ = np.histogram(channel, bins=256, range=(0, 255))
-            master_histogram += hist
-    master_histogram /= master_histogram.sum()  # Ensure normalization
-    return master_histogram
+            master_histograms[i] += hist
+    # Normalize each channel's histogram
+    for i in range(3):
+        master_histograms[i] /= master_histograms[i].sum()
+    return master_histograms
 
-def matchHistogram(img, master_histogram):
-    master_cdf = np.cumsum(master_histogram)
-    master_cdf = (255 * (master_cdf / master_cdf[-1])).astype(np.uint8)  # Normalize and convert to proper scale
-
+def matchHistogram(img, master_histograms):
     channels = cv2.split(img)
     matched_channels = []
 
-    for channel in channels:
+    for i, channel in enumerate(channels):
+        master_histogram = master_histograms[i]
+        master_cdf = np.cumsum(master_histogram)
+        master_cdf = (255 * (master_cdf / master_cdf[-1])).astype(np.uint8)  # Normalize and convert to proper scale
+
         hist, bins = np.histogram(channel.flatten(), bins=256, range=[0, 255])
         cdf = np.cumsum(hist)
         cdf = (255 * (cdf / cdf[-1])).astype(np.uint8)  # Normalize and convert to proper scale
@@ -438,6 +443,7 @@ def clusterGroup(group_info):
     # Keep track of which image each value belongs to
     all_indices = [index for index, sublist in enumerate(all_values_per_image) for _ in sublist]
 
+    all_values = np.array(all_values)
     # Clustering process
     _bprint(print_steps, f"Clustering {len(all_values)} colors in group {g}...")
     clustered_values = _cluster(all_values, **cluster_args, show_color_scatter=show, show_color_centroids=show,
