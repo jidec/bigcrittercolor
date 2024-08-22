@@ -13,7 +13,7 @@ def readSpeciesBalancedIDs(stage_type="image",print_steps=True,data_folder=''):
     if stage_type == "image":
         return balanced_ids
 
-    _bprint(print_steps, "Filtering for species-balanced ids that have reached the {stage_type} stage...")
+    _bprint(print_steps, f"Filtering for species-balanced ids that have reached the {stage_type} stage...")
     # stage is either "mask" or "segment"
     stage_ids = _getBCCIDs(type=stage_type,data_folder=data_folder)
 

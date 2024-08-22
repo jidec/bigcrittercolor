@@ -72,7 +72,12 @@ def setupBioencoderTrainingFolder(img_ids=None, data_folder='', min_imgs_per_cla
         if count < min_imgs_per_class:
             shutil.rmtree(species_dir)
 
+    # count number of classes to use in config
+    classes_path = os.path.join(new_folder, "data_raw", "aligned_train_val")
+    num_classes = sum(os.path.isdir(os.path.join(classes_path, item)) for item in os.listdir(classes_path))
+
     # write default bioencoder configs
+    # these have been tested using 1 A100 GPU and 50gb memory
     # define the content of the .yml file
     config_content = {
         "model": {
@@ -89,8 +94,8 @@ def setupBioencoderTrainingFolder(img_ids=None, data_folder='', min_imgs_per_cla
             "stage": "first"
         },
         "dataloaders": {
-            "train_batch_size": 20,
-            "valid_batch_size": 20,
+            "train_batch_size": 40,
+            "valid_batch_size": 40,
             "num_workers": 5
         },
         "optimizer": {
@@ -112,25 +117,106 @@ def setupBioencoderTrainingFolder(img_ids=None, data_folder='', min_imgs_per_cla
                 "temperature": 0.1
             }
         },
-        "img_size": 200,
+        "img_size": 280,
         "augmentations": {
             "transforms": [
-                {"RandomResizedCrop": {"height": 200, "width": 200, "scale": (0.7, 1)}},
                 "Flip",
-                "RandomRotate90",
                 {"MedianBlur": {"blur_limit": 3, "p": 0.3}},
                 {"ShiftScaleRotate": {"p": 0.4}},
                 "OpticalDistortion",
-                "GridDistortion",
-                "HueSaturationValue"
+                "GridDistortion"
             ]
         }
     }
+    dumpConfig(config_content=config_content, config_file_path=new_folder + "/bioencoder_configs/train_stage1.yml")
 
-    # write the content to the .yml file in the bioencoder_configs folder
-    config_folder = os.path.join(new_folder, "bioencoder_configs")
-    config_file_path = os.path.join(config_folder, "train_stage1.yml")
+    # define the content of the .yml file
+    config_content = {
+        "model": {
+            "backbone": "timm_tf_efficientnet_b5.ns_jft_in1k",
+            "num_classes": num_classes
+        },
+        "train": {
+            "n_epochs": "&epochs 30",
+            "amp": True,
+            "ema": True,
+            "ema_decay_per_epoch": 0.4,
+            "target_metric": "accuracy",
+            "stage": "second"
+        },
+        "dataloaders": {
+            "train_batch_size": 40,
+            "valid_batch_size": 40,
+            "num_workers": 5
+        },
+        "optimizer": {
+            "name": "SGD",
+            "params": {
+                "lr": 0.3
+            }
+        },
+        "scheduler": {
+            "name": "CosineAnnealingLR",
+            "params": {
+                "T_max": "*epochs",
+                "eta_min": 0.002
+            }
+        },
+        "criterion": {
+            "name": "LabelSmoothing",
+            "params": {
+                "classes": num_classes,
+                "smoothing": 0.01
+            }
+        },
+        "img_size": 280,
+        "augmentations": {
+            "sample_save":True,
+            "sample_n":10,
+            "transforms": [
+                "Flip",
+                {"MedianBlur": {"blur_limit": 3, "p": 0.3}},
+                {"ShiftScaleRotate": {"p": 0.4}},
+                "OpticalDistortion",
+                "GridDistortion"
+            ]
+        }
+    }
+    dumpConfig(config_content=config_content, config_file_path=new_folder + "/bioencoder_configs/train_stage2.yml")
 
+    config_content = {
+        "model": {
+            "backbone": "timm_tf_efficientnet_b5.ns_jft_in1k",  # Model architecture and pre-trained weights to use
+            "top_k_checkpoints": 3,  # Number of best model checkpoints to save based on validation metric
+            "num_classes": 4  # Number of output classes for classification
+        },
+        "train": {
+            "amp": True,  # Enable Automatic Mixed Precision (AMP) for faster training on compatible GPUs
+            "stage": "second"  # Training stage: 'first' for SupCon, 'second' for fine-tuning classification
+        },
+        "dataloaders": {
+            "train_batch_size": 40,  # Batch size for training data
+            "valid_batch_size": 40,  # Batch size for validation data
+            "num_workers": 16  # Number of CPU threads for data loading
+        },
+        "img_size": 384  # Image size for training and validation
+    }
+    dumpConfig(config_content=config_content, config_file_path=new_folder + "/bioencoder_configs/swa_stage2.yml")
+
+    # assume SWA is done
+    config_content = {
+        "model": {
+            "backbone": "timm_tf_efficientnet_b5.ns_jft_in1k",
+            "stage": "first",
+            "num_classes": num_classes,
+        },
+        "img_size": 280,
+        "return_probs": False
+    }
+    dumpConfig(config_content=config_content, config_file_path=new_folder + "/bioencoder_configs/inference.yml")
+
+
+def dumpConfig(config_content, config_file_path):
     with open(config_file_path, 'w') as file:
         yaml.dump(config_content, file, default_flow_style=False)
 
