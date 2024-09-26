@@ -65,6 +65,7 @@ def downloadiNatImageData(taxa_list, download_records=True, download_images=True
             if os.path.isfile(os.path.join(path, entry)) and entry.startswith("iNat"):
                 filenames_starting_with_iNat.append(entry)
         taxa_with_records = [s.split('-')[1].split('.')[0] for s in filenames_starting_with_iNat]
+        print("Skipping " + str(len(taxa_with_records)) + " taxa with records...")
         taxa_list_records = [item for item in taxa_list if item not in taxa_with_records]
 
     # for every taxon
