@@ -2,13 +2,14 @@ import os
 import cv2
 import shutil
 from bigcrittercolor.helpers import _readBCCImgs
+
 def copyBCCImages(img_ids, dest_folder, data_folder):
-    imgs = _readBCCImgs(img_ids)
+    imgs = _readBCCImgs(img_ids,data_folder=data_folder)
     filenames = [id + ".jpg" for id in img_ids]
     if not os.path.exists(dest_folder):
         os.makedirs(dest_folder)
-
-        # Iterate over the images and save each one
+    
+    # Iterate over the images and save each one
     for img, filename in zip(imgs, filenames):
         file_path = os.path.join(dest_folder, filename)
         # Save the image using cv2.imwrite
