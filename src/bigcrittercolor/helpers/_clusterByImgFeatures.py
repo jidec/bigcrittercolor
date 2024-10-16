@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 from PIL import Image
 import random
+import os
 
 import torch
 from torch import nn
@@ -18,13 +19,13 @@ def _clusterByImgFeatures(imgs, feature_extractor="resnet18",
                             cluster_params_dict={'eps':10,'min_samples':3}, fuzzy_probs_threshold=None,
                             pad_imgs =True,
                             full_display_ids=None, data_folder=None,
-                            print_steps=True, show=True, show_save=False, show_n=18):
+                            print_steps=True, show=True, show_save=False, show_n=30):
 
     if pad_imgs:
         imgs = [_resizeImgToTotalDim(img,300) for img in imgs] #800
         imgs = [_padImgToSize._padImgToSize(img,(300,300)) for img in imgs] #900 900
     # load model
-    _bprint(print_steps,"Loading pretrained feature extractor...")
+    _bprint(print_steps,"Applying pretrained feature extractor...")
     match feature_extractor:
         case "vgg16":
             model = models.vgg16(pretrained=True)
@@ -106,6 +107,47 @@ def _clusterByImgFeatures(imgs, feature_extractor="resnet18",
                 image = image.unsqueeze(0)  # Add batch dimension
                 new_features = inception(image)
                 features.append(new_features.cpu().detach().numpy().reshape(-1))
+        case "efficientnet_b0":
+            model = models.efficientnet_b0(pretrained=True)
+            model = torch.nn.Sequential(*(list(model.children())[:-1]))  # Remove the classification layer
+            model.eval()
+
+            # Define the transformation
+            transform = transforms.Compose([
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.Grayscale(num_output_channels=3),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ])
+            features = []
+            for img in imgs:
+                image = Image.fromarray(img)
+                image = transform(image)
+                image = image.unsqueeze(0)  # Add batch dimension
+                new_features = model(image)
+                features.append(new_features.cpu().detach().numpy().reshape(-1))
+
+        case "mobilenet_v2":
+            model = models.mobilenet_v2(pretrained=True)
+            model = model.features  # Extract only the feature layers
+            model.eval()
+
+            # Define the transformation
+            transform = transforms.Compose([
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.Grayscale(num_output_channels=3),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ])
+            features = []
+            for img in imgs:
+                image = Image.fromarray(img)
+                image = transform(image)
+                image = image.unsqueeze(0)  # Add batch dimension
+                new_features = model(image)
+                features.append(new_features.cpu().detach().numpy().reshape(-1))
 
     features = np.array(features)
 
@@ -164,6 +206,14 @@ def _clusterByImgFeatures(imgs, feature_extractor="resnet18",
             save_folder = None
             if show_save:
                 save_folder = data_folder + "/plots"
+
+            #temp_folder_path = data_folder + "/other/temp_filter_clusters/" + str(cluster_label)
+            #if not os.path.exists(temp_folder_path):
+            #    os.mkdir(temp_folder_path)
+            #for i, img in enumerate(cluster_imgs):
+            #    img_path = os.path.join(temp_folder_path, f"{i}.jpg")
+            #    cv2.imwrite(img_path, img)
+
             _showImages(show, cluster_imgs, titles=None,maintitle= "Cluster " + str(cluster_label) + ", " + str(n_imgs_in_cluster) + " images",save_folder=save_folder)
 
     # return labels
