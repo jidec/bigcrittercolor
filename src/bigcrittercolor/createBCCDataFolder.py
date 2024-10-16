@@ -32,9 +32,11 @@ def createBCCDataFolder(parent_folder, new_folder_name="bcc_data", use_db=False,
     mkdir_if_new(base_path + "/other")
 
     # make other subfolders
-    mkdirs(base_path + "/other", ["/bioencoder_encodings_images","/bioencoder_training",
-                                  "/inat_download_records","/manual_coding_datasets",
-                                  "/ml_checkpoints","/raw_records",
+    mkdirs(base_path + "/other", ["/bioencoder", "/bioencoder/bioencoder_encodings_images","/bioencoder/bioencoder_training",
+                                  "/download", "/download/split_download_records","/download/raw_image_downloads",
+                                  "/manual_coding_datasets",
+                                  "/ml_checkpoints",
+                                  "/my_gbif_darwincore",
                                   "/species_genus_exemplars"])
 
     # make processing info folder
@@ -53,3 +55,5 @@ def createBCCDataFolder(parent_folder, new_folder_name="bcc_data", use_db=False,
 
     if use_db:
         _createDb(data_folder=base_path,map_size=map_size)
+
+#createBCCDataFolder(parent_folder="D:/bcc",new_folder_name="all_beetles_download_obsorg")
