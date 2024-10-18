@@ -5,7 +5,7 @@ import shutil
 
 from bigcrittercolor.helpers import _bprint, _inat_dl_helpers, _rebuildiNatRecords, _writeBCCImgs, _getBCCIDs
 
-def downloadImagesUsingDWC(inat_img_size="medium", max_n_per_obs=1,
+def downloadImagesUsingDWC(inat_img_size="medium",
                           download_n_per_species=None,
                           skip_existing=True,
                           print_steps=True, data_folder=''):
@@ -15,7 +15,7 @@ def downloadImagesUsingDWC(inat_img_size="medium", max_n_per_obs=1,
     darwincore_folder_path = os.path.join(data_folder, "other", "gbif_darwincore_records_split")
     # set chunk size for downloading
     download_chunk_size = 5000
-    # only create records if either of the paths does not exist
+    # only create records if either of the paths does not exist - so we only do this once
     if not os.path.exists(records_csv_path) or not os.path.exists(darwincore_folder_path):
         _bprint(print_steps, "Creating records for image download using DarwinCore in other/my_gbif_darwincore...")
 
@@ -51,13 +51,18 @@ def downloadImagesUsingDWC(inat_img_size="medium", max_n_per_obs=1,
         "scientificName","kingdom","phylum","class","order","superfamily","family","genus","infraspecificEpithet","taxonomicStatus",
         "imageLink","rightsHolder"]]
 
-        merged_df["imageLink"] = merged_df["imageLink"].str.replace("original", "medium", regex=False)
+        merged_df["imageLink"] = merged_df["imageLink"].str.replace("original", inat_img_size, regex=False)
         # create img_url and file_name cols required by downloader
         merged_df["img_url"] = merged_df["imageLink"]
         merged_df["file_name"] = merged_df["catalogNumber"]
 
         # keep only rows with image urls
         merged_df = merged_df.loc[merged_df['img_url'].notna() & (merged_df['img_url'] != "")]
+
+        if download_n_per_species is not None:
+            # keep at most 200 random images per species
+            merged_df = merged_df.groupby('scientificName').apply(lambda x: x.sample(min(len(x), download_n_per_species))).reset_index(
+                drop=True)
 
         # write to records in root
         merged_df.to_csv(data_folder + "/records.csv", index=False)
@@ -71,7 +76,8 @@ def downloadImagesUsingDWC(inat_img_size="medium", max_n_per_obs=1,
     csv_folder = data_folder + "/other/split_gbif_download_records"
     # get a list of all CSV files in the directory
     csv_files = [f for f in os.listdir(csv_folder) if f.endswith('.csv')]
-
+    
+    _bprint(print_steps, "Started downloading chunks of images: " + str(len(csv_files)) + " remaining")
     # loop through each .csv file and download all the images in each
     for csv_file in csv_files:
         records_path = os.path.join(csv_folder, csv_file)
@@ -105,7 +111,7 @@ def downloadImagesUsingDWC(inat_img_size="medium", max_n_per_obs=1,
         # remove the raw images dir when moving is done
         shutil.rmtree(temp_raw_img_folder)
 
-        # remove the records .csv too as we don't need it anymore - this avoids redownloading as well
+        # remove the records .csv too as we don't need it anymore - this means that completed chunks aren't redownloaded
         os.remove(records_path)
 
 def splitCSVToFolder(csv_file_path, chunk_size, output_folder):
@@ -122,4 +128,4 @@ def splitCSVToFolder(csv_file_path, chunk_size, output_folder):
         # Save the chunk as a separate CSV file
         chunk.to_csv(chunk_file_path, index=False)
 
-downloadImagesUsingDWC(data_folder="D:/bcc/all_beetles_download")
+#downloadImagesUsingDWC(data_folder="D:/bcc/all_beetles_download_obsorg")
