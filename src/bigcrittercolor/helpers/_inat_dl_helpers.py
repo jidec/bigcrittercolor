@@ -212,7 +212,7 @@ def downloadImages(img_records,imgdir="../../data/other/",no_skip=False,fileout=
     )
     if len(downloads) == 0:
         exit()
-
+    #print(downloads)
     # Generate the file name for the failure log.
     logfn = 'fail_log-{0}.csv'.format(
         time.strftime('%Y%b%d-%H:%M:%S', time.localtime())
@@ -263,9 +263,21 @@ def getDownloadRequests(fpath, img_dir, skip_existing):
         reader = csv.DictReader(fin)
 
         for line in reader:
+            #print(line)
             imguri = line['img_url']
+            #print(imguri)
             fname = line['file_name']
+            #print(fname)
             tmp_fname = os.path.splitext(fname)[0]
+
+            # workaround for Obs.org downloads
+            # because they don't have the file_name field, use gbifID
+            # this is also how we know what prefix to add
+            if tmp_fname == '':
+                tmp_fname = "OBS-" + line['occurrenceID'].split('/')[-1] #line['gbifID']
+            else:
+                tmp_fname = "INAT-" + tmp_fname
+
             downloads.append((tmp_fname, imguri))
 
     return downloads
@@ -291,9 +303,8 @@ def getTaxonID(taxon_name):
             match_cnt += 1
 
     if match_cnt == 0:
-        raise Exception('Could not find the {0} "{1}".\n'.format(
-            rank, taxon_name
-        ))
+        print('Could not find the {0} "{1}".\n'.format(rank, taxon_name))
+        return -1
     elif match_cnt > 1:
         # raise Exception(
         # 'More than one {0} name match for "{1}".\n'.format(rank, taxon_name
