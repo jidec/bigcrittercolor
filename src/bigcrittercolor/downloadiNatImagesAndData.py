@@ -32,7 +32,7 @@ from bigcrittercolor.helpers.ids import _imgNameToID
 # sampling from those and resaving
 # alternatively in the download half of the function, could just subsample when you save the trimmed records
 # this makes more sense
-def downloadiNatImageData(taxa_list, download_records=True, download_images=True,
+def downloadiNatImagesAndData(taxa_list, download_records=True, download_images=True,
                           lat_lon_box=None, usa_only=False, img_size="medium", research_grade_only=True, #n_per_taxon=None, max_n_per_obs=1,
                           download_n_per_species=None,
                           skip_records_for_existing_taxa=False,
