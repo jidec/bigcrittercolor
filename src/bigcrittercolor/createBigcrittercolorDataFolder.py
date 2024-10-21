@@ -2,15 +2,19 @@ import os
 import lmdb
 
 from bigcrittercolor.helpers.db import _createDb
+from bigcrittercolor.helpers import _bprint
 
-def createBCCDataFolder(parent_folder, new_folder_name="bcc_data", use_db=False, map_size_gb=50):
+def createBigcrittercolorDataFolder(parent_folder, new_folder_name="bcc_data", use_db=False, map_size_gb=50, print_steps=True):
 
     """ Create a data folder as required for a bigcrittercolor project
 
         Args:
             parent_folder (str): folder in which to place the new bigcrittercolor data folder
             new_folder_name (str): name of the new bigcrittercolor data folder
+            use_db (bool): whether to use an LMDB database to store images (primarily for alleviating storage issues on some cluster architectures)
+            map_size_gb (int): maximum size of the LMDB store in GB
     """
+
     map_size = map_size_gb * (1024 ** 3)
     base_path = parent_folder + "/" + new_folder_name
 
@@ -55,5 +59,8 @@ def createBCCDataFolder(parent_folder, new_folder_name="bcc_data", use_db=False,
 
     if use_db:
         _createDb(data_folder=base_path,map_size=map_size)
+
+    _bprint(print_steps, "Created folder at " + base_path + ".")
+    #_bprint(print_steps, "If downloading images using DarwinCore records downloaded from GBIF (recommended when analyzing large clades) don't forget to unzip the archive to " + base_path + "/other/my_gbif_darwincore")
 
 #createBCCDataFolder(parent_folder="D:/bcc",new_folder_name="all_beetles_download_obsorg")
