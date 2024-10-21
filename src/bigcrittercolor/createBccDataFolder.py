@@ -4,7 +4,7 @@ import lmdb
 from bigcrittercolor.helpers.db import _createDb
 from bigcrittercolor.helpers import _bprint
 
-def createBigcrittercolorDataFolder(parent_folder, new_folder_name="bcc_data", use_db=False, map_size_gb=50, print_steps=True):
+def createBccDataFolder(parent_folder, new_folder_name="bcc_data", use_db=False, map_size_gb=50, print_steps=True):
 
     """ Create a data folder as required for a bigcrittercolor project
 

@@ -1,4 +1,4 @@
-from bigcrittercolor.createBigcrittercolorDataFolder import createBigcrittercolorDataFolder
+from bigcrittercolor.createBccDataFolder import createBccDataFolder
 from bigcrittercolor.downloadiNatImagesAndData import downloadiNatImagesAndData
 from bigcrittercolor.downloadImagesUsingDarwinCore import downloadImagesUsingDarwinCore
 from bigcrittercolor.inferMasks import inferMasks
