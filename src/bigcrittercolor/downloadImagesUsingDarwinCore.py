@@ -15,9 +15,11 @@ def downloadImagesUsingDarwinCore(dwc_archive_location,
                           skip_existing=True,
                           print_steps=True, data_folder=''):
 
-    """ Download images using a DarwinCore archive you've downloaded from GBIF - recommended when downloading many taxa
-        Works with iNaturalist and Observation.org for now, with other GBIF data sources to be added later
-        Images are saved in data_folder/all_images unless LMDB option was selected during project folder creation
+    """ Download images using a DarwinCore archive you've downloaded from GBIF - recommended when downloading many taxa.
+
+        Works with iNaturalist and Observation.org for now, with other GBIF data sources to be added later.
+
+        Images are saved in data_folder/all_images unless LMDB option was selected during project folder creation.
 
         Args:
             dwc_archive_location (str): location of the DarwinCore archive

@@ -6,7 +6,7 @@ from bigcrittercolor.helpers import _bprint
 
 def createBccDataFolder(parent_folder, new_folder_name="bcc_data", use_db=False, map_size_gb=50, print_steps=True):
 
-    """ Create a data folder as required for a bigcrittercolor project
+    """ Create a data folder as required for a bigcrittercolor project.
 
         Args:
             parent_folder (str): folder in which to place the new bigcrittercolor data folder
@@ -38,6 +38,7 @@ def createBccDataFolder(parent_folder, new_folder_name="bcc_data", use_db=False,
     # make other subfolders
     mkdirs(base_path + "/other", ["/bioencoder", "/bioencoder/bioencoder_encodings_images","/bioencoder/bioencoder_training",
                                   "/download", "/download/split_download_records","/download/raw_image_downloads",
+                                  "/inat_download_records",
                                   "/manual_coding_datasets",
                                   "/ml_checkpoints",
                                   "/my_gbif_darwincore",

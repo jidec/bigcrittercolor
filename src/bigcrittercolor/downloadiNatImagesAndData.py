@@ -37,9 +37,12 @@ def downloadiNatImagesAndData(taxa_list, download_records=True, download_images=
                           download_n_per_species=None,
                           skip_records_for_existing_taxa=False,
                           print_steps=True, data_folder=''):
-    """ Download iNat images and data by genus or species.
-        This method downloads records then refers to those records to download in parallel.
-        Images are always saved in data_folder/all_images.
+    """ Download iNaturalist images and data by genus or species.
+
+        This method downloads records first then refers to those records to download images.
+
+        Images are saved in data_folder/all_images unless LMDB option was selected during project folder creation.
+
         Based on Brian Stucky's iNat downloader, his modified code is in _inat_dl_helpers.py.
 
         Args:
@@ -114,7 +117,8 @@ def downloadiNatImagesAndData(taxa_list, download_records=True, download_images=
             records = records[~records['img_url'].str.contains('.gif')]
             # if download n_per_species
             if download_n_per_species is not None:
-                records = records.groupby('taxon').apply(lambda x: x.sample(n=download_n_per_species)).reset_index(drop=True)
+                records = records.groupby('taxon').apply(
+                    lambda x: x.sample(n=min(download_n_per_species, len(x)))).reset_index(drop=True)
             n_new_obs = records.shape[0]
             if n_new_obs == 0:
                 _bprint(print_steps, "No new observations to download, exiting or moving to next taxon...")
