@@ -2,13 +2,15 @@ site_name: bigcrittercolor Docs
 
 theme:
   name: "material"
+  logo: 'temp_logo.png'
 
 plugins:
   - mkdocstrings
 
 nav:
   - index.md
-  - Project Prep: project.md
-  - Image Download: imgdownload.md
-  - Segmentation: segmentation.md
-  - Mask Clustering & Segment Extraction: clusterextract.md
+  - 1. Project Prep: 1projprep.md
+  - 2. Image download: 2imgdownload.md
+  - 3. Segmentation: 3segmentation.md
+  - 4. Filtering: 4filterextract.md
+  - 5. Trait extraction: 5traits.md

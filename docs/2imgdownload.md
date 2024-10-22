@@ -1,0 +1,3 @@
+::: bigcrittercolor.downloadImagesUsingDarwinCore
+
+::: bigcrittercolor.downloadiNatImagesAndData
