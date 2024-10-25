@@ -102,7 +102,7 @@ def downloadImagesUsingDarwinCore(dwc_archive_location,
         merged_df = merged_df.loc[merged_df['img_url'].notna() & (merged_df['img_url'] != "")]
 
         if download_n_per_species is not None:
-            _bprint(print_steps, "Keeping " + download_n_per_species + " images per species...")
+            _bprint(print_steps, "Keeping " + str(download_n_per_species) + " images per species...")
             # keep at most 200 random images per species
             # species or scientificName?
             merged_df = merged_df.groupby('species').apply(lambda x: x.sample(min(len(x), download_n_per_species))).reset_index(
