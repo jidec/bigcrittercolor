@@ -2,7 +2,8 @@ import pandas as pd
 import cv2
 import copy
 
-from bigcrittercolor.helpers import _clusterByImgFeatures, _bprint, _getIDsInFolder, _showImages, _readBCCImgs, _getRecordsColFromIDs
+from bigcrittercolor.helpers import _clusterByImgFeatures, _bprint, _getBCCIDs, _showImages, _readBCCImgs
+from bigcrittercolor.helpers.ids import _getRecordsColFromIDs
 from bigcrittercolor.helpers.verticalize import _verticalizeImg
 
 # this fun should:
@@ -18,10 +19,10 @@ def inferMorphs(img_ids=None, group_records_colname ="species",
     # if no ids get all existing
     if img_ids is None:
         _bprint(print_steps, "No IDs specified, getting all IDs from existing segments...")
-        img_ids = _getIDsInFolder(data_folder + "/segments")
+        img_ids = _getBCCIDs(type="segment", data_folder=data_folder)
 
     # read in segs
-    segs = _readBCCImgs(img_ids=img_ids,type="seg", data_folder=data_folder)
+    segs = _readBCCImgs(img_ids=img_ids,type="segment", data_folder=data_folder)
 
     # get species names matching ids
     species = _getRecordsColFromIDs(img_ids=img_ids,column="species",data_folder=data_folder)
@@ -54,10 +55,10 @@ def inferMorphs(img_ids=None, group_records_colname ="species",
     df = pd.DataFrame({'img_id': img_ids, 'species_morph': all_species_morphs})
 
     # read in records
-    records = pd.read_csv(data_folder + "/records.csv")
+    # records = pd.read_csv(data_folder + "/records.csv")
 
     # merge
-    records = pd.merge(records, df, on='img_id')
+    #records = pd.merge(records, df, on='img_id')
 
     # write
 
