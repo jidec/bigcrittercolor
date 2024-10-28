@@ -28,7 +28,7 @@ def downloadImagesUsingDarwinCore(dwc_archive_location,
     """
     # setup paths
     records_csv_path = os.path.join(data_folder, "records.csv")
-    darwincore_folder_path = os.path.join(data_folder, "other", "gbif_darwincore_records_split")
+    darwincore_folder_path = os.path.join(data_folder, "other", "split_gbif_download_records")
 
     # only create records if either of the paths does not exist - so we only do this once
     if not os.path.exists(records_csv_path) or not os.path.exists(darwincore_folder_path):
