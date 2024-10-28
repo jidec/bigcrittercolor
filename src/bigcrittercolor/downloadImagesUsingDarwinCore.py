@@ -121,7 +121,10 @@ def downloadImagesUsingDarwinCore(dwc_archive_location,
         # remove cols that downloader needed
         merged_df = merged_df.drop(columns=["img_url"])
         # add catalogNumber back in (gets dropped in Obs.org for some reason)
-        merged_df['catalogNumber'] = merged_df['occurrenceID'].apply(lambda x: x.split('/')[-1])
+        #merged_df['catalogNumber'] = merged_df['occurrenceID'].apply(lambda x: x.split('/')[-1])
+        merged_df['catalogNumber'] = merged_df['occurrenceID'].apply(
+            lambda x: str(x).split('/')[-1] if pd.notna(x) else None)
+
         # add img_id column critical for bigcrittercolor
         merged_df['img_id'] = merged_df.apply(lambda x: f"OBS-{x['catalogNumber']}" if x['datasetName'] == 'Observation.org' else f"INAT-{x['catalogNumber']}",
                                     axis=1)
