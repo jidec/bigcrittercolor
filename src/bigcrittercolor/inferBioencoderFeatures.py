@@ -1,10 +1,10 @@
 import cv2
 import subprocess
 
-from bigcrittercolor.helpers import _bprint, _getBCCIDs, _readBCCImgs, _getSequentialSavePath, _mergeAndSaveFolderCSVs, _mkDirsIfNotExists
+from bigcrittercolor.helpers import _bprint, _getBCCIDs, _readBCCImgs, _getSequentialSavePath, _mergeAndSaveFolderCSVs, _mkDirsIfNotExists, _delDirsIfExists
 
-def inferBioEncoderFeatures(img_ids=None, print_steps=True,data_folder=''):
-    
+def inferBioEncoderFeatures(img_ids=None, print_steps=True, stop_after_prep_images_to_infer=False, data_folder=''):
+
     _bprint(print_steps, "Starting inferBioEncoderFeatures...")
     if img_ids is None:
         _bprint(print_steps, "No ids specified, getting existing segment ids...")
@@ -14,14 +14,20 @@ def inferBioEncoderFeatures(img_ids=None, print_steps=True,data_folder=''):
     # read in images
     imgs = _readBCCImgs(img_ids,type="segment", data_folder=data_folder)
 
+
     _bprint(print_steps, "Writing images to folder for inference...")
+    _delDirsIfExists(data_folder + "/other/bioencoder/images_to_infer")
     # write images
     for img, id in zip(imgs,img_ids):
         _mkDirsIfNotExists([data_folder + "/other/bioencoder", data_folder + "/other/bioencoder/images_to_infer"])
         cv2.imwrite(data_folder + "/other/bioencoder/images_to_infer/" + id + ".png",img)
 
+    # workaround for clusters with Py 3.9 versioning issues
+    if stop_after_prep_images_to_infer:
+        return
+
     # add _1, _2 etc. to save path if necessary
-    csv_save_path = _getSequentialSavePath(data_folder + "bioencodings.csv")
+    csv_save_path = _getSequentialSavePath(data_folder + "/bioencodings.csv")
 
     _bprint(print_steps, "Running BioEncoder inference command...")
     # run the command
