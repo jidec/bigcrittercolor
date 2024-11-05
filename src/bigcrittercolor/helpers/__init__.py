@@ -13,3 +13,6 @@ from bigcrittercolor.helpers._writeBCCImgs import _writeBCCImgs
 from bigcrittercolor.helpers._runtime import _runtime
 from bigcrittercolor.helpers._createTempTestFolder import _createTempTestFolder
 from bigcrittercolor.helpers._mkDirsIfNotExists import _mkDirsIfNotExists
+from bigcrittercolor.helpers._getSequentialSavePath import _getSequentialSavePath
+from bigcrittercolor.helpers._mergeAndSaveFolderCSVs import _mergeAndSaveFolderCSVs
+from bigcrittercolor.helpers._clusterByImgHistograms import _clusterByImgHistograms
