@@ -6,4 +6,4 @@ from bigcrittercolor.filterExtractSegments import filterExtractSegments
 from bigcrittercolor.clusterColorsToPatterns import clusterColorsToPatterns
 from bigcrittercolor.writeColorMetrics import writeColorMetrics
 from bigcrittercolor.trainBioEncoder import trainBioEncoder
-from bigcrittercolor.inferBioEncoderFeatures import inferBioEncoderFeatures
+from bigcrittercolor.inferBioencoderFeatures import inferBioEncoderFeatures
