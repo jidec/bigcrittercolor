@@ -16,3 +16,4 @@ from bigcrittercolor.helpers._mkDirsIfNotExists import _mkDirsIfNotExists
 from bigcrittercolor.helpers._getSequentialSavePath import _getSequentialSavePath
 from bigcrittercolor.helpers._mergeAndSaveFolderCSVs import _mergeAndSaveFolderCSVs
 from bigcrittercolor.helpers._clusterByImgHistograms import _clusterByImgHistograms
+from bigcrittercolor.helpers._delDirsIfExists import _delDirsIfExists
