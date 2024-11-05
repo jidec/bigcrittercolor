@@ -22,7 +22,7 @@ from bigcrittercolor.helpers.ids import _getRecordsColFromIDs
 
 # Extract segments using masks, normalize them, filter them using simple metrics, cluster using features from a pretrained CNN feature extractor
 #@profile
-def filterExtractSegs(img_ids=None, sample_n=None, batch_size=None,
+def filterExtractSegments(img_ids=None, sample_n=None, batch_size=None,
     color_format_to_cluster = "grey", used_aux_segmodel=False,
     filter_hw_ratio_minmax = None, filter_prop_img_minmax = None, filter_symmetry_min = None, filter_not_intersects_sides= False, # standard img processing filters
     mask_normalize_params_dict={'lines_strategy':"ellipse"}, # normalization/verticalization of masks
@@ -53,6 +53,7 @@ def filterExtractSegs(img_ids=None, sample_n=None, batch_size=None,
             cluster_n (int): number of clusters - if None a number is found using cluster dispersion criterion but this can take awhile
     """
 
+    _bprint(print_steps, "Don't forget to set used_aux_segmodel to True if you inferred masks in this way...")
     # if no ids specified load existing masks
     # note that if an aux segmodel was used, the images in masks are actually pre-extracted segments
     if img_ids is None:
@@ -149,6 +150,7 @@ def filterExtractSegs(img_ids=None, sample_n=None, batch_size=None,
         if used_aux_segmodel:
             segs = _readBCCImgs(img_ids=mask_ids,type="mask",color_format=color_format_to_cluster,make_3channel=True, data_folder=data_folder)
         else:
+            _bprint(print_steps, "Assuming no auxiliary segmentation model used, this will cause errors if untrue...")
             segs = _readBCCImgs(img_ids=mask_ids,type="raw_segment",color_format=color_format_to_cluster,make_3channel=True,data_folder=data_folder)
 
         _bprint(print_steps,"Normalizing segments for feature and segment extraction if specified...")
@@ -210,39 +212,39 @@ def filterExtractSegs(img_ids=None, sample_n=None, batch_size=None,
             #segs = [_format(seg,)]
 
 
-        # # illum approaches
-        # if illum_outliers_percent is not None:
-        #     species_labels = _getRecordsColFromIDs(img_ids=kept_ids,column="species",data_folder=data_folder)
-        #
-        #     # Dictionary to group segs and ids by species
-        #     species_data = {}
-        #     for seg, species, kept_id in zip(segs, species_labels, kept_ids):
-        #         if species not in species_data:
-        #             species_data[species] = {"segs": [], "kept_ids": []}
-        #         species_data[species]["segs"].append(seg)
-        #         species_data[species]["kept_ids"].append(kept_id)
-        #
-        #     # Final lists to store inliers from all species
-        #     final_segs = []
-        #     final_ids = []
-        #
-        #     # Process each species
-        #     for species, data in species_data.items():
-        #         species_segs = data["segs"]
-        #         species_ids = data["kept_ids"]
-        #         top_hist_cluster_imgs, top_hist_cluster_ids = _getTopHistClusterImgs(species_segs,species_ids,hist_cluster_params_dict)
-        #         final_segs = final_segs + top_hist_cluster_imgs
-        #         final_ids = final_ids + top_hist_cluster_ids
-        #         #inliers_segs, inliers_ids,outliers_segs = _getIllumInliers(species_segs, species_ids,contamination=illum_outliers_percent)
-        #         #final_segs.extend(inliers_segs)
-        #         #final_ids.extend(inliers_ids)
-        #         #if len(inliers_segs) > 0:
-        #         #    _showImages(show,images=inliers_segs,maintitle=species + " inliers",sample_n=9)
-        #         #if len(outliers_segs) > 0:
-        #         #    _showImages(show, images=outliers_segs, maintitle=species + " outliers", sample_n=9)
-        #
-        #     segs = final_segs
-        #     kept_ids = final_ids
+        # illum approaches
+        if illum_outliers_percent is not None:
+            species_labels = _getRecordsColFromIDs(img_ids=kept_ids,column="species",data_folder=data_folder)
+
+            # Dictionary to group segs and ids by species
+            species_data = {}
+            for seg, species, kept_id in zip(segs, species_labels, kept_ids):
+                if species not in species_data:
+                    species_data[species] = {"segs": [], "kept_ids": []}
+                species_data[species]["segs"].append(seg)
+                species_data[species]["kept_ids"].append(kept_id)
+
+            # Final lists to store inliers from all species
+            final_segs = []
+            final_ids = []
+
+            # Process each species
+            for species, data in species_data.items():
+                species_segs = data["segs"]
+                species_ids = data["kept_ids"]
+                top_hist_cluster_imgs, top_hist_cluster_ids = _getTopHistClusterImgs(species_segs,species_ids,hist_cluster_params_dict)
+                final_segs = final_segs + top_hist_cluster_imgs
+                final_ids = final_ids + top_hist_cluster_ids
+                #inliers_segs, inliers_ids,outliers_segs = _getIllumInliers(species_segs, species_ids,contamination=illum_outliers_percent)
+                #final_segs.extend(inliers_segs)
+                #final_ids.extend(inliers_ids)
+                #if len(inliers_segs) > 0:
+                #    _showImages(show,images=inliers_segs,maintitle=species + " inliers",sample_n=9)
+                #if len(outliers_segs) > 0:
+                #    _showImages(show, images=outliers_segs, maintitle=species + " outliers", sample_n=9)
+
+            segs = final_segs
+            kept_ids = final_ids
 
         # build imgnames
         kept_imgnames = [img_id + "_segment.png" for img_id in kept_ids]
@@ -402,3 +404,6 @@ def _getTopHistClusterImgs(images, ids, hist_cluster_args_dict,show=True):
     ids = [ids[i] for i in range(len(images)) if labels[i] == most_common_cluster]
 
     return most_common_cluster_images, ids
+
+#filterExtractSegments(data_folder="D:/bcc/ringtails",
+#                      cluster_params_dict={'algo':"gaussian_mixture",'show_pca_tsne':True,'pca_n':2,'n':5,"scale":'standard','show_clusters':True}, used_aux_segmodel=True)
