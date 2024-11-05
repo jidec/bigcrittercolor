@@ -8,47 +8,64 @@ import matplotlib.pyplot as plt
 
 from bigcrittercolor.helpers import _readBCCImgs, _getBCCIDs, _showImages, makeCollage
 from bigcrittercolor.helpers.ids import _imgNameToID, _imgPathToName
+from bigcrittercolor.helpers.image import _format
 
-def writeColorMetrics(img_ids=None, from_stage="pattern", batch_size=None, pattern_subfolder=None, show_thresh=None, data_folder=''):
+def writeColorMetrics(img_ids=None, from_stage="segment", batch_size=None,
+                      get_simple_metrics=True,
+                      threshold_metrics=[("hls",2,0.3,"below"),("rgb",0,0.6,"above")],
+                      pattern_subfolder=None, show=False, data_folder=''):
+
+    """ Write color metrics like mean colors and thresholds directly obtained from filtered segments or color-clustered "patterns".
+
+        Metrics appended to records are written to *data_folder*/records_with_metrics.csv.
+
+        Args:
+            from_stage (str): either "segment" or "pattern" (pattern referring to color clustered pattern)
+            batch_size (int): get metrics in batches of this size - use to conserve memory when running tens or hundreds of thousands of images
+            simple_metrics (bool): whether to get a suite of simple metrics like color channel means
+            thresh_metrics (list):  a list of tuples defining the threshold metrics. The first element of each tuple is the colorspace (either "hls" or "rgb), the second element is the channel (0,1, or 2), the third element is the threshold value, and the fourth element is "above" or "below" to measure the percent area either above or below the threshold
+    """
 
     # get all segment or pattern ids if None
     if img_ids is None:
         img_ids = _getBCCIDs(type=from_stage, data_folder=data_folder)
 
+    # list to hold metrics
     all_metrics = []
+
+    # do this in batches to avoid loading all images at once
     if batch_size is None:
         batch_size = len(img_ids)
-    def process_batch(batch_img_ids, from_stage, show_thresh):
+    def process_batch(batch_img_ids, from_stage, show):
         # todo - make sure read works for patterns
         imgs = _readBCCImgs(type=from_stage,img_ids=batch_img_ids, data_folder=data_folder)
 
         if from_stage == "segment":
             simple_metrics = _getSimpleColorMetrics(imgs, batch_img_ids)
-            thresh_metrics = _getThresholdMetrics(imgs, batch_img_ids, show_thresh=show_thresh)
+            thresh_metrics = _getThresholdMetrics(imgs, batch_img_ids, thresholds=threshold_metrics, show=show)
             metrics = pd.merge(simple_metrics, thresh_metrics, on='img_id')
             #metrics = simple_metrics
         if from_stage == "pattern":
             metrics = _getColorClusterMetrics(imgs, batch_img_ids)
 
         return metrics
-
-    # Iterate over the image IDs in batches
+    # iterate over the image IDs in batches
     for i in range(0, len(img_ids), batch_size):
         batch_img_ids = img_ids[i:i + batch_size]
-        batch_metrics = process_batch(batch_img_ids,from_stage,show_thresh)
+        batch_metrics = process_batch(batch_img_ids,from_stage,show)
         all_metrics.append(batch_metrics)
         print(str(i) + "/" + str(len(img_ids)))
 
-    # Concatenate all the batch metrics into a single DataFrame
+    # concatenate all the batch metrics into a single DataFrame
     metrics = pd.concat(all_metrics, ignore_index=True)
 
-    # TEMP while only doing 1 img per obs
+    # while only doing 1 img per obs (temporary)
     metrics['obs_id'] = metrics['img_id'].str.replace('-1$', '', regex=True)
 
     metrics.to_csv(data_folder + "/metrics.csv",index=False)
     records = pd.read_csv(data_folder + "/records.csv")
 
-    # TEMP while only doing 1 img per obs
+    # while only doing 1 img per obs (temporary)
     records_with_metrics = pd.merge(metrics,records,on='obs_id')
 
     # Rename the column 'img_id_x' to 'img_id'
@@ -65,14 +82,14 @@ def _getSimpleColorMetrics(imgs, img_ids):
     for img, img_id in zip(imgs, img_ids):
 
         image = img
-        # Convert image to RGB
+        # convert image to RGB
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        # Mask to exclude black pixels
+        # mask to exclude black pixels
         mask = (image_rgb[:, :, 0] != 0) | (image_rgb[:, :, 1] != 0) | (image_rgb[:, :, 2] != 0)
 
         if not np.any(mask):
-            # Skip if no non-black pixels
+            # skip if no non-black pixels
             continue
 
         # Apply mask
@@ -109,66 +126,55 @@ def _getSimpleColorMetrics(imgs, img_ids):
     df = pd.DataFrame(data)
     return df
 
-def _getThresholdMetrics(segs, img_ids, thresh_values=[0.15,0.2,0.25,0.30],show_thresh=None):
+def _getThresholdMetrics(segs, img_ids, thresholds=[("hls", 2, 0.3)], show=False):
     data = []
     imgs_to_show = []
+
     for img, img_id in zip(segs, img_ids):
         image = img
-        # Convert image to RGB
+        # convert image to RGB
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        # Mask to exclude black pixels
+        # mask to exclude black pixels
         mask = (image_rgb[:, :, 0] != 0) | (image_rgb[:, :, 1] != 0) | (image_rgb[:, :, 2] != 0)
 
-        if not np.any(mask):
-            # Skip if no non-black pixels
-            continue
-
-        # Convert to HSV
-        hsv_image = rgb2hsv(image_rgb / 255.0)
-
-        # Extract the value channel
-        value_channel = hsv_image[:, :, 2]
-
-        # Initialize the data dictionary for this image
+        # initialize the data dictionary for this image
         image_data = {'img_id': img_id}
 
-        for thresh in thresh_values:
-            dark_pixels_percent = np.mean(value_channel[mask] <= thresh)
-            image_data[f'percent_dark_or_darker_than_{thresh}'] = dark_pixels_percent * 100
+        for colorspace, channel, thresh, below_or_above in thresholds:
+            formatted_img = _format(image_rgb, in_format="rgb", out_format=colorspace)
+            channel_img = formatted_img[:, :, int(channel)]
 
-            # if 0.25 == 0.25
-            if thresh == show_thresh:
-                # create a mask for pixels below the threshold
-                below_thresh_mask = value_channel <= thresh
+            # if below, count pixels below the threshold
+            if below_or_above == "below":
+                thresh_pixels_percent = np.mean(channel_img[mask] <= float(thresh))
+            # otherwise count above the threshold
+            elif below_or_above == "above":
+                thresh_pixels_percent = np.mean(channel_img[mask] >= float(thresh))
+            image_data[f'{colorspace}_channel{channel}_thresh{thresh}_{below_or_above}'] = thresh_pixels_percent * 100
 
-                # create a copy of the image to mark the red pixels
+            if show:
+                below_thresh_mask = channel_img <= thresh
                 marked_image_bgr = image_rgb.copy()
                 marked_image_bgr = cv2.cvtColor(marked_image_bgr, cv2.COLOR_RGB2BGR)
                 marked_image_bgr[below_thresh_mask & mask] = [0, 0, 255]  # Mark in red
-
-                thresh_collage = makeCollage([image,marked_image_bgr],n_per_row=2)
+                thresh_collage = makeCollage([image, marked_image_bgr], n_per_row=2)
                 imgs_to_show.append(thresh_collage)
-
-                #_showImages(show, [image,marked_image_bgr],maintitle=str(thresh))
 
         # Append the metrics to the data list
         data.append(image_data)
 
-    if show_thresh is not None:
-        _showImages(True, imgs_to_show,sample_n=18)
-    # Create a DataFrame from the data list
+    _showImages(show, imgs_to_show, sample_n=18)
+
     df = pd.DataFrame(data)
-
     return df
-
 
 def _getColorClusterMetrics(images, img_ids):
     # Loop through first to find all unique colors
     all_colors = set()
     for i, image in enumerate(images):
-        if i % 100 == 0:
-            print(i)
+        #if i % 100 == 0:
+        #    print(i)
         arr = np.array(image)
         # Remove black background pixels and flatten to list of colors
         arr = arr[(arr[:, :, 0] != 0) | (arr[:, :, 1] != 0) | (arr[:, :, 2] != 0)]
@@ -180,8 +186,8 @@ def _getColorClusterMetrics(images, img_ids):
     # Loop through again to get proportions and build dataframe
     data = []
     for i, (image, img_id) in enumerate(zip(images, img_ids)):
-        if i % 100 == 0:
-            print(i)
+        #if i % 100 == 0:
+        #    print(i)
         arr = np.array(image)
         arr = arr[(arr[:, :, 0] != 0) | (arr[:, :, 1] != 0) | (arr[:, :, 2] != 0)]
 
@@ -203,4 +209,7 @@ def _getColorClusterMetrics(images, img_ids):
     df = pd.DataFrame(data, columns=columns)
     return df
 
-#writeColorMetrics(from_stage="segment",data_folder="D:/bcc/ringtails",show_thresh=0.25)
+#writeColorMetrics(from_stage="segment",data_folder="D:/bcc/ringtails",
+#                  thresholds=[("hls",1,83,"below")],show=True)
+
+#("rgb",1,125,"above")
