@@ -2,10 +2,18 @@ import os
 
 # given a base path like /other/bioencoder/inferred_encodings/bioencodings.csv, add -1,-2,-3 etc when necessary
 def _getSequentialSavePath(base_path):
-    # Extract the directory and base filename from the base path
-    dir_path, base_name = os.path.split(base_path)
+    # Extract the directory and filename with extension from the base path
+    dir_path, filename = os.path.split(base_path)
+
+    # Separate filename and extension to avoid issues with periods in the path
+    if '.' in filename:
+        base_name, extension = filename.rsplit('.', 1)
+    else:
+        base_name, extension = filename, ""
+
     # Check the directory for files with a similar base name and different suffixes
-    existing_files = [f for f in os.listdir(dir_path) if f.startswith(base_name.split(".")[0])]
+    existing_files = [f for f in os.listdir(dir_path) if f.startswith(base_name)]
+
     # Find the highest suffix number among the files
     max_index = 0
     for file in existing_files:
@@ -16,8 +24,10 @@ def _getSequentialSavePath(base_path):
                 max_index = index
         except ValueError:
             continue
+
     # Increment max_index to get the new suffix
     new_index = max_index + 1
-    # Return the full path with the incremented suffix
-    new_path = f"{base_path.split('.')[0]}_{new_index}.csv"
+    # Return the full path with the incremented suffix, re-attaching the extension
+    new_path = os.path.join(dir_path,
+                            f"{base_name}_{new_index}.{extension}" if extension else f"{base_name}_{new_index}")
     return new_path
