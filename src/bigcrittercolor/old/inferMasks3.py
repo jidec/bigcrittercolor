@@ -17,17 +17,13 @@ from segment_anything import build_sam, SamPredictor
 import torch
 from huggingface_hub import hf_hub_download
 
-from torchvision import transforms
-import segmentation_models_pytorch as smp
-
 from bigcrittercolor.helpers import _bprint, _showImages, _getBCCIDs,_writeBCCImgs,_readBCCImgs
 from bigcrittercolor.helpers.verticalize import _verticalizeImg
 from bigcrittercolor.helpers.image import _removeIslands, _imgAndMaskAreValid
-#from bigcrittercolor.segment import _initializeUNetPP
-#from bigcrittercolor.segment import _applyAuxSegmentationModel
 
+# version of inferMasks with "strategy" approach
 def inferMasks(img_ids=None, skip_existing=True, gd_gpu=True, sam_gpu=True,
-               text_prompt="subject", box_threshold=0.25, text_threshold=0.25, # groundedSAM params
+               strategy="prompt1", text_prompt="subject", box_threshold=0.25, text_threshold=0.25, # groundedSAM params
                aux_segmodel_location=None, # location of the auxiliary segmodel that get applied to SAM masks
                auxseg_normalize_params_dict={'lines_strategy':"skeleton_hough", 'best_line_metric':"overlap_sym"},
                sam_location=None,
@@ -35,8 +31,7 @@ def inferMasks(img_ids=None, skip_existing=True, gd_gpu=True, sam_gpu=True,
                show=False, show_indv=False, print_steps=True, print_details=False, data_folder=""):
 
     """ Infer masks using the groundingDINO zero-shot object detector followed by SegmentAnything.
-
-        Argument "aux_segmodel_location" allows applying an additional model trained for fine-tuning, like removing wings from dragonflies or legs from beetles.
+        Argument "aux_segmodel_location" allows applying an additional model trained for fine-tuning.
 
         Args:
             img_ids (list): the imageIDs (image names) to infer from
@@ -65,7 +60,7 @@ def inferMasks(img_ids=None, skip_existing=True, gd_gpu=True, sam_gpu=True,
     ckpt_config_filename = "GroundingDINO_SwinB.cfg.py"
 
     _bprint(print_steps,"Loading groundingDINO, downloading weights if necessary...")
-    groundingdino_model = _loadModelHf(ckpt_repo_id, ckpt_filenmae, ckpt_config_filename)
+    groundingdino_model = load_model_hf(ckpt_repo_id, ckpt_filenmae, ckpt_config_filename)
 
     # sam currently must be downloaded from https://huggingface.co/ybelkada/segment-anything/tree/main/checkpoints and placed in
     #   the ml_checkpoints folder as sam.pth
@@ -100,7 +95,10 @@ def inferMasks(img_ids=None, skip_existing=True, gd_gpu=True, sam_gpu=True,
 
 
     if aux_segmodel_location is not None:
-        aux_model = _initializeUNetPP(aux_segmodel_location)
+        aux_model = torch.load(aux_segmodel_location)
+        aux_model.eval()
+        # pick cuda device
+        aux_device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     # create img_locs which starts as a copy of img_ids
     #img_locs = img_ids.copy()
@@ -186,7 +184,7 @@ def inferMasks(img_ids=None, skip_existing=True, gd_gpu=True, sam_gpu=True,
             multimask_output=False,
         )
 
-        annotated_frame_with_mask = _showMask(masks[0][0], annotated_frame)
+        annotated_frame_with_mask = show_mask(masks[0][0], annotated_frame)
         img = Image.fromarray(annotated_frame_with_mask)
         img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
         img_frame_mask = np.copy(img)
@@ -199,7 +197,26 @@ def inferMasks(img_ids=None, skip_existing=True, gd_gpu=True, sam_gpu=True,
 
         _bprint(print_details, "Applying strategy...")
         # this strategy simply saves the first mask
-        mask = _tensorToImg(masks[0][0])
+        if strategy == "prompt1":
+            mask = tensor_to_img(masks[0][0])
+
+        # this strategy saves the first mask with ALL subsequent masks removed from it
+        if strategy == "remove_prompt2_from1":
+            # get the first (prompt1) mask
+            mask = tensor_to_img(masks[0][0])
+
+            # if more than 1 mask, collate subsequent masks
+            if len(masks) > 1:
+                prompt2_mask = tensor_to_img(masks[1])
+
+                # for each mask of class 2, add it together
+                for i in range(2,len(masks)):
+                    mask_to_add = tensor_to_img(masks[i])
+                    prompt2_mask = np.logical_or(prompt2_mask, mask_to_add).astype(np.uint8) * 255
+
+                # remove the prompt2_mask from the original prompt 1 mask
+                # taking the AND of the prompt 1 mask and the NOT prompt2_mask accomplishes this
+                mask = cv2.bitwise_and(mask, cv2.bitwise_not(prompt2_mask))
 
         # if mask is all black (empty) skip
         if cv2.countNonZero(mask) == 0:
@@ -238,10 +255,10 @@ def inferMasks(img_ids=None, skip_existing=True, gd_gpu=True, sam_gpu=True,
             mask_islands = np.copy(mask)
             show_indv_data.append((mask_islands, "Islands-Removed Mask"))
 
-        sam_seg = cv2.bitwise_and(img_raw, img_raw, mask=mask.astype(np.uint8))
         # if showing the individual masking process, show all step images
         if show_indv:
-            show_indv_data.append((sam_seg,"SAM Segment"))
+            raw_segment = cv2.bitwise_and(img_raw, img_raw, mask=mask.astype(np.uint8))
+            show_indv_data.append((raw_segment,"Raw Segment"))
 
         # special option to use a pretrained model on normalized SAM-extracted segments
         if aux_segmodel_location is not None:
@@ -250,14 +267,49 @@ def inferMasks(img_ids=None, skip_existing=True, gd_gpu=True, sam_gpu=True,
             if not _imgAndMaskAreValid(img_raw,mask.astype(np.uint8)):
                 continue
 
-            # pass SAM segment through model
-            mask_after_aux = _applyUNetPP(image=sam_seg, model=aux_model,threshold=0.8)
+            # get the segment SAM gave us and verticalize it
+            sam_seg = cv2.bitwise_and(img_raw, img_raw, mask=mask.astype(np.uint8))
+            #sam_seg = cv2.resize(sam_seg, (sam_seg.shape[1] // 2, sam_seg.shape[0] // 2))
+            sam_seg_vert = _verticalizeImg(sam_seg, **auxseg_normalize_params_dict)
+
+            show_indv_data.append((sam_seg_vert,"Normalized SAM Seg"))
+
+            #lines_strategy="skeleton_hough", best_line_metric="overlap_sym",
+            #               show=False)
+
+            # save dims of vert'ed SAM segment
+            sam_seg_vert_dims = (sam_seg_vert.shape[1], sam_seg_vert.shape[0])
+
+            # make tensor to feed into NN
+            sam_seg_vert_tensor = np.copy(sam_seg_vert)
+            sam_seg_vert_tensor = cv2.resize(sam_seg_vert_tensor, (344, 344))  # 344 is the size the NN takes
+
+
+            # transpose to correct shape for model
+            sam_seg_vert_tensor = sam_seg_vert_tensor.transpose(2, 0, 1).reshape(1, 3, 344, 344)
+
+            # model to device
+            aux_model.to(aux_device)
+
+            # get output from model
+            with torch.no_grad():
+                a = aux_model((torch.from_numpy(sam_seg_vert_tensor).type(torch.cuda.FloatTensor) / 255).to(aux_device))
+
+            activation_threshold = 0.4
+            # make mask using activation threshold
+            mask = a['out'].cpu().detach().numpy()[0][0] > activation_threshold
+            mask = mask.astype(np.uint8)  # convert to an unsigned byte
+            mask *= 255
+
+            # resize to the original input image size
+            mask = cv2.resize(mask, sam_seg_vert_dims)
 
             # remove islands
-            mask_after_aux = _removeIslands(mask_after_aux)
+            mask = mask.astype(np.uint8)
+            mask = _removeIslands(mask)
 
             # apply the new mask to get the seg
-            seg_after_aux = cv2.bitwise_and(sam_seg, sam_seg, mask=mask_after_aux.astype(np.uint8))
+            seg_after_aux = cv2.bitwise_and(sam_seg_vert, sam_seg_vert, mask=mask.astype(np.uint8))
 
             # reverticalize the new seg
             seg_after_aux = _verticalizeImg(seg_after_aux,lines_strategy="ellipse")
@@ -285,7 +337,7 @@ def inferMasks(img_ids=None, skip_existing=True, gd_gpu=True, sam_gpu=True,
 
 
 # download groundingDINO if you need it, the  load it
-def _loadModelHf(repo_id, filename, ckpt_config_filename, device='cpu'):
+def load_model_hf(repo_id, filename, ckpt_config_filename, device='cpu'):
     cache_config_file = hf_hub_download(repo_id=repo_id, filename=ckpt_config_filename)
 
     args = SLConfig.fromfile(cache_config_file)
@@ -300,14 +352,14 @@ def _loadModelHf(repo_id, filename, ckpt_config_filename, device='cpu'):
     return model
 
 # parse masks from tensors of bools to cv2 images
-def _tensorToImg(t):
+def tensor_to_img(t):
     t = t.cpu()
     h, w = t.shape[-2:]
     mask = (t.reshape(h, w, 1).numpy() * 255).astype(np.uint8)
     return (mask)
 
 # show the SAM mask
-def _showMask(mask, image, random_color=True):
+def show_mask(mask, image, random_color=True):
     if random_color:
         color = np.concatenate([np.random.random(3), np.array([0.8])], axis=0)
     else:
@@ -321,63 +373,4 @@ def _showMask(mask, image, random_color=True):
 
     return np.array(Image.alpha_composite(annotated_frame_pil, mask_image_pil))
 
-# Function to initialize U-Net++ model
-def _initializeUNetPP(model_weights_path, encoder_name='resnet34'):
-
-    model = smp.UnetPlusPlus(
-        encoder_name=encoder_name,        # choose encoder, e.g., 'resnet34'
-        encoder_weights="imagenet",      # use pre-trained weights for encoder
-        in_channels=3,                   # input channels (e.g., RGB)
-        classes=1                        # output channels (binary mask)
-    )
-
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-    # Load the trained model
-    model.load_state_dict(torch.load(model_weights_path, map_location=device))
-    model = model.to(device)
-    model.eval()
-
-    return model
-
-def _applyUNetPP(image, model, return_seg=False, threshold=0.5):
-    """
-    Apply a trained U-Net++ model to a cv2 image and return the masked image.
-
-    Args:
-        image (np.ndarray): Input image (H x W x C) in cv2 format (BGR).
-        encoder_name (str): Encoder used in U-Net++ (default: 'resnet34').
-        threshold (float): Threshold to convert the predicted mask to binary (default: 0.5).
-
-    Returns:
-        np.ndarray: Masked cv2 image.
-    """
-
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-    # Preprocess the input image
-    preprocess = transforms.Compose([
-        transforms.ToPILImage(),
-        transforms.Resize([352, 352]),
-        transforms.ToTensor()
-    ])
-    input_tensor = preprocess(cv2.cvtColor(image, cv2.COLOR_BGR2RGB)).unsqueeze(0).to(device)
-
-    # Perform inference
-    with torch.no_grad():
-        output = model(input_tensor)
-        mask = torch.sigmoid(output).squeeze().cpu().numpy()
-
-    # Resize mask back to the original image size
-    mask = cv2.resize((mask > threshold).astype(np.uint8), (image.shape[1], image.shape[0]))
-
-    # Apply the mask to the original image
-    masked_image = cv2.bitwise_and(image, image, mask=mask)
-
-    if return_seg:
-        return masked_image
-
-    # fix the mask
-    new_mask = (np.where((masked_image != [0, 0, 0]).any(axis=-1), 255, 0)).astype(np.uint8)
-
-    return new_mask
+#inferMasks(skip_existing=False,strategy="remove_prompt2_from_1",text_prompt="insect without wings . two wings", data_folder="D:/bcc/ringtails_copy",show_indv=True,show=True,sam_location="D:/bcc/sam.pth")
