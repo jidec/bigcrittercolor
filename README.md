@@ -1,6 +1,6 @@
 # bigcrittercolor
  
-bigcrittercolor is a pipeline for automated color trait discovery from mass iNaturalist images
+A Python package providing a framework for automated trait extraction from mass citizen science images of animals
 
 Try the [cloud Colab Demo](https://colab.research.google.com/drive/1p6D-HTsj33IIrt3pK0HkHOv-DPBcGIqx) where in around 10 minutes you can try the package out on your taxon
 
