@@ -146,7 +146,7 @@ def downloadiNatImagesAndData(taxa_list, download_records=True, download_images=
             imgnames = os.listdir(rawimg_folder)
             for name in imgnames:
                 newname = name.split('_')[0]
-                os.rename(rawimg_folder + "/" + name,rawimg_folder + "/INAT-" + newname)
+                os.rename(rawimg_folder + "/" + name,rawimg_folder + "/" + newname)
 
             # batch image moving to avoid memory errors caused by loading 100k+ images at once
             _bprint(print_steps, "Moving images to dataset...")
