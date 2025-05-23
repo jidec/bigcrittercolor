@@ -1,0 +1,3 @@
+from bigcrittercolor.art.saveRainbowCollage import saveRainbowCollage
+from bigcrittercolor.art.saveWhorlCollage import saveWhorlCollage
+from bigcrittercolor.art.saveSpiralWhorlCollage import saveSpiralWhorlCollage
