@@ -12,7 +12,7 @@ from bigcrittercolor.helpers import _SegmentationDataset
 from tqdm import tqdm
 
 from bigcrittercolor.helpers import _bprint
-from bigcrittercolor.segment import _initializeUNetPP
+#from bigcrittercolor.segment import _initializeUNetPP
 
 # Set device
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -185,5 +185,24 @@ def _plotTrainingMetrics(history):
     plt.show()
     #print(f"Saved training metrics to {save_path}")
 
+# Function to initialize U-Net++ model
+def _initializeUNetPP(encoder_name='resnet34'):
+
+    model = smp.UnetPlusPlus(
+        encoder_name=encoder_name,        # choose encoder, e.g., 'resnet34'
+        encoder_weights="imagenet",      # use pre-trained weights for encoder
+        in_channels=3,                   # input channels (e.g., RGB)
+        classes=1                        # output channels (binary mask)
+    )
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+    # Load the trained model
+    #model.load_state_dict(torch.load(model_weights_path, map_location=device))
+    model = model.to(device)
+    model.eval()
+
+    return model
+
 # Example of training the model
-trainAuxSegmentationModel(training_dir_location="D:/bcc/beetle_appendage_segmenter", num_epochs=30)
+#trainAuxSegmentationModel(training_dir_location="D:/bcc/dragonfly_segmenter", num_epochs=15)
