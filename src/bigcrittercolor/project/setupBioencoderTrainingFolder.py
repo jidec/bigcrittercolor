@@ -8,7 +8,14 @@ from bigcrittercolor.helpers import _readBCCImgs, _getBCCIDs, _bprint
 from bigcrittercolor.helpers.ids import _imgIDToObsID
 
 def setupBioencoderTrainingFolder(img_ids=None, data_folder='', min_imgs_per_class=20, max_imgs_per_class=100, print_steps=True, img_size=None, batch_size=None, n_workers=None):
+    """ Setup a folder at "data_folder/other/bioencoder_training" formatted for BioEncoder training.
+        It contains
 
+        Args:
+            min_imgs_per_class (int): minimum number of images per class (typically per species) required to use the class in training
+            max_imgs_per_class (int): maximum number of images per class - if more than N images exist for a class, use N random images
+            sample_n (int): the number of IDs to sample from img_ids
+    """
     _bprint(print_steps, "Started setting up bioencoder training folder...")
     if img_ids is None:
         img_ids = _getBCCIDs(type="segment",data_folder=data_folder)
@@ -50,7 +57,8 @@ def setupBioencoderTrainingFolder(img_ids=None, data_folder='', min_imgs_per_cla
     for img, img_id, obs_id in zip(imgs, img_ids, obs_ids):
         try:
             # Find the species for the given image ID
-            species = records[records['obs_id'] == obs_id]['species'].values[0]
+            # This works UNLESS I make the change back to ID-1,-2 etc. allowing more than 1 image per obs
+            species = records[records['img_id'] == img_id]['species'].values[0]
         except IndexError:
             continue
         species = species.replace(" ", "_")
@@ -214,6 +222,8 @@ def setupBioencoderTrainingFolder(img_ids=None, data_folder='', min_imgs_per_cla
         "return_probs": False
     }
     dumpConfig(config_content=config_content, config_file_path=new_folder + "/bioencoder_configs/inference.yml")
+
+    _bprint(print_steps,"Finished setupBioencoderTrainingFolder.")
 
 
 def dumpConfig(config_content, config_file_path):

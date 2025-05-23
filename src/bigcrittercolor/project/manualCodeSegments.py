@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from bigcrittercolor.helpers import _readBCCImgs, _getBCCIDs
 
 
-def manualCodeSegments(img_ids=None, type="segment", codings=None, data_folder=''):
+def manualCodeSegments(img_ids=None, type="segment", codings=None, sample_n=100, data_folder=''):
     """
     Presents images for manual coding and updates results in a CSV.
 
@@ -21,7 +21,7 @@ def manualCodeSegments(img_ids=None, type="segment", codings=None, data_folder='
     """
 
     if img_ids is None:
-        img_ids = _getBCCIDs(type=type, data_folder=data_folder)
+        img_ids = _getBCCIDs(type=type, sample_n=sample_n, data_folder=data_folder)
 
     # Load images
     imgs = _readBCCImgs(img_ids, type=type, data_folder=data_folder)

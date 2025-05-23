@@ -7,7 +7,7 @@ from sklearn.metrics import euclidean_distances
 from bigcrittercolor.helpers import _readBCCImgs, _bprint
 from bigcrittercolor.helpers.image import _blackBgToTransparent
 
-def saveBioencoderSpeciesGenusExemplars(n_pcs=8,data_folder=''):
+def saveBioencoderSpeciesGenusExemplars(n_pcs=20,data_folder=''): #8
 
     data_path = os.path.join(data_folder, "other", "bioencodings.csv")
     df = pd.read_csv(data_path)
