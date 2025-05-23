@@ -9,7 +9,7 @@ from bigcrittercolor.helpers import _getBCCIDs
 from bigcrittercolor.helpers.db import _readDb
 from bigcrittercolor.helpers.image import _segToMask, _format
 
-def _readBCCImgs(img_ids=None, sample_n=None,type="image", preclust_folder_name=None, color_format=None, make_3channel=False, data_folder=''):
+def _readBCCImgs(img_ids=None, sample_n=None,type="image",preclust_folder_name=None, color_format=None, make_3channel=False, data_folder=''):
     # make sure that img_ids isn't modified
     img_ids = copy.deepcopy(img_ids)
 
@@ -17,11 +17,11 @@ def _readBCCImgs(img_ids=None, sample_n=None,type="image", preclust_folder_name=
     if img_ids is None:
         match type:
             case "image":
-                img_ids = _getBCCIDs(type="image",data_folder=data_folder)
+                img_ids = _getBCCIDs._getBCCIDs(type="image",data_folder=data_folder)
             case "mask":
-                img_ids = _getBCCIDs(type="mask",data_folder=data_folder)
+                img_ids = _getBCCIDs._getBCCIDs(type="mask",data_folder=data_folder)
             case "segment" | "raw_segment" | "mask_from_segment":
-                img_ids = _getBCCIDs(type="segment", data_folder=data_folder)
+                img_ids = _getBCCIDs._getBCCIDs(type="segment", data_folder=data_folder)
 
     # sample
     if sample_n is not None and len(img_ids) > sample_n:
@@ -86,9 +86,7 @@ def _readBCCImgs(img_ids=None, sample_n=None,type="image", preclust_folder_name=
                     if img is not None and mask is not None:
                         segs.append(cv2.bitwise_and(img, img, mask=cv2.cvtColor(mask, cv2.COLOR_RGB2GRAY).astype(np.uint8)))
                 imgs = segs
-                #imgs = [cv2.bitwise_and(parent_img, parent_img,
-                #                    mask=cv2.cvtColor(mask, cv2.COLOR_RGB2GRAY).astype(np.uint8)) for
-                #    mask, parent_img in imgs_masks]
+
             case "mask_from_segment":
                 imgs = [cv2.imread(data_folder + "/segments/" + id + "_segment.png") for id in img_ids]
                 imgs = [_segToMask(img) for img in imgs]

@@ -30,7 +30,7 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
                     print_steps=True, print_details=False,
                     show=True, show_indv=False, data_folder="../.."):
 
-    """ Use clustering to reduce continuously shaded organismal segments to discrete patterns
+    """ Use clustering to reduce continuously shaded organismal segments to discrete patterns.
 
         Args:
             img_ids (list): the imageIDs to use segments from
@@ -446,6 +446,7 @@ def clusterGroup(group_info):
     all_values = np.array(all_values)
     # Clustering process
     _bprint(print_steps, f"Clustering {len(all_values)} colors in group {g}...")
+
     clustered_values = _cluster(all_values, **cluster_args, show_color_scatter=show, show_color_centroids=show,
                                 input_colorspace=colorspace, return_values_as_centroids=True, print_steps=print_steps, show=show)
 

@@ -20,3 +20,4 @@ from bigcrittercolor.helpers.image._format import _format
 from bigcrittercolor.helpers.image._blackBgToTransparent import _blackBgToTransparent
 from bigcrittercolor.helpers.image._getRotInvariantBlobSymmetry import _getRotInvariantBlobSymmetry
 from bigcrittercolor.helpers.image._meanDim import _meanDim
+from bigcrittercolor.helpers.image._sortImgsByChannel import _sortImgsByChannel

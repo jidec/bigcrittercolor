@@ -30,7 +30,7 @@ def makeCollage(imgs,n_per_row,resize_wh=None,white_bg=False,overlap_wh=None,rot
     # resize all images
     if resize_wh is None:
         resize_wh = _meanDim(imgs)
-    print(resize_wh)
+    #print(resize_wh)
     imgs = [cv2.resize(im,resize_wh) for im in imgs]
     collage = None
 

@@ -32,9 +32,10 @@ def _cluster(values, algo="kmeans", n=3,
              preference=None,
              scale=None, # whether to scale the features between 0 and 1 to equalize the importance of each (happens before weighting if applicable)
              weights=None, # a list of weights, one for each column, that make certain features more or less important
-             pca_n=None,
+             pca_n=None, tsne_n=None,
              show_pca_tsne = False,
              show_color_scatter = False,
+             show_clusters = False,
              show_silhouette = False,
              input_colorspace = "rgb",
              seed = random.randint(0, 2**32 - 1),
@@ -69,17 +70,19 @@ def _cluster(values, algo="kmeans", n=3,
         pca = PCA(n_components=2)
         principal_components = pca.fit_transform(scaled)
 
+        explained_variance = pca.explained_variance_ratio_
+
         # Step 3: Visualize the results
         plt.figure(figsize=(10, 6))
         plt.scatter(principal_components[:, 0], principal_components[:, 1], edgecolors='k', cmap="viridis")
-        plt.xlabel('Principal Component 1')
-        plt.ylabel('Principal Component 2')
+        plt.xlabel(f'Principal Component 1 ({explained_variance[0] * 100:.2f}% variance)')
+        plt.ylabel(f'Principal Component 2 ({explained_variance[1] * 100:.2f}% variance)')
         plt.title('2D PCA of Multi-dimensional Data')
         plt.grid(True)
         plt.show()
 
-        for i, ev in enumerate(pca.explained_variance_ratio_, start=1):
-            print(f"Principal Component {i}: {ev * 100:.2f}% of the variance")
+        #for i, ev in enumerate(pca.explained_variance_ratio_, start=1):
+        #    print(f"Principal Component {i}: {ev * 100:.2f}% of the variance")
 
     start_values = np.copy(values)
     if scale == "minmax":
@@ -99,6 +102,12 @@ def _cluster(values, algo="kmeans", n=3,
             pca_n = np.array(values).shape[0]
         pca = PCA(n_components=pca_n)
         values = pca.fit_transform(values)
+
+    if tsne_n is not None:
+        if tsne_n > np.array(values).shape[0]:
+            tsne_n = np.array(values).shape[0]
+        tsne = TSNE(n_components=tsne_n)
+        values = tsne.fit_transform(values)
 
     if unique_values_only:
         values, indices, inverse = np.unique(values, axis=0, return_index=True, return_inverse=True)
@@ -223,13 +232,14 @@ def _cluster(values, algo="kmeans", n=3,
             model = AgglomerativeClustering(n_clusters=n,linkage=linkage)
         case "dbscan":
             #eps = findDBSCANeps(values)
-            #min_samples = np.shape(values)[1] + 1
+            eps = 0.5
+            min_samples = np.shape(values)[1] + 1
             model = DBSCAN(eps=eps, min_samples=min_samples)#, #algorithm='ball_tree')  # , metric='manhattan')
         case "hdbscan":
             #eps = findDBSCANeps(values)
             min_samples = np.shape(values)[1] + 1
             #min_samples=25
-            model = HDBSCAN(min_samples=10,cluster_selection_method=cluster_selection_method)#cluster_selection_epsilon=eps)#cluster_selection_method="leaf")
+            model = HDBSCAN(min_cluster_size=5)#,cluster_selection_method=cluster_selection_method)#cluster_selection_epsilon=eps)#cluster_selection_method="leaf")
         case "affprop":
             if preference is None:
                 distances = euclidean_distances(values, squared=True)
@@ -268,6 +278,21 @@ def _cluster(values, algo="kmeans", n=3,
         return labels
 
     labels = model.fit_predict(values)
+
+    if show_clusters:
+        # Create scatter plot with cluster labels
+        #labels_strings = [str(l) for l in labels]
+        scatter = plt.scatter(values[:, 0], values[:, 1], c=labels, cmap='viridis')
+        plt.title('Clustering Results')
+
+        #plt.legend(loc='right')
+        # Add a color bar on the right to show the mapping of colors to clusters
+        cbar = plt.colorbar(scatter, ticks=np.unique(labels))
+        #cbar.set_label('Cluster Labels')
+        cbar.set_ticks(np.unique(labels))  # Ensure color bar ticks match the unique labels
+        cbar.set_ticklabels([f'Cluster {i}' for i in np.unique(labels)])  # Optional: Label clusters
+
+        plt.show()
 
     # if we scaled, revert back to the unscaled values we had before clustering - the labels stay the same
     if scale or (weights is not None):

@@ -74,3 +74,8 @@ def _verticalizeImg(img, lines_strategy="skeleton_hough", best_line_metric="over
     if return_img_bb_flip:
         return(img, box, has_flipped)
     return img
+
+#img = cv2.imread("D:/bcc/beetles/masks/INATRANDOM-34080277_mask.png")
+#img = _verticalizeImg(img,show=True)
+#cv2.imshow("0",img)
+#cv2.waitKey(0)

@@ -1,6 +1,6 @@
 import requests
 
-def getiNatGenusNames(parent_taxon):
+def getiNatGenusNames(parent_taxon,min_obs_per_genus=10):
     # Initial request to get the parent taxon ID
     response = requests.get('https://api.inaturalist.org/v1/taxa', params={'q': parent_taxon})
     data = response.json()
@@ -25,7 +25,8 @@ def getiNatGenusNames(parent_taxon):
             break  # Exit the loop if there are no more results
 
         for result in results:
-            genera.append(result['name'])
+            if result['observations_count'] >= min_obs_per_genus:
+                genera.append(result['name'])
 
         page += 1  # Increment the page number for the next iteration
 

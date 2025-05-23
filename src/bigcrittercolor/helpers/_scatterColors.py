@@ -35,12 +35,15 @@ def _scatterColors(color_values, input_colorspace, sample_n=500, pt_size=3, clus
     # Flatten the point_colors back to original shape
     point_colors = point_colors.reshape((-1, 3))
 
+    if input_colorspace.lower() == 'rgb':
+        point_colors = point_colors[:, ::-1]
+
     # Create a 3D scatter plot
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
     for i in range(len(color_values)):
-        xs, ys, zs = color_values[i, 0], color_values[i, 1], color_values[i, 2] #0,1,1
+        xs, ys, zs = color_values[i, 0], color_values[i, 1], color_values[i, 2] #0,1,2
         color = point_colors[i] / 255.0
         marker = markers[cluster_labels[i] % len(markers)] if cluster_labels is not None else 'o'
 

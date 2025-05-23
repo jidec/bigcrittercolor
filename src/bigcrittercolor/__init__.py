@@ -4,6 +4,6 @@ from bigcrittercolor.downloadImagesUsingDarwinCore import downloadImagesUsingDar
 from bigcrittercolor.inferMasks import inferMasks
 from bigcrittercolor.filterExtractSegments import filterExtractSegments
 from bigcrittercolor.clusterColorsToPatterns import clusterColorsToPatterns
-from bigcrittercolor.writeColorMetrics import writeColorMetrics
+from bigcrittercolor.writeBasicColorMetrics import writeBasicColorMetrics
 from bigcrittercolor.trainBioEncoder import trainBioEncoder
 from bigcrittercolor.inferBioencoderFeatures import inferBioEncoderFeatures

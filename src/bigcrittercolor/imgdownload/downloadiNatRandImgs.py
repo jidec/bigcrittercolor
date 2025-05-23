@@ -7,7 +7,7 @@ import random
 
 from bigcrittercolor.helpers import _bprint
 
-def downloadiNatRandImgs(n, seed=None, n_before_hr_wait=60, inat_csv_location='', sep=" ", print_steps=True, data_folder=''):
+def downloadiNatRandImgs(n, seed=None, n_before_hr_wait=60, inat_csv_location='', sep="\t", print_steps=True, data_folder=''):
     """
         Download random single images - typically used for creating generalized sets for testing
 
