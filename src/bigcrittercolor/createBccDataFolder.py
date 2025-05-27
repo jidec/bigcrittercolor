@@ -36,7 +36,7 @@ def createBccDataFolder(parent_folder: str, new_folder_name: str = "bcc_data", u
     mkdir_if_new(base_path + "/other")
 
     # make other subfolders
-    mkdirs(base_path + "/other", ["/bioencoder", "/bioencoder/images_to_infer","/bioencoder/bioencoder_training", "/bioencoder/inferred_encodings"
+    mkdirs(base_path + "/other", ["/bioencoder", "/bioencoder/images_to_infer","/bioencoder/bioencoder_training", "/bioencoder/inferred_encodings",
                                   "/download", "/download/split_download_records","/download/raw_image_downloads",
                                   "/inat_download_records",
                                   "/manual_coding_datasets",
