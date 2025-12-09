@@ -14,7 +14,7 @@ def trainBioEncoder(min_imgs_per_class=20, max_imgs_per_class=100, run_name="v1"
                 min_imgs_per_class (str): minimum number of images required for a class for it to be used in training
     """
 
-    #setupBioencoderTrainingFolder(data_folder=data_folder, min_imgs_per_class=min_imgs_per_class, max_imgs_per_class = max_imgs_per_class, print_steps = print_steps)
+    setupBioencoderTrainingFolder(data_folder=data_folder, min_imgs_per_class=min_imgs_per_class, max_imgs_per_class = max_imgs_per_class, print_steps = print_steps)
 
     # bioencoder_configure
     root_dir = data_folder + "/other/bioencoder_training/bioencoder_wd"
