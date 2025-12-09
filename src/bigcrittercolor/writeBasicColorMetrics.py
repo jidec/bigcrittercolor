@@ -44,13 +44,23 @@ def writeBasicColorMetrics(img_ids=None, from_stage="segment", batch_size=1000,
         imgs = _readBCCImgs(type=from_stage,img_ids=batch_img_ids, data_folder=data_folder)
 
         if from_stage == "segment":
-            simple_metrics = _getSimpleColorMetrics(imgs, batch_img_ids)
-            thresh_metrics = _getThresholdMetrics(imgs, batch_img_ids, thresholds=threshold_metrics, show=show)
-            shape_tex_metrics = _getShapeTextureMetrics(imgs,batch_img_ids,show=show)
-            metrics = pd.merge(simple_metrics, thresh_metrics, on='img_id')
-            metrics = pd.merge(metrics, shape_tex_metrics, on='img_id')
-            #metrics = simple_metrics
-        if from_stage == "pattern":
+            # Start with a base DataFrame containing img_ids
+            metrics = pd.DataFrame({'img_id': batch_img_ids})
+
+            # Conditionally get and merge each type of metrics
+            if get_color_metrics:
+                simple_metrics = _getSimpleColorMetrics(imgs, batch_img_ids)
+                metrics = pd.merge(metrics, simple_metrics, on='img_id', how='left')
+
+            if threshold_metrics:  # Only if threshold_metrics is provided and not empty
+                thresh_metrics = _getThresholdMetrics(imgs, batch_img_ids, thresholds=threshold_metrics, show=show)
+                metrics = pd.merge(metrics, thresh_metrics, on='img_id', how='left')
+
+            if get_shape_texture_metrics:
+                shape_tex_metrics = _getShapeTextureMetrics(imgs, batch_img_ids, show=show)
+                metrics = pd.merge(metrics, shape_tex_metrics, on='img_id', how='left')
+
+        elif from_stage == "pattern":
             metrics = _getColorClusterMetrics(imgs, batch_img_ids)
 
         return metrics
@@ -136,48 +146,221 @@ def _getSimpleColorMetrics(imgs, img_ids):
     df = pd.DataFrame(data)
     return df
 
-def _getThresholdMetrics(segs, img_ids, thresholds=[("hls", 2, 0.3)], show=False):
+import cv2
+import numpy as np
+import pandas as pd
+from bigcrittercolor.helpers import _showImages, makeCollage
+
+
+def _getThresholdMetrics(images, img_ids, thresholds=[("hls", 2, 0.3, "below")], show=False):
+    """
+    Enhanced thresholding:
+      - Supports single thresholds (above/below) [backward compatible]
+      - Supports range thresholds: (colorspace, channel, (low, high), 'between'|'outside')
+      - Supports dual thresholds (AND):
+          ('dual', condA, condB, optional_name)
+      - Supports triple thresholds (AND):
+          ('triple', condA, condB, condC, optional_name)
+        where condA/condB/condC are single/range threshold specs as above.
+
+    Hue handling:
+      - If colorspace=='hls' and channel==0, any threshold/range values >1.0 are treated as degrees.
+        Values <=180 are scaled by 180 (OpenCV hue), >180 by 360.
+      - Range supports wrap-around when low > high (e.g., hue (350, 20) degrees).
+
+    Returns: DataFrame with one row per img_id and one column per threshold spec (fraction of non-black pixels meeting the condition).
+    If show=True, overlays satisfied pixels in red.
+    """
+    import math
+
+    def _extract_channel(rgb):
+        # returns dict of normalized channels in [0,1]
+        hls = cv2.cvtColor(rgb, cv2.COLOR_RGB2HLS).astype(np.float32)
+        # normalize to 0-1
+        H = hls[:, :, 0] / 180.0  # OpenCV hue is 0-180
+        L = hls[:, :, 1] / 255.0
+        S = hls[:, :, 2] / 255.0
+        R = rgb[:, :, 0].astype(np.float32) / 255.0
+        G = rgb[:, :, 1].astype(np.float32) / 255.0
+        B = rgb[:, :, 2].astype(np.float32) / 255.0
+        return {
+            ("hls", 0): H, ("hls", 1): L, ("hls", 2): S,
+            ("rgb", 0): R, ("rgb", 1): G, ("rgb", 2): B
+        }
+
+    def _is_hue(colorspace, channel):
+        return colorspace.lower() in ("hls", "hsv") and int(channel) == 0
+
+    def _norm_scalar_thresh(colorspace, channel, t):
+        if _is_hue(colorspace, channel) and t > 1:
+            # Always scale by 360 for consistency when using degrees
+            scale = 360.0
+            return float(t) / scale
+        return float(t)
+
+    def _norm_range_thresh(colorspace, channel, rng):
+        a, b = rng
+        return (_norm_scalar_thresh(colorspace, channel, float(a)),
+                _norm_scalar_thresh(colorspace, channel, float(b)))
+
+    def _single_mask(rgb, nonblack_mask, spec):
+        """
+        spec forms:
+          (colorspace, channel, thresh, 'above'|'below')
+          (colorspace, channel, (low, high), 'between'|'outside')
+        returns boolean mask (same shape as nonblack_mask)
+        """
+        colorspace, channel, thr, direction = spec
+        colorspace = colorspace.lower()
+        channel = int(channel)
+
+        chan_maps = _extract_channel(rgb)
+        if (colorspace, channel) not in chan_maps:
+            raise ValueError(f"Unsupported colorspace/channel: {colorspace}, {channel}")
+        vals = chan_maps[(colorspace, channel)]
+
+        if isinstance(thr, (tuple, list)) and len(thr) == 2:
+            low, high = _norm_range_thresh(colorspace, channel, thr)
+            # handle wrap-around for cyclic hue ranges
+            if _is_hue(colorspace, channel) and low > high:
+                in_range = (vals >= low) | (vals <= high)
+            else:
+                in_range = (vals >= low) & (vals <= high)
+            mask = in_range if direction == "between" else ~in_range
+        else:
+            t = _norm_scalar_thresh(colorspace, channel, float(thr))
+            if direction == "below":
+                mask = vals <= t
+            elif direction == "above":
+                mask = vals >= t
+            else:
+                raise ValueError(f"Unknown direction '{direction}' for single threshold")
+        return mask & nonblack_mask
+
+    def _parse_dual_name(a, b):
+        def _name_of(spec):
+            cs, ch, thr, direction = spec
+            if isinstance(thr, (tuple, list)):
+                lo, hi = thr
+                return f"{cs}_ch{ch}_{direction}{lo}-{hi}"
+            else:
+                return f"{cs}_ch{ch}_{direction}{thr}"
+
+        return f"dual_{_name_of(a)}__AND__{_name_of(b)}"
+
+    def _parse_triple_name(a, b, c):
+        def _name_of(spec):
+            cs, ch, thr, direction = spec
+            if isinstance(thr, (tuple, list)):
+                lo, hi = thr
+                return f"{cs}_ch{ch}_{direction}{lo}-{hi}"
+            else:
+                return f"{cs}_ch{ch}_{direction}{thr}"
+
+        return f"triple_{_name_of(a)}__AND__{_name_of(b)}__AND__{_name_of(c)}"
+
     data = []
-    imgs_to_show = []
+    imgs_to_show, titles = [], []
 
-    for img, img_id in zip(segs, img_ids):
-        image = img
-        # convert image to RGB
-        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    for img, img_id in zip(images, img_ids):
+        rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        nonblack_mask = np.any(rgb != [0, 0, 0], axis=2)
 
-        # mask to exclude black pixels
-        mask = (image_rgb[:, :, 0] != 0) | (image_rgb[:, :, 1] != 0) | (image_rgb[:, :, 2] != 0)
+        row = {"img_id": img_id}
 
-        # initialize the data dictionary for this image
-        image_data = {'img_id': img_id}
+        for spec in thresholds:
+            # --- Triple threshold?
+            if isinstance(spec, (tuple, list)) and len(spec) >= 4 and str(spec[0]).lower() == "triple":
+                # ('triple', condA, condB, condC, optional_name)
+                if len(spec) < 4:
+                    raise ValueError("Triple threshold must be ('triple', condA, condB, condC, [name])")
+                _, condA, condB, condC, *maybe_name = spec
+                name = maybe_name[0] if maybe_name else _parse_triple_name(condA, condB, condC)
 
-        for colorspace, channel, thresh, below_or_above in thresholds:
-            formatted_img = _format(image_rgb, in_format="rgb", out_format=colorspace)
-            channel_img = formatted_img[:, :, int(channel)]
+                maskA = _single_mask(rgb, nonblack_mask, condA)
+                maskB = _single_mask(rgb, nonblack_mask, condB)
+                maskC = _single_mask(rgb, nonblack_mask, condC)
+                tmask = maskA & maskB & maskC  # AND all three conditions
 
-            # if below, count pixels below the threshold
-            if below_or_above == "below":
-                thresh_pixels_percent = np.mean(channel_img[mask] <= float(thresh))
-            # otherwise count above the threshold
-            elif below_or_above == "above":
-                thresh_pixels_percent = np.mean(channel_img[mask] >= float(thresh))
-            image_data[f'{colorspace}_channel{channel}_thresh{thresh}_{below_or_above}'] = thresh_pixels_percent * 100
+                count = np.count_nonzero(nonblack_mask)
+                frac = np.nan if count == 0 else (np.count_nonzero(tmask) / count)
+                row[name] = frac
 
-            if show:
-                below_thresh_mask = channel_img <= thresh
-                marked_image_bgr = image_rgb.copy()
-                marked_image_bgr = cv2.cvtColor(marked_image_bgr, cv2.COLOR_RGB2BGR)
-                marked_image_bgr[below_thresh_mask & mask] = [0, 0, 255]  # Mark in red
-                thresh_collage = makeCollage([image, marked_image_bgr], n_per_row=2)
-                imgs_to_show.append(thresh_collage)
+                if show:
+                    marked = cv2.cvtColor(rgb.copy(), cv2.COLOR_RGB2BGR)
+                    marked[tmask] = [0, 0, 255]
+                    collage = makeCollage([img, marked], n_per_row=2)
+                    imgs_to_show.append(collage)
+                    titles.append(f"{name}: {0 if np.isnan(frac) else frac * 100:.1f}%")
 
-        # Append the metrics to the data list
-        data.append(image_data)
+            # --- Dual threshold?
+            elif isinstance(spec, (tuple, list)) and len(spec) >= 3 and str(spec[0]).lower() == "dual":
+                # ('dual', condA, condB, optional_name)
+                if len(spec) < 3:
+                    raise ValueError("Dual threshold must be ('dual', condA, condB, [name])")
+                _, condA, condB, *maybe_name = spec
+                name = maybe_name[0] if maybe_name else _parse_dual_name(condA, condB)
 
-    _showImages(show, imgs_to_show, sample_n=18)
+                maskA = _single_mask(rgb, nonblack_mask, condA)
+                maskB = _single_mask(rgb, nonblack_mask, condB)
+                tmask = maskA & maskB
 
-    df = pd.DataFrame(data)
-    return df
+                count = np.count_nonzero(nonblack_mask)
+                frac = np.nan if count == 0 else (np.count_nonzero(tmask) / count)
+                row[name] = frac
+
+                if show:
+                    marked = cv2.cvtColor(rgb.copy(), cv2.COLOR_RGB2BGR)
+                    marked[tmask] = [0, 0, 255]
+                    collage = makeCollage([img, marked], n_per_row=2)
+                    imgs_to_show.append(collage)
+                    titles.append(f"{name}: {0 if np.isnan(frac) else frac * 100:.1f}%")
+
+            # --- Single/range threshold
+            else:
+                # Expect (colorspace, channel, thr or (low,high), direction)
+                if not (isinstance(spec, (tuple, list)) and len(spec) == 4):
+                    raise ValueError(
+                        "Threshold spec must be "
+                        "(colorspace, channel, thresh, 'above'|'below') "
+                        "or (colorspace, channel, (low,high), 'between'|'outside') "
+                        "or ('dual', condA, condB, [name]) "
+                        "or ('triple', condA, condB, condC, [name])."
+                    )
+                colorspace, channel, thr, direction = spec
+                tmask = _single_mask(rgb, nonblack_mask, (colorspace, channel, thr, direction))
+
+                # build column name
+                if isinstance(thr, (tuple, list)):
+                    lo, hi = thr
+                    key = f"{colorspace}_ch{channel}_{direction}{lo}-{hi}"
+                else:
+                    key = f"{colorspace}_ch{channel}_{direction}{thr}"
+
+                count = np.count_nonzero(nonblack_mask)
+                frac = np.nan if count == 0 else (np.count_nonzero(tmask) / count)
+                row[key] = frac
+
+                if show:
+                    marked = cv2.cvtColor(rgb.copy(), cv2.COLOR_RGB2BGR)
+                    marked[tmask] = [0, 0, 255]
+                    collage = makeCollage([img, marked], n_per_row=2)
+                    imgs_to_show.append(collage)
+                    titles.append(f"{key}: {0 if np.isnan(frac) else frac * 100:.1f}%")
+
+        data.append(row)
+
+    # Fixed: Only show images if there are any to show, and limit both imgs and titles to sample_n
+    if show and imgs_to_show:
+        sample_n = 18  # Match the expected sample size
+        # Limit both images and titles to the same sample size
+        if len(imgs_to_show) > sample_n:
+            imgs_to_show = imgs_to_show[:sample_n]
+            titles = titles[:sample_n]
+        _showImages(True, imgs_to_show, titles=titles, sample_n=len(imgs_to_show))
+
+    return pd.DataFrame(data)
+
 
 
 from skimage.measure import regionprops_table, label
@@ -278,45 +461,109 @@ def _getShapeTextureMetrics(imgs, img_ids, show=False):
     return df
 
 def _getColorClusterMetrics(images, img_ids):
-    # Loop through first to find all unique colors
+    """
+    For a batch of pattern images, computes the proportion of each unique RGB color
+    present in the batch (excluding background). Returns a wide DataFrame with:
+      img_id, col_1_r, col_1_g, col_1_b, col_1_prop, col_2_r, ... etc.
+
+    Fixes:
+      - Convert BGR->RGB before analysis
+      - Respect alpha if present (RGBA): keep only alpha>0
+      - Deterministic color ordering (lexicographic by RGB)
+    """
+    import numpy as np
+    import pandas as pd
+    import cv2
+
+    # --- Gather unique foreground colors across the batch (in RGB) ---
     all_colors = set()
-    for i, image in enumerate(images):
-        #if i % 100 == 0:
-        #    print(i)
-        arr = np.array(image)
-        # Remove black background pixels and flatten to list of colors
-        arr = arr[(arr[:, :, 0] != 0) | (arr[:, :, 1] != 0) | (arr[:, :, 2] != 0)]
-        for color in np.unique(arr, axis=0):
-            all_colors.add(tuple(color))
 
-    uniq_colors = np.array(list(all_colors))
+    def _to_rgb_and_mask(img_bgr):
+        # Handle BGR/RGBA safely
+        if img_bgr.ndim != 3:
+            return None, None  # skip not-3ch images
+        h, w, c = img_bgr.shape
+        if c == 4:
+            # OpenCV doesn't carry alpha by default unless you loaded with IMREAD_UNCHANGED.
+            # If c==4, assume BGRA.
+            b, g, r, a = cv2.split(img_bgr)
+            rgb = cv2.merge([r, g, b])
+            fg_mask = (a > 0)
+        elif c == 3:
+            # BGR -> RGB
+            rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+            # treat pure black as background
+            fg_mask = np.any(rgb != [0, 0, 0], axis=2)
+        else:
+            return None, None
+        return rgb, fg_mask
 
-    # Loop through again to get proportions and build dataframe
-    data = []
-    for i, (image, img_id) in enumerate(zip(images, img_ids)):
-        #if i % 100 == 0:
-        #    print(i)
-        arr = np.array(image)
-        arr = arr[(arr[:, :, 0] != 0) | (arr[:, :, 1] != 0) | (arr[:, :, 2] != 0)]
+    # First pass: collect batch palette
+    for img in images:
+        rgb, mask = _to_rgb_and_mask(img)
+        if rgb is None or mask is None or not np.any(mask):
+            continue
+        # extract foreground pixels
+        fg = rgb[mask]
+        if fg.size == 0:
+            continue
+        # unique rows fast
+        uniq = np.unique(fg, axis=0)
+        for row in uniq:
+            all_colors.add((int(row[0]), int(row[1]), int(row[2])))
 
-        # Calculate proportion of pixels for each unique color
-        row = [img_id]
-        total_pix = arr.shape[0]
-        for color in uniq_colors:
-            col_pix = np.sum((arr[:, :3] == color[:3]).all(axis=1))
-            prop = col_pix / total_pix if total_pix else 0
-            row.extend(list(color[:3]) + [prop])
+    if not all_colors:
+        # Nothing foreground-like; return just img_id column
+        return pd.DataFrame({"img_id": img_ids})
 
-        data.append(row)
+    # Deterministic order for columns
+    uniq_colors = np.array(sorted(all_colors, key=lambda t: (t[0], t[1], t[2])), dtype=np.int32)
 
-    # Creating DataFrame
-    columns = ['img_id']
-    for i, color in enumerate(uniq_colors, start=1):
-        columns.extend([f'col_{i}_r', f'col_{i}_g', f'col_{i}_b', f'col_{i}_prop'])
+    # --- Second pass: per-image proportions over the fixed palette ---
+    data_rows = []
+    for img, img_id in zip(images, img_ids):
+        rgb, mask = _to_rgb_and_mask(img)
+        row = {"img_id": img_id}
+        # Initialize with zeros so column set is consistent even if some colors aren’t present
+        for i, (r, g, b) in enumerate(uniq_colors, start=1):
+            row[f"col_{i}_r"] = r
+            row[f"col_{i}_g"] = g
+            row[f"col_{i}_b"] = b
+            row[f"col_{i}_prop"] = 0.0
 
-    df = pd.DataFrame(data, columns=columns)
+        if rgb is None or mask is None or not np.any(mask):
+            data_rows.append(row)
+            continue
+
+        fg = rgb[mask]
+        total = fg.shape[0]
+        if total == 0:
+            data_rows.append(row)
+            continue
+
+        # Count occurrences of each color present in this image
+        # Map color -> count using a structured view for speed
+        fg_view = fg.view([('r', fg.dtype), ('g', fg.dtype), ('b', fg.dtype)]).reshape(-1)
+        uniq_img, counts = np.unique(fg_view, return_counts=True)
+        # Convert back to plain (r,g,b) tuples for matching
+        uniq_img_rgb = np.column_stack([uniq_img['r'], uniq_img['g'], uniq_img['b']])
+
+        # Build a dict for quick lookup
+        # Note: using tuple keys to match uniq_colors tuples
+        counts_dict = { (int(r), int(g), int(b)): int(c) for (r,g,b), c in zip(uniq_img_rgb, counts) }
+
+        # Fill proportions for colors that appear
+        for i, key in enumerate(map(tuple, uniq_colors), start=1):
+            c = counts_dict.get(key, 0)
+            if c:
+                row[f"col_{i}_prop"] = c / float(total)
+
+        data_rows.append(row)
+
+    # Build columns in the same deterministic order
+    cols = ["img_id"]
+    for i in range(1, len(uniq_colors) + 1):
+        cols += [f"col_{i}_r", f"col_{i}_g", f"col_{i}_b", f"col_{i}_prop"]
+
+    df = pd.DataFrame(data_rows)[cols]
     return df
-
-#writeBasicColorMetrics(from_stage="segment",data_folder="D:/bcc/ringtails",
-#                  threshold_metrics=[("hls",1,83,"below")],show=True)
-#("rgb",1,125,"above")
