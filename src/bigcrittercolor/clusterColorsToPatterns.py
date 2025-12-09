@@ -135,81 +135,77 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
     # cluster by group
     if group_cluster_records_colname is not None:
         _bprint(print_steps, "Started group clustering by a records column (probably 'species' or 'genus')")
-        # load records
-        records = pd.read_csv(data_folder + "/records.csv")
-        records = records[['obs_id', group_cluster_records_colname]]
-        records = records.drop_duplicates(subset='obs_id', keep='first')
 
-        # create df to hold img_ids and corresponding taxa
+        # Load records + join groups
+        records = pd.read_csv(os.path.join(data_folder, "records.csv"))
+        records = records[['obs_id', group_cluster_records_colname]].drop_duplicates(subset='obs_id', keep='first')
+
         img_ids_groups = pd.DataFrame(img_ids, columns=['img_id'])
-        img_ids_groups['obs_id'] = ["-".join(id.split("-")[:-1]) for id in img_ids] # add obs_id column
+        img_ids_groups['obs_id'] = ["-".join(id.split("-")[:-1]) for id in img_ids]
+        img_ids_groups = pd.merge(img_ids_groups, records, on='obs_id', how='left')
 
-        # merge in
-        img_ids_groups = pd.merge(img_ids_groups, records, on='obs_id')
-
-        # loop through unique groups and update patch data using clustered centroids
         unique_groups = unique(img_ids_groups[group_cluster_records_colname])
 
-        # Perform parallel clustering with a progress bar
-        patch_or_pixel_data = clusterGroupsMultiprocess(
-            n_processes, unique_groups, img_ids_groups, img_ids, group_cluster_records_colname,
-            patch_or_pixel_data, cluster_args, show, print_steps, colorspace
-        )
+        # Process ONE group at a time to keep memory bounded
+        for g in tqdm(unique_groups, desc="Clustering+Writing Groups", unit="group"):
+            # indices for this group
+            group_indices = img_ids_groups.index[img_ids_groups[group_cluster_records_colname] == g].tolist()
+            if len(group_indices) == 0:
+                continue
 
-        # for g in unique_groups:
-        #     group_info = g, img_ids_groups, img_ids, group_cluster_records_colname, patch_or_pixel_data, cluster_args, show, print_steps, colorspace
-        #     group_ppds_and_img_ids = clusterGroup(group_info)
-        #     updated_patch_or_pixel_data = updated_patch_or_pixel_data + group_ppds_and_img_ids[0]
-        #     updated_img_ids = updated_img_ids + group_ppds_and_img_ids[1]
+            # pull only this group’s ppds
+            group_ppds = [patch_or_pixel_data[i] for i in group_indices if patch_or_pixel_data[i] is not None]
+            if len(group_ppds) == 0:
+                # already freed or empty
+                _free_group_from_memory(patch_or_pixel_data, group_indices)
+                continue
 
-        # cluster groups
-        #patch_or_pixel_data, updated_img_ids = clusterGroupsMultiprocess(unique_groups, img_ids, patch_or_pixel_data, cluster_args,
-        #                                                      show, print_steps, colorspace)
-        # for g in unique_groups:
-        #     # get indices for the group
-        #     group_indices = img_ids_groups.index[img_ids_groups[group_cluster_records_colname] == g].tolist()
-        #
-        #     # get data for the group
-        #     group_ppds = [patch_or_pixel_data[i] for i in group_indices]
-        #
-        #     # get ids for the group
-        #     group_img_ids = [img_ids[i] for i in group_indices]
-        #
-        #     ## BELOW PASTED FROM GROUP CLUSTERING - may want to make own fun
-        #     # get color values per image (a list of lists, each sublist containing RGB color values each of which has a length of 3)
-        #     all_values_per_image = [ppd[1] for ppd in group_ppds]
-        #
-        #     # combine the image sublists - all_values is a list of color values
-        #     all_values = [value for image_list in all_values_per_image for value in image_list]
-        #     # keep track of the indices - all_indices is a list of indices, the images to which each color value belongs
-        #     all_indices = [index for index, sublist in enumerate(all_values_per_image) for item in sublist]
-        #
-        #     _bprint(print_steps, "Clustering " + str(len(all_values)) + " colors...")
-        #     clustered_values = _cluster(all_values, **cluster_args, show_color_scatter=show, show_color_centroids=show,
-        #                                 input_colorspace=colorspace, return_values_as_centroids=True,
-        #                                 print_steps=print_steps,show=show)
-        #
-        #     def group_values_by_indices(values, indices):
-        #         groups = {}
-        #         for value, index in zip(values, indices):
-        #             if index not in groups:
-        #                 groups[index] = []
-        #             groups[index].append(value)
-        #
-        #         # Sort the dictionary by its keys and return the values
-        #         return [groups[key] for key in sorted(groups)]
-        #
-        #     # clustered_values_imgs regroups the clustered values back to their original images using the image indices we saved
-        #     clustered_values_imgs = group_values_by_indices(clustered_values, all_indices)
-        #     # we then create a new patch_or_pixel_data that only replaces old values with the new clustered values
-        #     group_ppds = [(ppd[0], clustered_values_imgs[index], ppd[2]) for index, ppd in
-        #                            enumerate(group_ppds)]
-        #     ##
-        #     # I think indices are screwed up when you do this?
-        #     updated_patch_or_pixel_data = updated_patch_or_pixel_data + group_ppds
-        #     updated_img_ids = updated_img_ids + group_img_ids
-        # patch_or_pixel_data = updated_patch_or_pixel_data
-        # img_ids = updated_img_ids
+            # 1) gather per-image values
+            all_values_per_image = [ppd[1] for ppd in group_ppds]
+            all_values = [v for sub in all_values_per_image for v in sub]
+            all_indices = [idx for idx, sub in enumerate(all_values_per_image) for _ in sub]
+
+            all_values = np.asarray(all_values, dtype=float)
+
+            # 2) cluster just this group
+            _bprint(print_steps, f"Clustering {len(all_values)} colors in group {g}...")
+            clustered_values = _cluster(
+                all_values,
+                **cluster_args,
+                show_color_scatter=show,
+                show_color_centroids=show,
+                input_colorspace=colorspace,
+                return_values_as_centroids=True,
+                print_steps=print_steps,
+                show=show
+            )
+
+            # 3) regroup back to images
+            grouped = {}
+            for val, idx in zip(clustered_values, all_indices):
+                grouped.setdefault(idx, []).append(val)
+            clustered_values_imgs = [grouped[i] for i in sorted(grouped.keys())]
+
+            # 4) build updated ppds for this group only
+            group_ppds_updated = []
+            for local_i, ppd in enumerate(group_ppds):
+                group_ppds_updated.append((ppd[0], clustered_values_imgs[local_i], ppd[2], ppd[3]))
+
+            # 5) write this group immediately, then free its memory
+            _write_patterns_for_group(
+                group_ppds_updated,
+                by_patches=by_patches,
+                colorspace=colorspace,
+                write_subfolder=write_subfolder,
+                data_folder=data_folder,
+                print_details=print_details
+            )
+
+            # free group data from the big list
+            _free_group_from_memory(patch_or_pixel_data, group_indices)
+
+        # After sequential group writes, we’re done (skip global reconstruction below)
+        return
 
     # cluster at the level of individual images
     elif cluster_individually:
@@ -232,11 +228,12 @@ def clusterColorsToPatterns(img_ids=None, cluster_individually=False, precluster
 
         # combine the image sublists - all_values is a list of color values
         all_values = [value for image_list in all_values_per_image for value in image_list]
+        all_values = np.asarray(all_values, dtype=float)
         # keep track of the indices - all_indices is a list of indices, the images to which each color value belongs
         all_indices = [index for index, sublist in enumerate(all_values_per_image) for item in sublist]
 
         _bprint(print_steps, "Clustering " + str(len(all_values)) + " colors...")
-        clustered_values = _cluster(all_values, **cluster_args, input_colorspace=colorspace, return_values_as_centroids=True,print_steps=print_steps,show=show)
+        clustered_values = _cluster(all_values, **cluster_args, show_color_scatter=show, input_colorspace=colorspace, return_values_as_centroids=True,print_steps=print_steps,show=show)
 
         def group_values_by_indices(values, indices):
             groups = {}
@@ -404,16 +401,27 @@ def gatherImageDataMultiprocess(n_processes, img_ids, data_folder, preclustered,
         for img_id in img_ids
     ]
 
-    # Set up the multiprocessing pool
-    with Pool(n_processes) as pool:
-        # Initialize tqdm progress bar
+    if(n_processes <= 1):
+        # Sequential loop version (no multiprocessing)
+        results =[]
         with tqdm(total=len(img_id_info_list), desc="Processing Images", unit="image") as pbar:
-            # Use imap_unordered to get results iteratively
-            results = []
-            for result in pool.imap_unordered(gatherImageData, img_id_info_list):
+            for info in img_id_info_list:
+                result = gatherImageData(info)  # just call directly
                 if result is not None:
                     results.append(result)
                 pbar.update(1)
+
+    else:
+        # Set up the multiprocessing pool
+        with Pool(n_processes) as pool:
+            # Initialize tqdm progress bar
+            with tqdm(total=len(img_id_info_list), desc="Processing Images", unit="image") as pbar:
+                # Use imap_unordered to get results iteratively
+                results = []
+                for result in pool.imap_unordered(gatherImageData, img_id_info_list):
+                    if result is not None:
+                        results.append(result)
+                    pbar.update(1)
 
     return results
 
@@ -487,3 +495,29 @@ def clusterGroupsMultiprocess(n_processes, unique_groups, img_ids_groups, img_id
                 pbar.update(1)
 
     return updated_patch_or_pixel_data
+
+def _write_patterns_for_group(group_ppds, by_patches, colorspace, write_subfolder, data_folder, print_details=False, preview_limit=18):
+    """Reconstruct and write each image in a group immediately."""
+    shown = 0
+    for ppd in group_ppds:
+        img = _reconstructImgFromPPD(ppd, is_patch_data=by_patches, input_colorspace=colorspace)
+        img = _format(img, in_format=colorspace, out_format="rgb", alpha=True)
+        if shown < preview_limit:
+            shown += 1  # (You can collect to a small list if you still want to preview.)
+        img = _blackBgToTransparent(img)
+
+        write_target = os.path.join(data_folder, "patterns", f"{ppd[3]}_pattern.png")
+        if write_subfolder != "":
+            out_dir = os.path.join(data_folder, "patterns", write_subfolder)
+            if not os.path.exists(out_dir):
+                os.mkdir(out_dir)
+            write_target = os.path.join(out_dir, f"{ppd[3]}_pattern.png")
+
+        cv2.imwrite(write_target, img)
+        _bprint(print_details, "Wrote to " + write_target)
+
+
+def _free_group_from_memory(patch_or_pixel_data, group_indices):
+    """Release memory held by a group’s ppds by nulling those slots."""
+    for idx in group_indices:
+        patch_or_pixel_data[idx] = None
