@@ -1,0 +1,4 @@
+image,pc1_score,output_file
+INATRANDOM-116732733_mask,0.2578650414943695,pc1_gradcam_results\INATRANDOM-116732733_mask_pc1cam.png
+INATRANDOM-144923_mask,0.23893526196479797,pc1_gradcam_results\INATRANDOM-144923_mask_pc1cam.png
+INATRANDOM-112457408_mask,0.27629125118255615,pc1_gradcam_results\INATRANDOM-112457408_mask_pc1cam.png

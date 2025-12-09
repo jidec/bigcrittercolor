@@ -4,7 +4,7 @@ import shutil
 from tempfile import TemporaryDirectory
 import random
 
-from bigcrittercolor import createBCCDataFolder, downloadiNatImageData, inferMasks, filterExtractSegs
+from bigcrittercolor import createBccDataFolder, downloadiNatImagesAndData, inferMasks, filterExtractSegments
 from bigcrittercolor.helpers import _getBCCIDs
 
 # tests in bigcrittercolor are at the level of the core steps in the base module
@@ -18,6 +18,7 @@ from bigcrittercolor.helpers import _getBCCIDs
 # the "visual_tests" folder contains visual tests for the clustering stages
 
 #pytest --permanent-folder="D:/GitProjects/bigcrittercolor/tests/intermediate_data_folders" -s
+#pytest D:/GitProjects/bigcrittercolor/tests/test_4_filterExtractSegs.py::test_batch --permanent-folder="D:/GitProjects/bigcrittercolor/tests/intermediate_data_folders" -s
 @pytest.fixture(scope="session")
 def shared_temp_folder(request):
     # whether to use a permanent folder, which allows you save time running tests
@@ -44,11 +45,11 @@ def shared_temp_folder(request):
     if not os.path.exists(empty_folder):
         # Create folders at intermediate stages of the pipeline
         # Empty
-        createBCCDataFolder(parent_folder=temp_folder, new_folder_name="empty")
+        createBccDataFolder(parent_folder=temp_folder, new_folder_name="empty")
 
         # Downloaded (Anaciaeschna)
         shutil.copytree(empty_folder, downloaded_folder)
-        downloadiNatImageData(taxa_list=["Anaciaeschna"], data_folder=downloaded_folder)
+        downloadiNatImagesAndData(taxa_list=["Anaciaeschna"], data_folder=downloaded_folder)
 
         # Normal - not using auxseg
         # Masked

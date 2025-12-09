@@ -13,7 +13,7 @@ from bigcrittercolor.helpers._readBCCImgs import _readBCCImgs
 from bigcrittercolor.helpers.clustering import _cluster, _findNClusters
 from bigcrittercolor.helpers.image import _padImgToSize,_resizeImgToTotalDim
 
-# helper that takes a list of numpy arr images and returns labels clustered by AffinityProp on features
+# helper that takes a list of numpy arr images and returns labels clustered on features
 #   extracted by a pretrained model
 def _clusterByImgFeatures(imgs, feature_extractor="resnet18",
                             cluster_params_dict={'eps':10,'min_samples':3}, fuzzy_probs_threshold=None,

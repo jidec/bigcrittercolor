@@ -1,0 +1,1 @@
+user_name,trial_number,timestamp,dragonfly_image,dragonfly_scale,dragonfly_center_x,dragonfly_center_y,dragonfly_width,dragonfly_height,grain_size,contrast,complexity_alpha,edge_density,background_seed,click_x,click_y,click_accuracy_pixels,click_accuracy_normalized,reaction_time_seconds,found,timed_out

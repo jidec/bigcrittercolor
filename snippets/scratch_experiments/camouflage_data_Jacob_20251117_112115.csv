@@ -1,0 +1,4 @@
+user_name,trial_number,timestamp,dragonfly_image,dragonfly_scale,dragonfly_center_x,dragonfly_center_y,dragonfly_width,dragonfly_height,grain_size,contrast,complexity_alpha,edge_density,background_seed,click_x,click_y,click_accuracy_pixels,click_accuracy_normalized,reaction_time_seconds,found,timed_out
+Jacob,1,2025-11-17T11:21:21.000746,Macromia.png,1.0,255,335,50,300,35.029732744716405,0.5366818746286308,0.6302989908498845,medium,148009,250.2216494845361,327.74742268041234,8.68518919916149,0.04962965256663709,2.672748327255249,True,False
+Jacob,2,2025-11-17T11:21:24.167948,Brachydiplax duivenbodei.png,1.0,142,355,57,279,44.90108195042321,0.4313706886302593,1.0198489405783224,high,924590,144.65463917525773,352.4896907216495,3.653595738965346,0.021747593684317536,1.2152984142303467,True,False
+Jacob,3,2025-11-17T11:21:27.340596,Brachydiplax duivenbodei.png,1.0,377,445,57,279,15.167736856803074,0.3770848778215914,1.0719113414238914,medium,309746,,,,,,False,True
